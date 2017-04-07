@@ -1,4 +1,4 @@
-**Documentation: CollectOnline API **
+*Documentation: CollectOnline API *
 ----
 
 
@@ -10,8 +10,8 @@ ___
   _/api/update_
 
 * **Method:**
- `POST`
-
+ `POST` 
+ 	
    **Required:**
    `Enseigne=[ the script name]`
    example : 'Bricoman'
@@ -21,26 +21,26 @@ ___
 
 
 
-
-
+  
+   
 * **Data Params**
-	JSON object
-
-  ```json
-{
+	JSON object 
+ 
+```json
+{ 
   "Enseigne":"Bricoman",
   "MagasinId":"1",
   "idProduit":"519260",
   "url":"https://www.bricoman.fr/...he-h200xl300.html"
-}
-	```
+} 
+```
 
 * **Success Response:**
-
+  
   * **Code:** 200 <br />
-    **Content:**
+    **Content:** 
 
- ```json
+```json
 {
   "requestID": 1,
   "requestDate": 1491573656648,
@@ -52,15 +52,15 @@ ___
   "status": "pending",
   "data": {}
 }
-	```
+```
 
-
+ 
 * **Error Response:**
 
    * **Code:** 400 Bad Request <br />
-    **Content:**
+    **Content:** 
 ```json
-  {
+  { 
   "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
   }
 ```
@@ -74,17 +74,17 @@ ___
   _/request/:id_
 
 * **Method:**
- `GET`
-
+ `GET` 
+ 	
    **Required:**
    `id=[Integer]`
 
 * **Success Response:**
-
+  
   * **Code:** 200 <br />
-    **Content:**
+    **Content:** 
 
- ```json
+```json
 {
   "requestID": 1,
   "requestDate": 1491573656648,
@@ -117,13 +117,13 @@ ___
 			    "dispo": 1
 			}
 	}
-	```
+```
 
-
+ 
 * **Error Response:**
 
    * **Code:** 404 Not Found <br />
-    **Content:**
+    **Content:** 
 ```json
     {  "Error": "the requested ID, do not exists"}
 ```
