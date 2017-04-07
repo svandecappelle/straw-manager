@@ -1,4 +1,3 @@
-
 # Documentation: CollectOnline API
 
 <br><br><br>
@@ -25,11 +24,17 @@ ___
  `POST` 
  	
    **Required:**
-   `Enseigne=[ the script name]`
+
+
+   `Enseigne  = [the script name]`
+   
    example : 'Bricoman'
-   `MagasinId=[integer]`
-   `idProduit=[ product or variant id ]`
-   `url=[product url]`
+
+   `MagasinId = [integer]`
+   
+   `idProduit = [product or variant ID]`
+   
+   `url       = [product url]`
 
 
 
@@ -71,6 +76,7 @@ ___
 
    * **Code:** 400 Bad Request <br />
     **Content:** 
+
 ```json
   { 
   "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
@@ -91,7 +97,7 @@ ___
  `GET` 
  	
    **Required:**
-   `id=[Integer]`
+   `id = [Integer]`
 
 * **Success Response:**
   
