@@ -1,0 +1,4 @@
+{
+  "port-http"     : "65000",
+  "hostname"      : "localhost"
+}
