@@ -1,11 +1,23 @@
-*Documentation: CollectOnline API *
-----
+
+# Documentation: CollectOnline API
+
+<br><br><br>
+<br><br><br>
 
 
 
-***
-####__Request a data update  of a given product__
+
+
+
+
+
+
+
+
+#### __Request a data update  of a given product__
 ___
+
+
 * **URL**
   _/api/update_
 
@@ -66,8 +78,10 @@ ___
 ```
 
 
+<br><br><br>
+<br><br><br>
 
-***
+
 #### __Check the data of a given Request__
 ___
 * **URL**
@@ -123,7 +137,8 @@ ___
 * **Error Response:**
 
    * **Code:** 404 Not Found <br />
-    **Content:** 
+    **Content:**
+
 ```json
     {  "Error": "the requested ID, do not exists"}
 ```
