@@ -86,3 +86,14 @@ exports.validQuery = function validQuery(query) {
     return false
   }
 }
+
+exports.drop = function drop(object) {
+  var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)})
+  if (  index > -1 ) {
+    requestBuffer.splice(index, 1)
+    return true
+  }else {
+    return false
+  }
+
+}

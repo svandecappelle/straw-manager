@@ -47,8 +47,28 @@ router.get('/request/:id', function (req, res) {
       res.status(200).send(elem);
     } else {
       console.log(RED(req.params.id)+" not found");
-      res.status(404).send({"Error":"the requested ID, do not exists"});
+      res.status(404).send({"Error":"the requested ID, doesn't exists"});
     }
+
+});
+// delete element
+router.delete('/drop/:id', function (req, res) {
+ console.log(RED(req.params.id)+" to delete !");
+  var elem = buffer.drop({
+                "requestID":req.params.id
+             })
+
+  if (elem) {
+    console.log(RED(req.params.id)+" deleted");
+    res.status(200).send({"deleted"       :req.params.id,
+                          "bufferLength"  :buffer.getBuffer().length
+                         });
+  }else {
+    console.log(RED(req.params.id)+" not found");
+    res.status(404).send({"Error":"a valid ID must be choosen"})
+  }
+
+
 
 });
 

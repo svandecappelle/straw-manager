@@ -21,41 +21,41 @@ ___
   _/api/update_
 
 * **Method:**
- `POST` 
- 	
+ `POST`
+
    **Required:**
 
 
    `Enseigne  = [the script name]`
-   
+
    example : 'Bricoman'
 
    `MagasinId = [integer]`
-   
+
    `idProduit = [product or variant ID]`
-   
+
    `url       = [product url]`
 
 
 
-  
-   
+
+
 * **Data Params**
-	JSON object 
- 
+	JSON object
+
 ```json
-{ 
+{
   "Enseigne":"Bricoman",
   "MagasinId":"1",
   "idProduit":"519260",
   "url":"https://www.bricoman.fr/...he-h200xl300.html"
-} 
+}
 ```
 
 * **Success Response:**
-  
+
   * **Code:** 200 <br />
-    **Content:** 
+    **Content:**
 
 ```json
 {
@@ -71,14 +71,14 @@ ___
 }
 ```
 
- 
+
 * **Error Response:**
 
    * **Code:** 400 Bad Request <br />
-    **Content:** 
+    **Content:**
 
 ```json
-  { 
+  {
   "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
   }
 ```
@@ -94,15 +94,15 @@ ___
   _/request/:id_
 
 * **Method:**
- `GET` 
- 	
+ `GET`
+
    **Required:**
    `id = [Integer]`
 
 * **Success Response:**
-  
+
   * **Code:** 200 <br />
-    **Content:** 
+    **Content:**
 
 ```json
 {
@@ -139,12 +139,47 @@ ___
 	}
 ```
 
- 
+
 * **Error Response:**
 
    * **Code:** 404 Not Found <br />
     **Content:**
 
 ```json
-    {  "Error": "the requested ID, do not exists"}
+    {  "Error": "the requested ID, doesn't exists"}
+```
+
+
+
+#### __Delete the data of a given Request__
+___
+* **URL**
+  _/drop/:id_
+
+* **Method:**
+ `DELETE`
+
+   **Required:**
+   `id = [Integer]`
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:**
+
+```json
+{
+  "deleted": "0",
+  "bufferLength": 7
+}
+```
+
+
+* **Error Response:**
+
+   * **Code:** 404 Not Found <br />
+    **Content:**
+
+```json
+    {"Error":"a valid ID must be choosen"}
 ```
