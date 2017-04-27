@@ -64,8 +64,6 @@ function ficheProduit(html, obj){
     }
     /*           Promo          */                     // 20/02/2017
 
-    if ($(".special-price > .price").length > 0 && $(this).find(".special-price > .price").attr("id") != undefined)
-      data.promoDirecte = $('.IM_percent').text().trim()
 
     var cip7 = data.srcImage.substring(data.srcImage.lastIndexOf('/')+1).split('.jpg')[0]
     if(isNaN(cip7) == true){
@@ -93,6 +91,11 @@ function ficheProduit(html, obj){
     }
     if($('.is-unite').length > 0){
       data.prixUnite = $('.is-unite').text().trim()
+    }
+
+    if (data.promo){
+      data.promoDirecte = $('.IM_percent').text().trim()
+      
     }
 
     data.cip13 = $('.data').eq(1).text().trim()

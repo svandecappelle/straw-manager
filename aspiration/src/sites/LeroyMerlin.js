@@ -28,12 +28,41 @@ function prettify_me(string) {
 function LeroyMerlin_GetDetailArticles(html, obj){
   var $ = cheerio.load(html);
   newObj = engine.clone(obj);
-  data = newObj.data;
+  data = []
+
+  if ($('div.infos-stores p span').length < 1) {
+
+    process.send({
+      requestID  :  newObj.requestID,
+      error      :	"produit non disponible",
+      data       :  undefined
+    })
+
+    process.exit(1); // important !!
+  }
+
+  data.timestamp = +(new Date());
+  data.enseigne = newObj['Enseigne'];
+  data.magasin = newObj['Magasin'];
+  data.magasinId = newObj['MagasinId'];
+
+  data.ean = undefined;
   data.marque = $("a.logo-marque img").attr("alt");
   //var resultat = /^\/recherche=([A-Z0-9-' .]+)$/.exec($("a.logo-marque").attr("href"));
   //if (resultat && resultat.length > 0) data.marque = resultat[1];
   // On charge les caractéristiques du produit
   var tampon = "";
+
+  data.categories = []
+   $('ul.breadcrumb a').each(function (i, elm){
+      if(i>1){
+        logger.logAttrVal('text',$(this).text())
+        data.categories.push($(this).text())
+      }
+       //if(($(this).attr('class')!='home') && ($(this).attr('class')!='product'))
+       //data.categories.push($(this).text().replace('\n',' ').replace('>',' ').trim())
+   })
+
   data.caracteristique = [];
   if ($("p.desc span").text().trim().length > 0){
     tampon = $("p.desc span").text().trim();
@@ -42,6 +71,28 @@ function LeroyMerlin_GetDetailArticles(html, obj){
     tampon = outils.replaceAll('\t', ';', tampon);
     data.caracteristique.push(tampon);
   }
+
+
+  data.promo = 0;
+  data.prix = $('p.price').first().text().trim();
+  data.prixUnite = $('p.price').first().text().trim();
+  if($('span[class="picto-marque promo"]').first().text().length > 0) {
+    data.promo = 1;
+      data.ancienPrix = $('p.infos em.barred em').first().text().trim()
+
+  }
+  data.libelles = []
+  data.libelles.push($('header h1').first().text().trim())
+
+  data.srcImage = $('a.active img').first().attr('src')
+  //var a = $(this).find("h3 > a").first(); // length > 100 => update : added 'first' 19/01/2016
+
+
+  var a = $(this).find(".label-produit") // infinite cycle  undefined label
+  if (a.length < 1) {
+    a = $(this).find('[itemprop="name"]')
+  }
+
   $("table.tech-desc tbody tr").each(function(){
     tampon = $(this).find("td").text().trim();
     tampon = outils.replaceAll('\r', '', tampon);
@@ -61,7 +112,17 @@ function LeroyMerlin_GetDetailArticles(html, obj){
   //console.log(data.caracteristique);
   //process.exit(0);
   logger.logValColor('Export zero')
-  engine.export_products(data, newObj);
+
+  logger.logAttrVal("DATA", "BEGIN")
+  console.log(data);
+  logger.logAttrVal("DATA", "END")
+
+   //process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
+  process.send({
+     requestID : newObj.requestID,
+     data			: data
+   })
+  //engine.export_products(data, newObj);
 }
 
 function LeroyMerlin_GetArticles(html, obj){
@@ -375,9 +436,9 @@ function LeroyMerlin_SansMagasin(obj){
   ReqObject.tree = [];
   ReqObject.Magasin = 'Centrale Leroy Merlin';
   ReqObject.MagasinId = 0;
-  if (engine.shouldBeDone(0)){
-    engine.BindRequest("/", {}, {}, LeroyMerlin_Navigation, ReqObject);
-  }
+
+    engine.BindRequest("/", {}, {}, LeroyMerlin_GetDetailArticles, ReqObject);
+
 }
 
 function LeroyMerlin_SuppMagasin(obj){
@@ -422,6 +483,13 @@ function LeroyMerlin_SuppMagasin(obj){
   ObjMag7.storeId = 191
   ObjMag7.name = 'Beauvais'
 
+  ObjMag8.link = "https://www.leroymerlin.fr/v3/p/magasins/grenoble-2-l1500668713"
+  ObjMag8.storeId = 194
+  ObjMag8.name = 'Grenoble (Saint-Egrève)'
+
+  ObjMag9.link = "https://www.leroymerlin.fr/v3/p/magasins-l1308220543"
+  ObjMag9.storeId = 193
+  ObjMag9.name = 'Brest (Guipavas)'
 
   SuppArray.push(ObjMag1,ObjMag2,ObjMag3,ObjMag4,ObjMag5,ObjMag6,ObjMag7)
 
@@ -431,9 +499,11 @@ function LeroyMerlin_SuppMagasin(obj){
     ReqObject.Magasin = elm.name;
     ReqObject.MagasinId = elm.storeId;
     ReqObject.jar["store"] = "store=" +  elm.storeId;
-    if (elm.storeId && engine.shouldBeDone(elm.storeId)){
+    //if (elm.storeId && engine.shouldBeDone(elm.storeId)){
+    if (elm.storeId == obj.MagId){
       logger.logTree(elm.link,elm.storeId,elm.name)
-      engine.BindRequest(elm.link, {}, {}, LeroyMerlin_Navigation, ReqObject);
+      engine.BindRequest(ReqObject.lookup, {}, {}, LeroyMerlin_GetDetailArticles, ReqObject);
+      //engine.BindRequest(elm.link, {}, {}, LeroyMerlin_Navigation, ReqObject);
     }
 
   })
@@ -463,9 +533,13 @@ function LeroyMerlin_MagasinList2(html, obj){
   	  ReqObject.MagasinId = MagasinId;
       ReqObject.jar["store"] = "store=" +  MagasinId;
         //if (MagasinId=='75'){
-  	  if (MagasinId && engine.shouldBeDone(MagasinId) && MagasinId!='57'){ // Reims (Cormontreuil) Doublon
+
+      if(MagasinId == ReqObject.MagId) {
+  	 //if (MagasinId && engine.shouldBeDone(MagasinId) && MagasinId!='57'){ // Reims (Cormontreuil) Doublon
         logger.logTree(MagasinId,href,MagasinName)
-  	    engine.BindRequest(href, {}, {}, LeroyMerlin_Navigation, ReqObject);
+  	    //engine.BindRequest(href, {}, {}, LeroyMerlin_Navigation, ReqObject);
+        engine.BindRequest(ReqObject.lookup, {}, {}, LeroyMerlin_GetDetailArticles, ReqObject);
+
   	  }
     }
    	/*var MagasinId = $(this).attr('data-storeid');
@@ -482,7 +556,7 @@ function LeroyMerlin_MagasinList2(html, obj){
   // On traite le magasin central
 
 
-  LeroyMerlin_SansMagasin(obj);
+//  LeroyMerlin_SansMagasin(obj);
   LeroyMerlin_SuppMagasin(obj)
 }
 
@@ -502,6 +576,7 @@ function LeroyMerlin_MagasinList(html, obj){
 
   engine.BindRequest(hrefListMag, {}, {}, LeroyMerlin_MagasinList2, ReqObject);
 }
+
 
 
 
@@ -529,6 +604,38 @@ function update(param){
 
 }
 
+function debug(param){
+    var obj = {};
+
+    //engine.init(param.ttw, param.tor);
+    //engine.setProxyList(param.proxy_list);
+    //engine.setParallelRequest(param.parr_req);
+    obj.hostname = "www.leroymerlin.fr";
+    obj.Enseigne = name;
+    obj.TestPrix = 0
+    obj.https = true; //07/02/2017 Passe en https
+    obj.public_ip = true;
+    //obj.filter = param.filter
+    //obj.filename = param.filename;
+    //Magasin Internet (Pas de connexion sur un magasin en particulier)
+    //engine.BindRequest("/", {}, {}, LeroyMerlin_SansMagasin, obj);
+    //Magasin Internet (Connexion sur un magasin en particulier)
+    logger.logAttrVal('PID',  obj.Enseigne +' / ' +process.pid)
+  //  logger.stopLog()
+    obj.filename = param.filename;
+    obj.MagId = '140'; // dont set obj.MagasinId at this level
+    //obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/meuble-vasque-l-60-x-h-64-x-p-48-cm-blanc-neo-line-e1500541607';
+    //obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/tuile-monier-silvacane-littoral-canal-midi-e46462';
+    obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/verriere-atelier-aluminium-noir-vitrage-non-fourni-h-1-08-x-l-1-23-m-e1401576645';
+    //obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/coupe-bordure-hybride-ryobi-one-rlt1831h25-e1500554998';
+    obj.requestID = 0;
+    engine.BindRequest("/", {}, {}, LeroyMerlin_MagasinList, obj);
+    //engine.BindRequest("/", {}, {}, LeroyMerlin_SansMagasin, obj)
+
+}
+
+
 module.exports = {
-    update : update
+    update : update,
+    debug : debug
 };

@@ -19,6 +19,19 @@ function Castorama_GetDetailsArticle(html, obj) {
 	var $ = cheerio.load(html);
 
 
+  logger.logAttrVal('vumMsg',$('div#vumMsg').text())
+	if($('div#vumMsg').text().length) {
+    logger.logAttrVal('Produit non disponible','Produit non disponible')
+		process.send({
+			requestID  :  obj.requestID,
+			error      :	"produit non disponible",
+			data       :  undefined
+		})
+
+		process.exit(1); // important !!
+  }
+
+
 	var product = $("div.productContent");
 
 	//recuperation des donnees produit
@@ -57,11 +70,20 @@ function Castorama_GetDetailsArticle(html, obj) {
 
 	data.marque = product.find("div.productLabel img").attr("title");
 
+	data.categories = []
+   $('div[class="breadcrumbs greenPage"] div a').each(function (i, elm){
+      if(i>0){
+        logger.logAttrVal('text',$(this).text())
+        data.categories.push($(this).text())
+      }
+
+  })
+
 	data.libelles = [];
 	data.libelles.push(product.find("h1").text().replace(/\n/g, " ").replace(/\r/g, " "));
 
 	var priceBlock = $("div.productPrix.productDetailsPriceBlock");
-
+  
 	// simple case price
 	data.prix = $(priceBlock).find("div.priceContent > div.price").text().trim();
 
@@ -134,7 +156,7 @@ function Castorama_GetDetailsArticle(html, obj) {
 	//lien produit a recuperer
 	data.lienProduit = obj.produitURL;
 	data.isPremierPrix = (product.find("img[src='/images/brands/L_PREMIER_PRIX.jpg']").length > 0) ? 1 : 0;
-	data.categories = obj.tree;
+
 	data.timestamp = +(new Date());
 	data.enseigne = obj['Enseigne'];
 	data.magasin = obj['Magasin'];
@@ -241,7 +263,7 @@ function Castorama_Navigation(html, obj) {
 					newObj.tree.push(n1);
 					newObj.tree.push(n2);
 					logger.logTree(n1, n2, url);
-					
+
 					engine.AddRequest(url, {}, {}, Castorama_SubNavigation, newObj);
 				});
 			/*} else {
@@ -271,9 +293,10 @@ function Castorama_PatchMagasin2(html, obj) {
 	//engine.AddRequest("/store/Salle-de-bains-et-WC-cat_id_3322.htm?navAction=jump&wrap=true", {}, {}, Castorama_Navigation, clone);
 	//engine.AddRequest("/store/Colle-en-pate-Hautes-performances-murs-sols-20-kg-PRDm498108.html?isSearchResult=true&navAction=jump", {}, {}, Castorama_GetDetailsArticle, clone);
 
-/* !!!!!  */ 	engine.AddRequest("/store/", {}, {}, Castorama_Navigation, clone);
+   logger.logAttrVal('castorama navigation','castorama ' )
+//  /* !!!!!  */ 	engine.AddRequest("/store/", {}, {}, Castorama_Navigation, clone);
 //DEV AND DEBUG
-//engine.AddRequest("http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-a-percussion-SKIL-18V---12Ah-prod20380008.html?isFeaturedProduct=true&categoryId=cat_id_4338&navCount=0&navAction=jump", {}, {}, Castorama_GetDetailsArticle, clone);
+engine.AddRequest(clone.lookup, {}, {}, Castorama_GetDetailsArticle, clone);
 //engine.AddRequest("http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-cat_id_2182.htm?navAction=jump&navCount=0", {}, {}, Castorama_Pagination, clone);
 }
 
@@ -287,7 +310,8 @@ function Castorama_TraiterMagasin(html, obj) {
   /*if (obj.MagasinId == "4234" || obj.MagasinId == "4252") {
 		console.log('dedans');
 		process.exit(0);*/
-	if (url && engine.shouldBeDone(obj.MagasinId)) {
+	if(url) {
+	//if (url && engine.shouldBeDone(obj.MagasinId)) {
 		var clone = engine.clone(obj);
 		//clone.MagasinId = codeMagasin;
 		clone.CodeMagasinCasto = codeMagasin;
@@ -314,11 +338,11 @@ function Castorama_TraiterMagasin(html, obj) {
 function Castorama_ParseMagasins(html, obj) {
 	logger.logAttrVal("Level", "ParseMagasins");
 
-	var MagToDo = outils.FileToArray(LINK_MAG_FILE)
+	//var MagToDo = outils.FileToArray(LINK_MAG_FILE)
 
-	logger.logAttrVal("####","####");
-	console.log(MagToDo);
-	logger.logAttrVal("####","####");
+	//logger.logAttrVal("####","####");
+	//console.log(MagToDo);
+	//logger.logAttrVal("####","####");
 
 	try {
 		json = JSON.parse(html);
@@ -331,15 +355,17 @@ function Castorama_ParseMagasins(html, obj) {
 
 	for (var elm in listeMagasins) {
 		var clone = engine.clone(obj);
+		//logger.logAttrVal('magasinId',elm)
 		clone.MagasinId = elm;
 		clone.Magasin = listeMagasins[elm].name;
-		if (engine.shouldBeDone(clone.MagasinId)) {
+		if (elm == obj.MagId) {
 				logger.logAttrVal("magasin to do ",elm);
-
-				if (MagToDo.indexOf(elm) > -1) {
+				engine.AddRequest('magasins.castorama.fr/' + listeMagasins[elm].url, {}, {}, Castorama_TraiterMagasin, clone);
+			/*	if (MagToDo.indexOf(elm) > -1) {
 					logger.logTree("CONCRET","magasin to do ",elm);
-					engine.AddRequest('magasins.castorama.fr/' + listeMagasins[elm].url, {}, {}, Castorama_TraiterMagasin, clone);
-				}
+					logger.logAttrVal('magasin',clone.Magasin)
+					//engine.AddRequest('magasins.castorama.fr/' + listeMagasins[elm].url, {}, {}, Castorama_TraiterMagasin, clone);
+				}*/
 			}
 	}
 
@@ -388,6 +414,38 @@ function update(param) {
 }
 
 
+function debug(param) {
+	var obj = {};
+	obj.hostname = "www.castorama.fr";
+	obj.Enseigne = name;
+	obj.tree = [];
+	//logger.logAttrVal('PID',  obj.Enseigne +' / ' +process.pid)
+	//logger.stopLog()
+	obj.filename = param.filename;
+	obj.MagId = '4182'; // dont set obj.MagasinId at this level
+	//obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/meuble-vasque-l-60-x-h-64-x-p-48-cm-blanc-neo-line-e1500541607';
+	//obj.lookup = 'http://www.leroymerlin.fr/v3/p/produits/tuile-monier-silvacane-littoral-canal-midi-e46462';
+	//obj.lookup = 'http://www.castorama.fr/store/Table-de-jardin-Roscana-180-240-x-110-cm-prod21440014.html';
+	obj.lookup = 'http://www.castorama.fr/store/Fauteuil-de-jardin-Roscana-lot-de-2-prod21800052.html';
+	obj.requestID = 0;
+
+  engine.BindRequest("/", {}, {}, Castorama_Patch, obj);
+
+	/*
+	if (process.argv.length === 3 ) {
+		logger.logAttrVal("SCRAP", "MAGASIN ZERO");
+		engine.BindRequest("/", {}, {}, Castorama_Patch0, obj);
+	}else {
+		if (process.argv.length === 4){
+			LINK_MAG_FILE = process.argv[3];
+			logger.logAttrVal("SCRAP", "LIST IN FILE: "+LINK_MAG_FILE);
+
+
+		}
+
+	*/
+}
+
 /*
 process.on('uncaughtException', function(err) {
   logger.logAttrVal("uncaughtException",err);
@@ -395,5 +453,6 @@ process.on('uncaughtException', function(err) {
 });*/
 
 module.exports = {
-	update: update
+	update: update,
+	debug: debug
 };

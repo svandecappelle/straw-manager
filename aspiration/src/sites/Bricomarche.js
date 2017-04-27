@@ -15,11 +15,31 @@ var logger = new xlblogger("Bricomarche");
 function getDataArticle(html, obj){
   var $ = cheerio.load(html);
   newObj = engine.clone(obj);
+
+  logger.logValColor('*********Fiche**************')
+  // manage fail
+  var desc_html = $('.fiche-description').html()
+  logger.logAttrVal('desc_html',desc_html.length.toString())
+
+  data = {};
+
+	if ($('span.product_avaliable.product_avaliable-online-only').text().length > 0) {
+    logger.logAttrVal('Produit non disponible','Produit non disponible')
+		process.send({
+			requestID  :  newObj.requestID,
+			error      :	"produit non disponible",
+			data       :  undefined
+		})
+
+		process.exit(1); // important !!
+	}
+
+
 	var libelle1 = $('#h2-fiche-description').text().replace(/\n/g, "").replace(/\r/g, "").trim();
   var livraison = ($('.content-fiche-produit .onsale-product-container-inside').attr('style') &&
   $('.content-fiche-produit .onsale-product-container-inside').attr('style').indexOf('livraison_incluse') > 0)
 
- 	data = {};
+
   data.categories= obj.tree;
   data.timestamp = +(new Date());
   data.enseigne = obj['Enseigne'];
@@ -30,12 +50,13 @@ function getDataArticle(html, obj){
   if (livraison){data.libelles.push("Livraison Incluse")}
   textPrix =  htmlToText.fromString($('.fiche-price .new-price').html(), { wordwrap: false }).replace(/\n/g," ");
   prixUnite = textPrix.indexOf('soit') > 0
+
   data.prix = textPrix;
   if (prixUnite) {
     data.prix = textPrix.split('soit')[0].trim()
     data.prixUnite = textPrix.split('soit')[1].trim()
   }
-
+  logger.logAttrVal("unite","unite")
   data.ancienPrix =  htmlToText.fromString($('.fiche-price .old-price').html(), { wordwrap: false }).replace(/\n/g," ");
 
 
@@ -100,7 +121,13 @@ function getDataArticle(html, obj){
   console.log(data);
   logger.logAttrVal("DATA", "END")
 
-  engine.export_products(data, newObj);
+
+  //process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
+	process.send({
+		requestID : newObj.requestID,
+		data			: data
+	})
+  //engine.export_products(data, newObj);
 
 }
 
@@ -252,11 +279,25 @@ function Bricomarche_List(html, obj) {
 }
 
 
+function HomeMag(html, obj) {
+	var $ = cheerio.load(html);
+	logger.logValColor('***********[HOME '+obj.MagasinId+']***********')
+
+	logger.logValColor("inside magasin => "+$(".store-details strong").text() + $("#choose-store-confirm h5").text())
+	newObj = engine.clone(obj);
+	console.log(newObj.lookup);
+	engine.AddRequest(newObj.lookup, {}, {}, getDataArticle, newObj);
+
+
+}
+
 function Bricomarche_OnlyL1_Navigation(html, obj){
   var $ = cheerio.load(html);
 
+
   logger.logValColor("inside magasin => "+$(".store-details strong").text() + $("#choose-store-confirm h5").text())
 
+  /*
   $("#magento_main-menu [role='menu'] > [data-submenu-id*='magento_submenu-']").each(function(){
     clone = engine.clone(obj);
 
@@ -265,8 +306,11 @@ function Bricomarche_OnlyL1_Navigation(html, obj){
     clone.tree = [n1];
 
     logger.logAttrVal(n1,href)
-    engine.BindRequest(href, {}, {}, Bricomarche_List, clone);
+    //engine.BindRequest(href, {}, {}, Bricomarche_List, clone);
   });
+
+  */
+
 }
 
 
@@ -318,28 +362,29 @@ function Bricomarche_Navigation(html, obj){
 
 function patch(html, obj){
   clone = engine.clone(obj);
-  engine.BindRequest("http://www.bricomarche.com/nos-produits/bricolage.html", {}, {}, Bricomarche_OnlyL1_Navigation, clone);
+  engine.BindRequest("http://www.bricomarche.com/nos-produits/bricolage.html", {}, {}, HomeMag, clone);
 
 
 /*Single prod in list boutique en ligne */ // "http://www.bricomarche.com/nos-produits/bricolage/outillage-et-equipement-de-l-atelier/outillage-electroportatif/perceuse-sans-fil-visseuse-accessoire/autre-accessoire-de-visseuse.html"
-  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-deco/soldes-decoration-des-murs.html" /* Promotion list */
-  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager.html?p=2" // all infos promo prix unite
-  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager/serre-composteur-et-pot.html" // product indispo in list
-  urlList = 'http://www.bricomarche.com/nos-produits/amenagement/cuisine/evier.html'
-  urlList = "http://www.bricomarche.com/nos-produits/bricolage/outillage-et-equipement-de-l-atelier/outillage-electroportatif/scie-portative-accessoire.html"
-  urlList = "http://www.bricomarche.com/nos-produits/jardin.html"
-  urlList = 'http://www.bricomarche.com/nos-produits/bricolage/outillage-et-equipement-de-l-atelier/outillage-electroportatif/perceuse-sans-fil-visseuse-accessoire/autre-accessoire-de-visseuse.html'
-  urlList = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture.html"
-  urlList = "http://www.bricomarche.com/nos-produits/animalerie/rongeur-et-petit-mammifere/alimentation-friandise.html"
-  urlList = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture/serre.html"
+
+//  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-deco/soldes-decoration-des-murs.html" /* Promotion list */
+//  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager.html?p=2" // all infos promo prix unite
+//  urlList = "http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager/serre-composteur-et-pot.html" // product indispo in list
+//  urlList = 'http://www.bricomarche.com/nos-produits/amenagement/cuisine/evier.html'
+//  urlList = "http://www.bricomarche.com/nos-produits/bricolage/outillage-et-equipement-de-l-atelier/outillage-electroportatif/scie-portative-accessoire.html"
+//  urlList = "http://www.bricomarche.com/nos-produits/jardin.html"
+//  urlList = 'http://www.bricomarche.com/nos-produits/bricolage/outillage-et-equipement-de-l-atelier/outillage-electroportatif/perceuse-sans-fil-visseuse-accessoire/autre-accessoire-de-visseuse.html'
+//  urlList = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture.html"
+//  urlList = "http://www.bricomarche.com/nos-produits/animalerie/rongeur-et-petit-mammifere/alimentation-friandise.html"
+//  urlList = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture/serre.html"
   //engine.BindRequest("http://www.bricomarche.com/nos-produits/habitat-facile/adapter-sa-salle-de-bain/equipement-de-la-douche.html", {}, {}, Bricomarche_List, clone);
   //engine.BindRequest("http://www.bricomarche.com/nos-produits/chauffage/radiateur-chauffage-central.html", {}, {}, Bricomarche_List, clone);
   //engine.BindRequest("http://www.bricomarche.com/nos-produits/habitat-facile/faciliter-son-quotidien.html", {}, {}, Bricomarche_List, clone);
-  urlProd = "http://www.bricomarche.com/nos-produits/habitat-facile/adapter-sa-salle-de-bain/equipement-de-la-douche/main-courante-haute-resist-lisse-blanc-en-l-120x45cm-dlp-serie-11900.html"
-  urlProd = "http://www.bricomarche.com/nos-produits/animalerie/peche/canne/ensemble-truite-canne-telescopique-3-metres-moulinet-fr-t2-1bb.html"
-  urlProd = "http://www.bricomarche.com/nos-produits/decoration/papier-peint-et-revetement-mural/colle-decolleur/colle-pate-pret-a-l-emploi-pour-papier-peint-premium-5kg.html" // prix unité
-  urlProd = 'http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager/tble-potagere-60-gris-anthr-ti.html' // indispo
-  urlProd = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture/serre/base-pour-serre-venus7500-lams.html"
+//  urlProd = "http://www.bricomarche.com/nos-produits/habitat-facile/adapter-sa-salle-de-bain/equipement-de-la-douche/main-courante-haute-resist-lisse-blanc-en-l-120x45cm-dlp-serie-11900.html"
+//  urlProd = "http://www.bricomarche.com/nos-produits/animalerie/peche/canne/ensemble-truite-canne-telescopique-3-metres-moulinet-fr-t2-1bb.html"
+//  urlProd = "http://www.bricomarche.com/nos-produits/decoration/papier-peint-et-revetement-mural/colle-decolleur/colle-pate-pret-a-l-emploi-pour-papier-peint-premium-5kg.html" // prix unité
+//  urlProd = 'http://www.bricomarche.com/nos-produits/bonnes-affaires/soldes/soldes-jardin-et-animalerie/potager/tble-potagere-60-gris-anthr-ti.html' // indispo
+//  urlProd = "http://www.bricomarche.com/nos-produits/jardin/serre-accessoire-de-culture/serre/base-pour-serre-venus7500-lams.html"
 
 
 //  engine.BindRequest(urlProd, {}, {}, getDataArticle , clone);
@@ -368,7 +413,7 @@ function runBoutiqueEnLigne(obj) {
 function InitMagasin(html, obj) {
   var $ = cheerio.load(html);
 
-    runBoutiqueEnLigne(obj)
+    //runBoutiqueEnLigne(obj)
     $("#select_advmag option").each(function(){
       clone = engine.clone(obj);
       var urlMag = $(this).attr('value')
@@ -377,7 +422,8 @@ function InitMagasin(html, obj) {
       //A cause des MagasinId: Culoz et LES FINS qui ont plus d'un "/" dans leur value. On prendra donc la valeur qui est après la dernière occurence "/"
       clone.MagasinId = urlMag.substring(urlMag.lastIndexOf("/") + 1).trim()
       //logger.logTree(clone.Magasin, clone.MagasinId, urlMag)
-      if (clone.MagasinId  && engine.shouldBeDone(clone.MagasinId)) {
+      //if (clone.MagasinId  && engine.shouldBeDone(clone.MagasinId)) {
+      if(clone.MagasinId == obj.MagId) {
         logger.logTree(clone.Magasin, clone.MagasinId, urlMag)
         engine.BindRequest("http://magasins.bricomarche.com/minisite/points-de-vente/magasin-bricolage/"+urlMag.trim(), {}, {}, patch, clone);
       }
@@ -394,6 +440,27 @@ function update(param){
     engine.BindRequest("http://magasins.bricomarche.com/", {}, {}, InitMagasin, obj);
 }
 
+function debug(param){
+    var obj = {};
+    obj.hostname = "www.bricomarche.com";
+    obj.Enseigne = name;
+    obj.tree = [];
+    obj.filename = param.filename;
+  	obj.MagId = '7381'; // dont set obj.MagasinId at this level
+  	//obj.lookup = 'http://www.bricomarche.com/p/s/etabli-en-bois-professionnel-2m-outilfrance-865.html';
+  	obj.lookup = 'http://www.bricomarche.com/p/s/perceuse-sans-fil-14-4v-mckenzie-4857.html';
+  	obj.requestID = 0;
+
+  	//engine.BindRequest("https://www.bricoman.fr/nos-magasins.html", {}, {}, Bricoman_MagasinList, obj);
+
+    logger.logAttrVal('PID',  obj.Enseigne +' / ' +process.pid)
+    //logger.stopLog()
+    engine.BindRequest("http://magasins.bricomarche.com/", {}, {}, InitMagasin, obj);
+}
+
+
+
 module.exports = {
-    update : update
+    update : update,
+    debug  : debug
 };

@@ -18,8 +18,19 @@ var name = "BricoDepot";
 
 function BricoDepot_GetDetailsArticles(html, obj) {
   var $ = cheerio.load(html);
-
+  var data = {}
 //  logger.logAttrVal("Export","Level");
+
+  if (($('span.inStock span').text().trim() == "0 pièce")||($('span.inStock span').length == 0) ){
+
+    process.send({
+      requestID  :  ReqObject.requestID,
+      error      :	"produit non disponible",
+      data       :  undefined
+    })
+
+    process.exit(1); // important !!
+  }
 
 
   var tampon = '';
@@ -29,22 +40,35 @@ function BricoDepot_GetDetailsArticles(html, obj) {
   logger.logAttrVal('URL Fiche', obj.lasturl)
   logger.logAttrVal('ficheNumberOfProducts',ficheNumberOfProducts);
 
-
   $("table.criteria > tr").each(function() {
 
-    var produit = engine.clone(obj.exportData);
+    //var produit = engine.clone(obj.exportData);
+
+
     var tds = $(this).children("td");
     var indexId = 0
+    data.promo = 0;
+    data.timestamp = +(new Date());
+    data.magasin = obj['Magasin'];
+    data.magasinId = obj['MagasinId'];
+    data.dispo = data.prix ? 1 : 0;
 
-    produit.srcImage = $("#productZoom img ").attr('src')  // 23/01/2017 udpdate //// produit.srcImage = $('[itemprop="image"]').attr('src') // update 24/06/2016
+
+    data.srcImage = $("#productZoom img").attr('src')  // 23/01/2017 udpdate //// produit.srcImage = $('[itemprop="image"]').attr('src') // update 24/06/2016
     if($("table.criteria").html().indexOf("/docroot/images/tempImg/exclu-web-small.png")>0){
       indexId++
     }
-    produit.idProduit = $(tds[indexId]).text().split('Réf:')[1].trim(); // Selector Update 02/07/2015
-
-    logger.logAttrVal('mag :'+produit.magasinId+' id produit',produit.idProduit);
-
-    var temporaryArray = produit.libelles;
+    data.idProduit = $(tds[indexId]).text().split('Réf:')[1].trim(); // Selector Update 02/07/2015
+    data.libelles = []
+    data.libelles.push($('h1.prodTitle').text().trim())
+    logger.logAttrVal('mag :'+data.magasinId+' id produit',data.idProduit);
+    data.categories = []
+    $('div[class="breadcrumbs web"] a').each(function (p,elm) {
+      if(p>0) {
+        data.categories.push($(this).text())
+      }
+    });
+    var temporaryArray = data.libelles;
 
     for (var k = 1; k < tds.length - 2; k++) {
       if (tds[k].children[0]) {
@@ -62,47 +86,45 @@ function BricoDepot_GetDetailsArticles(html, obj) {
 
     logger.logValColor('####################[ TABLE NETTE ]#####################');
 
-      produit.libelles = temporaryArray.slice(0, typeList-2)
+      data.libelles = temporaryArray.slice(0, typeList-2)
 
     // LIST STYLE AND NUMBER OF PRODUCT PER PAGE
     // if there is many prod and the list style is 3 ==> we have to make [0] and [1] else we keep the default
     // if the list style is 2 we take [0] ==> override default (wich give an empty libelle)
       if(typeList < 3)
-      produit.libelles = temporaryArray.slice(0, typeList-1);
+      data.libelles = temporaryArray.slice(0, typeList-1);
       else if (( typeList == 3) && (ficheNumberOfProducts > 1)) {
-      produit.libelles = temporaryArray.slice(0, typeList-1)
+      data.libelles = temporaryArray.slice(0, typeList-1)
       }
 
 
-
-
-      logger.logThis(produit.libelles)
-      logger.logThis("table length "+produit.libelles.length)
+      logger.logThis(data.libelles)
+      logger.logThis("table length "+data.libelles.length)
 
     // ==============================================
 
 
 
-    if (produit.libelles[1]){
+    if (data.libelles[1]){
       // On regarde si le libellé du produit (dans le tableau) n'est pas présent dans le libellé général du produit
-      tampon = outils.ChaineSansAccent(produit.libelles[1]);
+      tampon = outils.ChaineSansAccent(data.libelles[1]);
       tampon = tampon.toUpperCase();
       // S'il est présent, on va le supprimer car on va ajouter au libelle général les libellés des différentes lignes du tableau
-      if (produit.libelles[0].indexOf(tampon) != -1){
-        produit.libelles[0] = produit.libelles[0].replace(tampon, "");
+      if (data.libelles[0].indexOf(tampon) != -1){
+        data.libelles[0] = data.libelles[0].replace(tampon, "");
         logger.logAttrVal('INFO', "Lib général est présent, on va le supprimer car on va ajouter les libellés des différentes lignes du tableau");
-        logger.logValColor("L[0] : "+produit.libelles[0])
+        logger.logValColor("L[0] : "+data.libelles[0])
       }
     }
-    if (produit.libelles[1]) {
+    if (data.libelles[1]) {
       // On ajoute le libellé du tableau au libellé principal
-      produit.libelles[0] += ' - ' + produit.libelles[1];
+      data.libelles[0] += ' - ' + data.libelles[1];
       logger.logAttrVal('INFO', "On ajoute le libellé du tableau au libellé principal");
-      logger.logValColor("L[0] : "+produit.libelles[0])
+      logger.logValColor("L[0] : "+data.libelles[0])
 
 
       // On supprime le 2ème libellé qui est devenu inutile
-      produit.libelles[1] = "";
+      data.libelles[1] = "";
       logger.logAttrVal('INFO', "On supprime le 2ème libellé qui est devenu inutile");
     }
 
@@ -116,8 +138,8 @@ function BricoDepot_GetDetailsArticles(html, obj) {
     // la zone prix contient les prix TTC et les prix HT
     // S'il y a 2 prix TTC, on considère que le 1er est le prix unitaire et le 2ème le prix de l'article
     // S'il n'y a qu'un seul prix, on considère qu'il n'y a que le prix de l'article
-    produit.prix = price
-    tampon = outils.replaceAll('\r', '', produit.prix);
+    data.prix = price
+    tampon = outils.replaceAll('\r', '', data.prix);
     tampon = outils.replaceAll('\t', '', tampon);
     if (tampon.trim().indexOf('soit') != -1){
     // On a 2 prix
@@ -126,39 +148,44 @@ function BricoDepot_GetDetailsArticles(html, obj) {
     tampon = outils.replaceAll('\t', '', tampon);
 
     logger.logAttrVal('DETECTED','UNITY PRICES');
-    produit.prixUnite = tampon.trim().split('soit')[0]
-    produit.prix = tampon.trim().split('soit')[1]
+    data.prixUnite = tampon.trim().split('soit')[0]
+    data.prix = tampon.trim().split('soit')[1]
   }
   else
     //produit.prix = tampon.trim().split('\n')[0];
-    produit.prix = htmlToText.fromString($(this).find(".productTablePriceCell table").eq(0).find('td'), { wordwrap: false });
+    data.prix = htmlToText.fromString($(this).find(".productTablePriceCell table").eq(0).find('td'), { wordwrap: false });
 
 
 
     var oldprice = $(this).find(".productTablePriceCell table").eq(1).find('.oldPrice.clearfix');
     if (oldprice.length > 0){
-      produit.ancienPrix = oldprice.text().trim();
-      produit.promo = 1;
+      data.ancienPrix = oldprice.text().trim();
+      data.promo = 1;
     }
 
     // On récupère les caractéristique sur la première ligne du tableau
     if (NumLigne === 1){
       //console.log($("div.prodDescr div.prodInfo").text().trim());
-      produit.caracteristique = [];
+      data.caracteristique = [];
       tampon = $("div.prodDescr div.prodInfo").text().trim();
       tampon = outils.replaceAll('\r', '', tampon);
       tampon = outils.replaceAll('\n', '', tampon);
       tampon = outils.replaceAll('\t', '', tampon);
-      if (tampon.length > 0) produit.caracteristique.push(tampon);
+      if (tampon.length > 0) data.caracteristique.push(tampon);
     }
 
     NumLigne ++;
     logger.logValColor("Product Export from page :"+obj.fromPage);
     logger.logAttrVal('# FICHE ##',"###")
-    console.log(produit);
+    console.log(data);
     logger.logAttrVal('# FICHE ##',"###")
-    engine.export_products(produit, obj);
+    //engine.export_products(produit, obj);
   });
+
+  process.send({
+		requestID : ReqObject.requestID,
+		data			: data
+	})
   //process.exit(0);
 }
 
@@ -230,11 +257,8 @@ function BricoDepot_GetArticles_OneShot(html, obj) {
   });
 }
 
-
-
 //Gets all articles and pushes them in the DB
 function BricoDepot_GetArticles(html, obj) {
-
 
   var $ = cheerio.load(html);
   var listSize = $("#4008 li").length;
@@ -261,8 +285,8 @@ function BricoDepot_GetArticles(html, obj) {
     console.log("In the store: " + obj['MagasinId'] + ": " + obj['Magasin'] + ", " + obj['Enseigne']);
 
     logger.logAttrVal("No List",obj.tmpUrl);
-
-  engine.AddRequest(obj.tmpUrl, {}, {}, BricoDepot_GetArticles, obj);
+    newObj = engine.clone(obj);
+    engine.AddRequest(newObj.lookup, {}, {}, BricoDepot_GetArticles, newObj);
   }
 
   newObj = engine.clone(obj);
@@ -311,9 +335,10 @@ function BricoDepot_GetArticles(html, obj) {
     //newObj.tree.push(subCategory);
     newObj.idxProduit = 0;
     newObj.fromPage = 1;
-
+    if(data.lienProduit == newObj.lookup) {
     //console.warn(data.categories + "");
-    engine.AddRequest(data.lienProduit, {}, {}, BricoDepot_GetDetailsArticles,newObj);
+      engine.AddRequest(data.lienProduit, {}, {}, BricoDepot_GetDetailsArticles,newObj);
+    }
   });
 
 
@@ -470,35 +495,61 @@ function patch(html, obj){
 //  engine.AddRequest("http://www.bricodepot.fr/angouleme-champniers/menuiserie/poignees-de-portes-et-fenetres/poignees-de-portes-interieures/", {}, {},BrandLoader, ReqObject);
 }
 
+function HomeMag(html, obj) {
+	var $ = cheerio.load(html);
+	logger.logValColor('***********[HOME '+obj.MagasinId+']***********')
+	logger.logValColor($(".label span").first().text().trim())
+	newObj = engine.clone(obj);
+	console.log(newObj.lookup);
+	engine.AddRequest(newObj.lookup, {}, {}, BricoDepot_GetDetailsArticles, newObj);
+	//engine.AddRequest("https://www.bricoman.fr/joint-de-dilatation-pvc.html", {}, {}, Bricoman_Fiche, obj);
+
+}
+
+
+
+function Patch_magIN(html, obj) {
+	var $ = cheerio.load(html);
+	logger.logValColor('***********[AFTER POST'+obj.MagasinId+']***********')
+	Req= engine.clone(obj);
+	engine.AddRequest('/', {}, {}, HomeMag, Req);
+}
+
+
 
 //Retrieves stores list
 function BricoDepot_MagasinList(html, obj) {
-  //process.exit(0);
-
-// test fiche prod
-//  obj.tmpUrl ="http://www.bricodepot.fr/mulhouse/sous-couche-confort-polystyrene/prod31992/"
-//  engine.AddRequest(obj.tmpUrl, {}, {},BricoDepot_GetDetailsArticles, obj); /* xlb update */
 
   var $ = cheerio.load(html);
   list = $("#myStoreM").children() // update 14-12-2o15
-
-  //$("div.storeArea > form > select#headerStoreSel > option").each(function(idx) {
   list.each(function(idx) {
-
     //process.exit(0);
 
     var MagasinName = $(this).text().replace(/\n/g,' ').replace(/\t/g,'').trim();
     var url = $(this).attr('data-url');
     var MagasinId = $(this).attr('value');
-    logger.logValColor(MagasinId+" : "+url+" => "+MagasinName);
+    //logger.logValColor(MagasinId+" : "+url+" => "+MagasinName);
 
     if (MagasinId.length < 1) {
       console.log("NOT A MAG");
       return;
     }
+
+    if(MagasinId == obj.MagId){
+
+			console.log("Entrer dans le magasin " + MagasinId)
+			ReqObject = engine.clone(obj);
+			ReqObject.tree = [];
+			ReqObject.Magasin = MagasinName;
+			ReqObject.MagasinId = MagasinId;
+			ReqObject.tmpurl = url;
+
+			var cookie = 'smile_retailershop_id='+MagasinId;
+			//ReqObject.xlbSetJar = cookie;
+			engine.BindRequest(url, {}, {}, Patch_magIN, ReqObject);
   //  console.log("MagasinId " + MagasinId);
 
-    if (engine.shouldBeDone(MagasinId)) {
+  /*  if (engine.shouldBeDone(MagasinId)) {
       ReqObject = engine.clone(obj);
       ReqObject.tree = [];
       ReqObject.Magasin = MagasinName;
@@ -507,20 +558,24 @@ function BricoDepot_MagasinList(html, obj) {
       ReqObject.retryHome = 0;
       //engine.AddRequest(url, {}, {}, nomenclature, ReqObject);
       engine.AddRequest(url, {}, {}, patch, ReqObject);
+    }*/
     }
-  });
+  })
 
 }
 
 function update(param) {
   var obj = {};
 
-  engine.init(param.ttw, param.tor);
-  engine.setProxyList(param.proxy_list);
-  engine.setParallelRequest(param.parr_req);
+  //engine.init(param.ttw, param.tor);
+  //engine.setProxyList(param.proxy_list);
+  //engine.setParallelRequest(param.parr_req);
   obj.hostname = "www.bricodepot.fr";
   obj.filename = param.filename;
-  obj.Enseigne = name;
+  obj.Enseigne 	 = param.Enseigne;
+	obj.MagId  		 = param.MagasinId; // dont set obj.MagasinId at this level
+	obj.lookup		 = param.url;
+	obj.requestID	 = param.requestID;
 
   engine.BindRequest("/", {}, {}, BricoDepot_MagasinList, obj)
   //DEV AND DEBUG
@@ -534,6 +589,21 @@ function update(param) {
 
 }
 
+function debug(param) {
+	var obj = {};
+
+	obj.hostname = "www.bricodepot.fr";
+	obj.filename = param.filename;
+	obj.Enseigne = 'BricoDepot';
+	obj.MagId = '1783'; // dont set obj.MagasinId at this level
+	//obj.lookup = 'https://www.bricoman.fr/joint-de-dilatation-pvc.html';
+	obj.lookup = 'http://www.bricodepot.fr/roanne/betonniere-electrique-125-l/prod35368/';
+	obj.requestID = 0;
+
+  engine.BindRequest("/", {}, {}, BricoDepot_MagasinList, obj)
+}
+
 module.exports = {
-  update: update
+  update: update,
+  debug : debug
 };

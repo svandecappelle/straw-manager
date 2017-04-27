@@ -17,15 +17,62 @@ process.on('uncaughtException', function(err) {
 
 function Bricorama_FicheProduit(html, obj){
   var $ = cheerio.load(html);
-  data = obj.data;
+  //data = obj.data;
+  data = []
   ReqObject = engine.clone(obj);
+  var bFound = false
+  $('span.lines-wrapper').each(function (i, elm){
+    if($(this).text() == 'Retrait indisponible') {
+      bFound = true
+    }
+  })
+  if(bFound == true) {
+    logger.logAttrVal('Produit non disponible','Produit non disponible')
+		process.send({
+			requestID  :  newObj.requestID,
+			error      :	"produit non disponible",
+			data       :  undefined
+		})
 
-  logger.logAttrVal("Level Fiche",data.idProduit);
+		process.exit(1); // important !!
+  }
+
 
 //  var caracteristiqueRef = $(".product-name div").text().trim().split('Réf: ')[1].trim();
   var caracteristiqueRef = $(".product-name div").text().trim()
   tampon = outils.replaceAll('\n', ' ', caracteristiqueRef);
 
+  data.timestamp = +(new Date());
+  data.enseigne = ReqObject['Enseigne'];
+  data.magasin = ReqObject['Magasin'];
+  data.magasinId = ReqObject['MagasinId'];
+
+  data.libelles = [];
+  data.libelles.push($('div.page-title-wrapper h1.product-name').text().split('Réf:')[0].trim())
+  //data.libelles.push($(this).find(".img-wrapper img").attr('alt'))
+  //data.prix = $(this).find(".priciv.price-info e").text().trim()
+  //var sprix = $('div.price-info div.price-box span#product-price-5585 span.price').text()
+  var sprix =$('div.price-box span.regular-price span.price').first().text().trim()
+  data.prix = sprix //.substring(0,sprix.length/2)
+//si promo
+  var aprix = $('p.old-price span.price').first().text().trim()
+  if(aprix.length >1){
+    logger.logAttrVal('ancPrix'.aprix)
+    data.ancienPrix = aprix //.substring(0,aprix.length/2)
+    var sprix = $('p.special-price span.price').first().text().trim()
+    data.prix = sprix //.substring(0,sprix.length/2)
+  }
+  data.promo =  data.ancienPrix ? 1 : 0;
+  data.promoDiff = undefined;
+
+  data.srcImage = $('img.zoom-image').attr('src')
+  data.idProduit = $('div.product-ref').text().substring(4,$('div.product-ref').text().length).trim()
+  data.categories = []
+  //data.idProduit = $(this).find("[id*='product-price-']").a'ttr("id").split('-')[2]
+  $('div.breadcrumbs ul li').each(function (i, elm){
+      if(($(this).attr('class')!='home') && ($(this).attr('class')!='product'))
+      data.categories.push($(this).text().replace('\n',' ').replace('>',' ').trim())
+  })
 
   data.marque = $(".product-brand-logo img").attr('title')
 
@@ -33,17 +80,20 @@ function Bricorama_FicheProduit(html, obj){
   data.caracteristique.push(tampon);
   //data.caracteristique.push(caracteristique0);
 
-   var caracBloc = htmlToText.fromString($(".product-toggle-content div").html(), { wordwrap: false });
-   tampon = outils.replaceAll('\n', ' ', caracBloc);
+  var caracBloc = htmlToText.fromString($(".product-toggle-content div").html(), { wordwrap: false });
+  tampon = outils.replaceAll('\n', ' ', caracBloc);
 
-   data.caracteristique.push(tampon);
+  data.caracteristique.push(tampon);
 
-
-
-  logger.logAttrVal("Fiche", "Start");
+  logger.logAttrVal("DATA", "BEGIN")
   console.log(data);
-  logger.logAttrVal("Fiche", "End");
-  engine.export_products(data, ReqObject);
+  logger.logAttrVal("DATA", "END")
+
+   //process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
+  process.send({
+     requestID : newObj.requestID,
+     data			: data
+   })
 }
 
 
@@ -61,7 +111,6 @@ function Bricorama_ListeProduits(html, obj){
 
         ReqObject = engine.clone(obj);
         data = {};
-
 
         data.lienProduit = $(this).find(".page-link").attr('href')
         ReqObject.force_url_prod = data.lienProduit;
@@ -133,6 +182,12 @@ function Bricorama_inMagasin(html, obj){
   var $ = cheerio.load(html);
 
   logger.logAttrVal("Magasin",$('[itemprop="name"]').first().text());
+  ReqObject = engine.clone(obj);
+  var cookie = 'smile_retailershop_id='+obj.MagasinId
+  ReqObject.xlbSetJar = cookie
+  engine.BindRequest(ReqObject.lookup, {}, {}, Bricorama_FicheProduit, ReqObject);
+
+  /*
   $("#menu ul li.level0").each(function(elm){
     if ($(this).find('a').text().trim() == "Conseils" || $(this).find('a').text().trim() == "Bonnes Affaires") {
       console.log("Not Interesting");
@@ -183,7 +238,7 @@ function Bricorama_inMagasin(html, obj){
         }
       });
     });
-  });
+  });*/
 }
 
 
@@ -205,14 +260,18 @@ function Bricorama_Magasin(html, obj) {
     } catch (e) {
       logger.logAttrVal('En ligne', MagasinId)
     }
+    //if (engine.shouldBeDone(MagasinId) && !dont) {
     if (engine.shouldBeDone(MagasinId) && !dont) {
       logger.logTree(Magasin, linkMag, MagasinId)
       var cookie = 'smile_retailershop_id='+MagasinId
       newObj = engine.clone(obj);
-      newObj.xlbSetJar = cookie
-      newObj.MagasinId = MagasinId;
-      newObj.Magasin = Magasin;
-      engine.BindRequest(linkMag, {}, {}, Bricorama_inMagasin, newObj);
+
+      if(MagasinId == newObj.MagId) {
+        newObj.xlbSetJar = cookie
+        newObj.MagasinId = MagasinId;
+        newObj.Magasin = Magasin;
+        engine.BindRequest(linkMag, {}, {}, Bricorama_inMagasin, newObj);
+      }
     };
   }
 }
@@ -238,6 +297,21 @@ function update(param){
     engine.AddRequest("/", {}, {}, Bricorama_SetCookies, obj);
 }
 
+function debug(param){
+    var obj = {};
+    obj.hostname = "www.bricorama.fr";
+    obj.Enseigne = name;
+    obj.filename = param.filename;
+    obj.MagId = '146'; // dont set obj.MagasinId at this level
+    obj.lookup = 'http://www.bricorama.fr/store-banne-avec-coffre-integral-led-4-x-3-5-m-gris.html';
+    //obj.lookup = 'http://www.bricorama.fr/outillage-construction/outillage/perceuse-visseuse-sans-fil/perceuse-percussion-stanley-fatmax-18-v-sans-batterie.html';
+    obj.requestID = 0;
+
+    engine.AddRequest("/", {}, {}, Bricorama_SetCookies, obj);
+}
+
+
 module.exports = {
-    update : update
+    update : update,
+    debug  : debug
 };
