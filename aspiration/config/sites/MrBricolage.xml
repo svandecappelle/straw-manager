@@ -1,10 +1,8 @@
 <config>
-  <liste_proxy>file/proxy/proxyRu.txt</liste_proxy>
-  <nombres_requetes_paralleles>60</nombres_requetes_paralleles> <!-- Par defaut 60 -->
-  <nb_clients_par_mag>6</nb_clients_par_mag> <!-- Par defaut 6 -->
-  <mag_parrallele>6</mag_parrallele> <!-- Par defaut 6 -->
-  <minimum_msec_entre_mag>50</minimum_msec_entre_mag> <!-- Par defaut 50 -->
-  <!--<list_mag_notdo>file\recover\MrBricolage</list_mag_notdo>-->
+  <liste_proxy>//192.168.1.106/PartageCommun/Dev_Aspiration/prx/proxyRu.txt</liste_proxy>
+  <nombres_requetes_paralleles>10</nombres_requetes_paralleles> <!-- Par defaut 60 -->
+  <nb_clients_par_mag>1</nb_clients_par_mag> <!-- Par defaut 6 -->
+  <mag_parrallele>1</mag_parrallele> <!-- Par defaut 6 -->
   <list_ean>file/bricolage/MrBricolage.csv</list_ean>
-  <limiter_nb_magasin_script>15</limiter_nb_magasin_script> <!-- Par defaut 15 -->
+  <writeCSV>false</writeCSV>
 </config>

@@ -39,7 +39,7 @@ function ficheProduit(html, obj){
       return
     }else {
       data.categories.push($(this).find('a').text().trim());
-      console.log(data.categories +' '+i);
+    //  console.log(data.categories +' '+i);
 
     }
 
@@ -95,7 +95,7 @@ function ficheProduit(html, obj){
 
     if (data.promo){
       data.promoDirecte = $('.IM_percent').text().trim()
-      
+
     }
 
     data.cip13 = $('.data').eq(1).text().trim()
