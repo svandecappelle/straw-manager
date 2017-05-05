@@ -1,14 +1,26 @@
-var express = require('express')
-var routes = require('./app/routes/collect');
-var config = require('./../config.json')
-var app = express()
+var express = require('express'),
+    routes = require('./app/routes/collect'),
+    nconf = require('nconf'),
+    app = express(),
+    log4js = require("log4js"),
+    logger = log4js.getLogger('Server');
+nconf.argv()
+   .env()
+   .file({ file: './config.json' });
 
-var http_port = config['port-http'] ? config['port-http']: 3001
 
+process.title = "Optimix-CollectOnline";
+if (process.argv[2] === "dev"){
+  logger.info("entering dev mode");
+  log4js.configure('logger-dev.json', {});
+} else {
+  log4js.configure('logger.json', {});
+}
 
-console.log(config);
+var http_port = nconf.get('port-http') ? nconf.get('port-http'): 3001
 
+logger.debug("aspi" , nconf.get('aspiration'));
 app.use('/api', routes)
 
-console.log("server is listening on part",http_port);
+logger.info("server is listening on port", http_port);
 app.listen(http_port)
