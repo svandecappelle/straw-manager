@@ -1,0 +1,10 @@
+<config>
+  <liste_proxy>//192.168.1.106/PartageCommun/Dev_Aspiration/prx/proxyRu.txt</liste_proxy>
+  <nombres_requetes_paralleles>50</nombres_requetes_paralleles><!-- Par defaut 50 -->
+  <nb_clients_par_mag>1</nb_clients_par_mag> <!-- Par defaut 8 -->
+  <mag_parrallele>1</mag_parrallele> <!-- Par defaut 6 -->
+  <minimum_msec_entre_mag>500</minimum_msec_entre_mag> <!-- Par defaut 500 -->
+  <writeCSV>false</writeCSV>
+  <!--<list_mag_todo>file/recover/bricolage/LeroyMerlin</list_mag_todo> <!-- -->
+  <!--<list_mag_notdo>file/recover/bricolage/LeroyMerlin</list_mag_notdo> <!-- -->
+</config>

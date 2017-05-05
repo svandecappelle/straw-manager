@@ -1,0 +1,21 @@
+{
+  "appenders": [
+    {
+      "type": "file",
+      "filename": "logs/output.log",
+      "maxLogSize": 20480,
+      "backups": 3
+    },    
+    {
+      "type": "file",
+      "filename": "logs/sites/Bricoman.log",
+      "maxLogSize": 20480,
+      "backups": 3,
+      "category": "Bricoman"
+    },
+    { "type": "console" }
+  ],
+  "levels": {
+      "[all]": "INFO"
+  }
+}
