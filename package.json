@@ -27,6 +27,7 @@
     "date-format-lite": "0.5.0",
     "dateformat": "1.0.7-1.2.3",
     "express": "^4.15.2",
+    "forever": "^0.15.3",
     "html-entities": ">=1.1.2",
     "html-to-text": ">=1.4.0",
     "iconv-lite": "0.2.11",

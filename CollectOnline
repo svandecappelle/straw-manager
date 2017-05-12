@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+
+
+var colors = require('colors'),
+    cproc = require('child_process'),
+    _ = require('underscore'),
+    forever = require('forever'),
+    argv = require('minimist')(process.argv.slice(2)),
+    fs = require('fs'),
+    async = require('async');
+
+const binLocation = '/src/server.js',
+    applicationId = "CollectOnline";
+
+
+var Application = function(){
+
+};
+
+Application.prototype.start = function (callback, options) {
+
+    if (options === "dev"){
+        process.env.NODE_ENV = 'development';
+        forever.start(__dirname + binLocation, {uid: applicationId, args: ["dev"]});
+    } else {
+        process.stdout.write('\nStarting ' + applicationId + '\n'.bold);
+        process.stdout.write('  "' + './' + applicationId + ' stop'.yellow + '" to stop the ' + applicationId + ' server\n');
+        process.stdout.write('  "' + './' + applicationId + ' log'.yellow + '" to view server ' + applicationId + '\n');
+        process.stdout.write('  "' + './' + applicationId + ' restart'.yellow + '" to restart ' + applicationId + '\n\n'.reset);
+
+        // Spawn a new application process
+        forever.startDaemon(__dirname + binLocation, {uid: applicationId});
+    }
+
+    if (callback){
+        callback();
+    }
+};
+
+Application.prototype.stop = function (callback) {
+    this.getRunningPid(function(err, app) {
+        if (!err && app) {
+            process.stdout.write('Stopping "' + app.uid + '": ["' + app.pid + '"]!\n')
+            forever.stop(app.index);
+            process.stdout.write('Stopping "' + app.uid + '". Goodbye!\n');
+        } else {
+            process.stdout.write(app.uid + ' is already stopped.\n');
+        }
+
+        if (callback){
+            callback();
+        }
+    });
+};
+
+Application.prototype.status = function (callback) {
+    this.getRunningPid(function(err, app) {
+        if (!err && app) {
+            process.stdout.write('\n' + applicationId + ' Running '.bold + '(pid '.cyan + app.pid.toString().cyan + ')\n'.cyan);
+            process.stdout.write('\t"' + './' + applicationId + ' stop'.yellow + '" to stop the ' + applicationId + ' server\n');
+            process.stdout.write('\t"' + './' + applicationId + ' log'.yellow + '" to view server ' + applicationId + '\n');
+            process.stdout.write('\t"' + './' + applicationId + ' restart'.yellow + '" to restart ' + applicationId + '\n\n');
+        } else {
+            process.stdout.write('\n' + applicationId + ' is not running\n'.bold);
+            process.stdout.write('\t"' + './' + applicationId + ' start'.yellow + '" to launch the ' + applicationId + ' server\n\n'.reset);
+        }
+        if (callback){
+            callback();
+        }
+    });
+};
+
+Application.prototype.getRunningPid = function (callback) {
+    forever.list(false, function(err, processes){
+        var groupedByUid, applicationProcess;
+        if (processes){
+            applicationProcess = _.findWhere(processes, {uid: applicationId});
+            if (!applicationProcess){
+                callback(new Error("Application not started"))
+            } else {
+                applicationProcess.index = _.indexOf(processes, applicationProcess);
+                var pid = applicationProcess.pid;
+                callback(err, applicationProcess);
+            }
+        }else{
+            callback(err, null);
+        }
+    });
+};
+
+Application.prototype.restart = function (callback) {
+    var that = this;
+    this.stop(function(){
+        that.start(callback);
+    });
+};
+
+Application.prototype.log = function () {
+    process.stdout.write('\nType '.red + 'Ctrl-C '.bold + 'to exit'.red);
+    process.stdout.write('\n\n'.reset);
+    cproc.spawn('tail', ['-F', './logs/output.log'], {
+        cwd: __dirname,
+        stdio: 'inherit'
+    });
+};
+
+var app = new Application();
+
+switch(process.argv[2]) {
+    case 'status':
+        app.status();
+        break
+    case 'start':
+        app.start();
+        break
+    case 'stop':
+        app.stop();
+        break;
+    case 'restart':
+        app.restart();
+        break;
+    case 'dev':
+        app.start(null, "dev");
+        break;
+    case 'log':
+        app.log();
+        break;
+    case 'setup':
+        /*cproc.fork('setup.js', ['--setup'], {
+            cwd: __dirname,
+            silent: false
+        });*/
+        process.stdout.write('\nNot yet implemented\n'.red);
+        break;
+
+    case 'upgrade':
+            process.stdout.write('\nNot yet implemented\n'.red);
+        break;
+
+    default:
+        process.stdout.write('\nWelcome to ' + applicationId + '\n\n'.bold);
+        process.stdout.write('Usage: ./' + applicationId + ' {start|stop|reload|restart|log|setup|reset|upgrade|dev}\n\n');
+        process.stdout.write('\t' + 'start'.yellow + '\tStart the ' + applicationId + ' server\n');
+        process.stdout.write('\t' + 'stop'.yellow + '\tStops the ' + applicationId + ' server\n');
+        process.stdout.write('\t' + 'restart'.yellow + '\tRestarts ' + applicationId + '\n');
+        process.stdout.write('\t' + 'log'.yellow + '\tOpens the logging interface (useful for debugging)\n');
+        process.stdout.write('\t' + 'setup'.yellow + '\tRuns the ' + applicationId + ' setup script\n');
+        process.stdout.write('\t' + 'upgrade'.yellow + '\tRun ' + applicationId + ' upgrade scripts, ensure packages are up-to-date\n');
+        process.stdout.write('\t' + 'dev'.yellow + '\tStart ' + applicationId + ' in interactive development mode\n');
+        process.stdout.write('\t' + 'watch'.yellow + '\tStart ' + applicationId + ' in development mode and watch for changes\n');
+        process.stdout.write('\n'.reset);
+        break;
+}
