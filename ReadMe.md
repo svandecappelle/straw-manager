@@ -99,27 +99,27 @@ Edit the config.json:
           "url": "https://www.bricoman.fr/...he-h200xl300.html",
           "status": "set",
           "data": {  
-              "enseigne": "Bricoman",
-    			    "magasin": "01600 Massieux",
-    			    "magasinId": "1",
-    			    "categories": [
-    				      "Menuiserie extérieure",
-    				      "Portes de garage",
-    				      "Portes de garage"
-    				  ],
-    			    "marque": "",
-    			    "srcImage": "https://www.bricoman.fr/me60_11ml.jpg",
-    			    "libelles": [
-    				      "PORTE DE GARAGE 200XL300"
-    				  ],
-    			    "idProduit": "519260",
-    			    "ean": "3760193164046",
-    			    "prix": "769,00 €TTC",
-    			    "prixUnite": "769,00 € / Unité",
-    			    "timestamp": 1491573658762,
-    			    "promo": 0,
-    			    "promoDirecte": 0,
-    			    "dispo": 1
+            "enseigne": "Bricoman",
+  			    "magasin": "01600 Massieux",
+  			    "magasinId": "1",
+  			    "categories": [
+				      "Menuiserie extérieure",
+				      "Portes de garage",
+				      "Portes de garage"
+  				  ],
+  			    "marque": "",
+  			    "srcImage": "https://www.bricoman.fr/me60_11ml.jpg",
+  			    "libelles": [
+				      "PORTE DE GARAGE 200XL300"
+  				  ],
+  			    "idProduit": "519260",
+  			    "ean": "3760193164046",
+  			    "prix": "769,00 €TTC",
+  			    "prixUnite": "769,00 € / Unité",
+  			    "timestamp": 1491573658762,
+  			    "promo": 0,
+  			    "promoDirecte": 0,
+  			    "dispo": 1
     			}
         }
         ```
@@ -157,5 +157,7 @@ Edit the config.json:
        * **Content:**
 
         ```json
-            {"Error":"a valid ID must be choosen"}
+        {
+          "Error": "a valid ID must be choosen"
+        }
         ```
