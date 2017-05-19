@@ -40,6 +40,7 @@ Edit the config.json:
       * `url       = [product url]`
 
     * **Example of data params**
+
 ```json
 {
   "Enseigne":"Bricoman",
@@ -51,6 +52,7 @@ Edit the config.json:
   * **Example of success response:**
     * **Code:** 200 <br />
     * **Content:**
+
 ```json
 {
   "requestID": 1,
@@ -69,11 +71,12 @@ Edit the config.json:
 
      * **Code:** 400 Bad Request <br />
      * **Content:**
+
       ```json
         {
         "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
         }
-        ```
+      ```
 ---
 ### __Check the data of a given Request__
 
@@ -83,6 +86,7 @@ Edit the config.json:
     * **Success Response:**
       * **Code:** 200
       * **Content:**
+
 ```json
 {
   "requestID": 1,
@@ -121,6 +125,7 @@ Edit the config.json:
     * **Error Response:**
        * **Code:** 404 Not Found <br />
        * **Content:**
+
 ```json
     {  "Error": "the requested ID, doesn't exists"}
 ```
@@ -135,15 +140,18 @@ Edit the config.json:
     * **Success Response:**
       * **Code:** 200
       * **Content:**
+
 ```json
 {
   "deleted": "0",
   "bufferLength": 7
 }
 ```
+
     * **Error Response:**
        * **Code:** 404 Not Found
        * **Content:**
+
 ```json
     {"Error":"a valid ID must be choosen"}
 ```
