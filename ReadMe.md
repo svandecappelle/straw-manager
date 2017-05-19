@@ -41,42 +41,43 @@ Edit the config.json:
 
     * **Example of data params**
 
-```json
-{
-  "Enseigne":"Bricoman",
-  "MagasinId":"1",
-  "idProduit":"519260",
-  "url":"https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html"
-}
-```
+      ```json
+      {
+        "Enseigne":"Bricoman",
+        "MagasinId":"1",
+        "idProduit":"519260",
+        "url":"https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html"
+      }
+      ```
+
   * **Example of success response:**
     * **Code:** 200 <br />
     * **Content:**
 
-```json
-{
-  "requestID": 1,
-  "requestDate": 1491573656648,
-  "responseDate": null,
-  "Enseigne": "Bricoman",
-  "MagasinId": "1",
-  "idProduit": "519260",
-  "url": "https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html",
-  "status": "pending",
-  "data": {}
-}
-```
+      ```json
+      {
+        "requestID": 1,
+        "requestDate": 1491573656648,
+        "responseDate": null,
+        "Enseigne": "Bricoman",
+        "MagasinId": "1",
+        "idProduit": "519260",
+        "url": "https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html",
+        "status": "pending",
+        "data": {}
+      }
+      ```
 
   * **Error Response:**
 
      * **Code:** 400 Bad Request <br />
      * **Content:**
 
-      ```json
-        {
-        "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
-        }
-      ```
+        ```json
+          {
+          "Error": "a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"
+          }
+        ```
 ---
 ### __Check the data of a given Request__
 
@@ -87,48 +88,48 @@ Edit the config.json:
       * **Code:** 200
       * **Content:**
 
-```json
-{
-  "requestID": 1,
-  "requestDate": 1491573656648,
-  "responseDate": 1491573658784,
-  "Enseigne": "Bricoman",
-  "MagasinId": "1",
-  "idProduit": "519260",
-  "url": "https://www.bricoman.fr/...he-h200xl300.html",
-  "status": "set",
-  "data": {  "enseigne": "Bricoman",
-			    "magasin": "01600 Massieux",
-			    "magasinId": "1",
-			    "categories": [
-				      "Menuiserie extérieure",
-				      "Portes de garage",
-				      "Portes de garage"
-				  ],
-			    "marque": "",
-			    "srcImage": "https://www.bricoman.fr/me60_11ml.jpg",
-			    "libelles": [
-				      "PORTE DE GARAGE 200XL300"
-				  ],
-			    "idProduit": "519260",
-			    "ean": "3760193164046",
-			    "prix": "769,00 €TTC",
-			    "prixUnite": "769,00 € / Unité",
-			    "timestamp": 1491573658762,
-			    "promo": 0,
-			    "promoDirecte": 0,
-			    "dispo": 1
-			}
-	}
-```
+        ```json
+        {
+          "requestID": 1,
+          "requestDate": 1491573656648,
+          "responseDate": 1491573658784,
+          "Enseigne": "Bricoman",
+          "MagasinId": "1",
+          "idProduit": "519260",
+          "url": "https://www.bricoman.fr/...he-h200xl300.html",
+          "status": "set",
+          "data": {  "enseigne": "Bricoman",
+        			    "magasin": "01600 Massieux",
+        			    "magasinId": "1",
+        			    "categories": [
+        				      "Menuiserie extérieure",
+        				      "Portes de garage",
+        				      "Portes de garage"
+        				  ],
+        			    "marque": "",
+        			    "srcImage": "https://www.bricoman.fr/me60_11ml.jpg",
+        			    "libelles": [
+        				      "PORTE DE GARAGE 200XL300"
+        				  ],
+        			    "idProduit": "519260",
+        			    "ean": "3760193164046",
+        			    "prix": "769,00 €TTC",
+        			    "prixUnite": "769,00 € / Unité",
+        			    "timestamp": 1491573658762,
+        			    "promo": 0,
+        			    "promoDirecte": 0,
+        			    "dispo": 1
+        			}
+        	}
+        ```
 
     * **Error Response:**
        * **Code:** 404 Not Found <br />
        * **Content:**
 
-```json
-    {  "Error": "the requested ID, doesn't exists"}
-```
+        ```json
+          {  "Error": "the requested ID, doesn't exists"}
+        ```
 
 ---
 
@@ -141,17 +142,17 @@ Edit the config.json:
       * **Code:** 200
       * **Content:**
 
-```json
-{
-  "deleted": "0",
-  "bufferLength": 7
-}
-```
+        ```json
+        {
+          "deleted": "0",
+          "bufferLength": 7
+        }
+        ```
 
     * **Error Response:**
        * **Code:** 404 Not Found
        * **Content:**
 
-```json
-    {"Error":"a valid ID must be choosen"}
-```
+        ```json
+            {"Error":"a valid ID must be choosen"}
+        ```
