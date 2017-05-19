@@ -1,0 +1,22 @@
+{
+  "valids": [
+    {
+      "Enseigne":"Bricoman",
+      "MagasinId":"1",
+      "idProduit":"519260",
+      "url":"https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html"
+    },
+    {
+      "Enseigne":"Bricoman",
+      "MagasinId":"1",
+      "idProduit":"519260",
+      "url":"https://www.bricoman.fr/porte-de-garage-sectionnelle-motorisee-blanche-h200xl300.html"
+    },
+    {
+      "Enseigne":"Castorama",
+      "MagasinId":"1",
+      "idProduit":"22110002",
+      "url":"http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-MAC-ALLISTER-MEDD20S-20V---15Ah-prod22110002.html?sortByValue=relevance&navCount=1&navAction=push"
+    }
+  ]
+}

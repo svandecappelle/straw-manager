@@ -87,7 +87,7 @@ router.post('/update', function (req, res) {
           spinner.stop();
           logger.info("results sent");
           res.status(200).send(results);
-        });  
+        });
       } else {
 
         // Mode interactive activated: The result is not returned into POST return call.

@@ -1,9 +1,9 @@
 {
-  "port-http"     : "65000",
+  "port"     : "65000",
   "hostname"      : "localhost",
   "logLevel": "INFO",
   "aspiration": {
     "type": "none",
-    "interactive": false
+    "interactive": true
   }
 }
