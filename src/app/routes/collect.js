@@ -21,7 +21,7 @@ router.use(bodyParser.json());
 
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
-  logger.info(YELLOW('Time: '), GREEN(moment().format('L [|] hh:mm:ss')))
+  logger.info('Time: '.yellow, GREEN(moment().format('L [|] hh:mm:ss')))
   //console.log(YELLOW('Time: '), GREEN(moment().format('MMMM Do YYYY, h:mm:ss a')))
   next()
 });
@@ -65,9 +65,10 @@ router.delete('/drop/:id', function (req, res) {
 
   if (elem) {
     logger.info(RED(req.params.id)+" deleted");
-    res.status(200).send({"deleted"       :req.params.id,
-                          "bufferLength"  :buffer.getBuffer().length
-                         });
+    res.status(200).send({
+      "deleted"       :req.params.id,
+      "bufferLength"  :buffer.getBuffer().length
+    });
   } else {
     logger.warn(RED(req.params.id)+" not found");
     res.status(404).send({"Error":"a valid ID must be choosen"})

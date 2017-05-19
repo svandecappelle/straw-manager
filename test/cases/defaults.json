@@ -14,9 +14,24 @@
     },
     {
       "Enseigne":"Castorama",
-      "MagasinId":"1",
+      "MagasinId": "4206",
       "idProduit":"22110002",
       "url":"http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-MAC-ALLISTER-MEDD20S-20V---15Ah-prod22110002.html?sortByValue=relevance&navCount=1&navAction=push"
+    },
+    {
+      "Enseigne":"Castorama",
+      "MagasinId": "4206",
+      "idProduit":"22110002",
+      "url":"http://www.castorama.fr/store/Coffret-de-6-tournevis-electricien-STANLEY-prod10650123.html?isFeaturedProduct=true&categoryId=cat_id_1771&navAction=jump"
+    }
+  ],
+  "invalids": [
+    {
+      "Cause": "Vendu uniquement dans certain magasins",
+      "Enseigne":"Castorama",
+      "MagasinId": "4206",
+      "idProduit":"22110002",
+      "url":"http://www.castorama.fr/store/Table-de-jardin-en-metal-Flores-160-x-90-cm-blanche-prod10420005.html?navAction=jump&isSearchResult=true"
     }
   ]
 }

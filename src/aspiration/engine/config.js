@@ -4,11 +4,14 @@
  * MIT Licensed
  */
 
-var _ = require("lodash");
-var Q = require("q")
-var builder = require('xmlbuilder');
-var fs = require("fs");
-var cheerio = require("cheerio")
+var _ = require("lodash"),
+  Q = require("q"),
+  builder = require('xmlbuilder'),
+  fs = require("fs"),
+  _ = require("underscore"),
+  cheerio = require("cheerio"),
+  logger = require("log4js").getLogger("engine->config"),
+  yaml_config = require('node-yaml-config');;
 const path = require('path');
 
 function Config(enseigne){
@@ -34,12 +37,12 @@ function Config(enseigne){
   }
 
   function GetBool(string){
-    if (string == "true" || string == "1")
+    if (string == "true" || string == "1") {
       return true;
-    else if (string == "false" || string == "0")
+    } else if (string == "false" || string == "0") {
       return false;
-    else{
-      console.red("la config, contient un mauvais bolleen");
+    } else {
+      logger.error("la config, contient un mauvais boolean");
       process.exit(1);
     }
   }
@@ -48,22 +51,22 @@ function Config(enseigne){
     if (string == "ISO-8859-1" || string == "UTF-8" || string == "ISO-8859-15") {
       return string;
     } else {
-      console.red("ERREUR D'ENCODING");
+      logger.error("ERREUR D'ENCODING");
       process.exit(1);
     }
   }
 
-    function getSemana(){
-      // var day = this.getDay() ;
-      // if (day == 1 || day == 2)
-      // 	semaine--;
-      // return (day == 1 || day == 2 || day == 7) ?
-      // 	semaine + "A" : semaine + "B"
+  function getSemana(){
+    // var day = this.getDay() ;
+    // if (day == 1 || day == 2)
+    // 	semaine--;
+    // return (day == 1 || day == 2 || day == 7) ?
+    // 	semaine + "A" : semaine + "B"
 
-      require("date-format-lite");
-      var now = new Date();
-      return  now.format("W");
-    }
+    require("date-format-lite");
+    var now = new Date();
+    return  now.format("W");
+  }
 
   function notDo(){
     require("date-format-lite");
@@ -81,23 +84,19 @@ function Config(enseigne){
     }
   }
 
-
-
-
-    /* TEMPLATES */
-
-var template = [
+  /* TEMPLATES */
+  var template = [
     {attr:"auto_exit",                     obligatoire : false,   getter : GetBool},
     {attr:"liste_proxy",                   obligatoire : true,  getter : FileToArray},
-    {attr:"list_ean",                   obligatoire : false,  getter : FileToArray},
+    {attr:"list_ean",                      obligatoire : false,  getter : FileToArray},
     {attr:"divers_list",                   obligatoire : false,  getter : FileToArray},
     {attr:"encoding",                      obligatoire : false, getter : GetEncoding, defaut : 'UTF-8'},
     {attr:"nombres_requetes_paralleles",   obligatoire : true,  getter : GetUint},
     {attr:"nb_clients_par_mag",            obligatoire : true,  getter : GetUint},
     {attr:"mag_parrallele",                obligatoire : true,  getter : GetUint},
-    {attr:"out_dir_semaine",		   obligatoire : false, getter : getSemana, defaut : getSemana()},
+    {attr:"out_dir_semaine",		           obligatoire : false, getter : getSemana, defaut : getSemana()},
     {attr:"list_mag_todo",                 obligatoire : false, getter : FileToArray},
-  //  {attr:"list_mag_notdo",                obligatoire : false, getter : FileToArray},
+    // {attr:"list_mag_notdo",                obligatoire : false, getter : FileToArray},
     {attr:"list_mag_notdo",                obligatoire : false, getter : notDo, defaut : notDo()},
     {attr:"minimum_msec_entre_req",        obligatoire : false, getter : GetUint, defaut : 0},
     {attr:"minimum_msec_entre_mag",        obligatoire : false, getter : GetUint, defaut : 0},
@@ -113,39 +112,115 @@ var template = [
     {attr:"limit_nomenclature",            obligatoire : false, getter : FileToArray},
     {attr:"debug",                         obligatoire : false, getter : GetBool, defaut : 0},
     {attr:"liste_url_forces",              obligatoire : false, getter : FileToArray},
-    {attr:"limiter_nb_magasin_script",     obligatoire : false, getter : GetUint, defaut : 0}]
+    {attr:"limiter_nb_magasin_script",     obligatoire : false, getter : GetUint, defaut : 0}
+  ]
 
+  function parse_xml_config_file(filename, current_config){
+    var config_flatten = fs.readFileSync(filename, "utf8"),
+      config = {};
+    logger.debug(config_flatten);
 
+    var $ = cheerio.load(config_flatten);
+    // var templateFileName = $("template").length > 0 ?
+    // $("template").text().trim() : "default";
+    // var template = JSON.parse(fs.readFileSync("./config/template/" + templateFileName + ".json", "utf8"));
 
+    for (var i in template) {
+      var obj = template[i];
+      var fetched = $(obj.attr);
 
-    /* LOADER */
-
-//    var config = fs.readFileSync("./config/sites/" +  enseigne + ".xml", "utf8");
-    var CONFIG_FILE = path.resolve(__dirname, "./../../aspiration/config/sites/" +  enseigne + ".xml")
-    var config = fs.readFileSync(CONFIG_FILE, "utf8");
-
-    var $ = cheerio.load(config);
-    //var templateFileName = $("template").length > 0 ?
-    //$("template").text().trim() : "default";
-    //var template = JSON.parse(fs.readFileSync("./config/template/" + templateFileName + ".json", "utf8"));
-    this.config = {};
-  for (var i in template){
-    var obj = template[i];
-    var fetched = $(obj.attr);
-    if (fetched.length <= 0 && obj.obligatoire){
-      console.warn("le champs: " + obj.attr + " est obligatoire!");
-      process.exit(1);
+      if (fetched.length <= 0 && obj.obligatoire && !current_config.hasOwnProperty(obj.attr)) {
+        logger.warn("Property: ".concat(obj.attr).concat(" is required in at least one config file !").yellow);
+      } else if (fetched.length > 0 ) {
+        config[obj.attr] = obj.getter(fetched.text());
+      } else if (!current_config.hasOwnProperty(obj.attr)) {
+        config[obj.attr] = obj.defaut;
+      }
     }
-    else if (fetched.length > 0)
-      this.config[obj.attr] = obj.getter(fetched.text());
-    else
-      this.config[obj.attr] = obj.defaut;
+    // logger.info(config);
+
+    return config;
+  }
+
+  function parse_yaml_config_file(filename, current_config){
+    var config = {};
+    config = yaml_config.load(filename);
+
+    for (var i in template) {
+      var config_variable = template[i];
+      // logger.warn(config_variable, config.hasOwnProperty(config_variable.attr));
+      if (config.hasOwnProperty(config_variable.attr)){
+        config[config_variable.attr] = config_variable.getter(config[config_variable.attr]);
+      } else if(!current_config.hasOwnProperty(config_variable.attr)) {
+        if (!config_variable.obligatoire){
+          // Not required
+          config[config_variable.attr] = config_variable.defaut;
+        } else {
+          logger.warn("Property: ".concat(config_variable.attr).concat(" is required in at least one config file !").yellow);
+        }
+      }
+    }
+
+    logger.debug(config);
+    return config;
+  }
+
+  function parse_config_file(filename, extension, current_config){
+    if (extension === "xml"){
+      return parse_xml_config_file(filename, current_config);
+    } else if (extension === "yml"){
+      return parse_yaml_config_file(filename, current_config);
+    }
+  }
+
+  this.config = {};
+
+  /* LOADER */
+  // var config = fs.readFileSync("./config/sites/" +  enseigne + ".xml", "utf8");
+  var supported_formats = ["xml", "yml"];
+  logger.debug("enseigne: " , enseigne);
+  var files_to_load = ['global', "sites/" + enseigne];
+
+  for (var files in files_to_load) {
+    var file_loading = files_to_load[files];
+
+    for (var i = 0; i < supported_formats.length; i++) {
+      extension = supported_formats[i];
+
+      var CONFIG_FILE = path.resolve(__dirname, "./../../aspiration/config/".concat(file_loading).concat(".").concat(extension));
+      logger.info(CONFIG_FILE.cyan);
+
+      if (fs.existsSync(CONFIG_FILE)){
+        var parsed_configuration = parse_config_file(CONFIG_FILE, extension, this.config);
+        if (parsed_configuration) {
+          _.extend(this.config, parsed_configuration);
+          // logger.info(this.config);
+        }
+      } else {
+        logger.debug("Config file " + CONFIG_FILE + " not exists skip it");
+      }
+    }
+  }
+  logger.info(this.config["writeCSV"]);
+  var has_errors = false;
+  for (var i in template) {
+    var config_variable = template[i];
+    // logger.warn(config_variable, config.hasOwnProperty(config_variable.attr));
+    if (config_variable.obligatoire && !this.config.hasOwnProperty(config_variable.attr)){
+      // Required but not set property:
+      logger.error("Property: ".concat(config_variable.attr).concat(" is required !").red);
+      has_errors = true;
+    }
+  }
+
+  if (has_errors) {
+    //process.exit(1);
   }
 
   // TODO Steeve use a logger for this.
   // console.log(this.config);
+  logger.debug(this.config);
 }
-
 
 module.exports = {
   create : function(name){ return new Config(name) }

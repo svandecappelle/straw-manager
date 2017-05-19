@@ -6,7 +6,7 @@
 const path = require('path'),
   cp = require('child_process'),
   engine = require(path.resolve(__dirname, "./engine")),
-  logger = require("log4js").getLogger('Server');
+  logger = require("log4js").getLogger('Interface');
 
 
 (function (Interface) {

@@ -1,9 +1,14 @@
 {
-  "port"     : "65000",
-  "hostname"      : "localhost",
+  "port": "65000",
+  "hostname": "localhost",
   "logLevel": "INFO",
   "aspiration": {
     "type": "none",
     "interactive": true
+  },
+  "tests": {
+    "autorun_server": false,
+    "timeout": 5000,
+    "silent": true
   }
 }

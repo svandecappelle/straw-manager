@@ -18,7 +18,7 @@ function Node(){
     this.father = undefined;
 
     this.get_node = function(idx){
-	return this.next[idx];
+	     return this.next[idx];
     }
 
     this.GetNextNodeIndex = function(nbr_childrens){
@@ -450,7 +450,7 @@ RequestManager.prototype.AddRequest = function(param, req_token, cb, xmlbuilder)
 
           //this.engine.output.LogRegiment(id_regiment, " l'url vient de rentrer de le manager: " + req.url);
     	//Préhome == Entre la home et le magasin (dans les pages intermédiaire pour acceder a un magasin)
-    	if (this.regiments[id_regiment].prehome == false
+      if (this.regiments[id_regiment].prehome == false
     	    || param.StoreInRegiment == true){
     	    //Une que par client dans le PreHome (Entre Home et Magasin)
     	    param.requete_magasin = true;
@@ -509,7 +509,7 @@ RequestManager.prototype.calculate_time = function(req){
     var min = this.engine.config.minimum_msec_entre_mag;
     var host = req.param.proxy;
     if (this.host_time[host] == undefined){
-    	console.red("new ip" + host);
+    	console.log("\rnew ip: " + host.yellow.underline + " from proxies \r".red);
     	// dans le cas d'une premiere execution log, + instant execute;
     	this.host_time[host] = +(new Date());
     	req.wait = 0;

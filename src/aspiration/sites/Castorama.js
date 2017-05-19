@@ -1,15 +1,12 @@
-var cheerio = require('cheerio');
-var dateFormat = require('dateformat');
-var Entities = require('html-entities').XmlEntities;
-var outils = require("../engine/outils");
+const name = "Castorama";
 
-var name = "Castorama";
-
+var cheerio = require('cheerio'),
+  dateFormat = require('dateformat'),
+  Entities = require('html-entities').XmlEntities,
+  outils = require("../engine/outils"),
+  logger = require("log4js").getLogger(name);
 
 var xlblogger = require('xlblogger');
-var logger = new xlblogger("Castorama");
-
-
 
 (function (Castorama) {
     "use strict";
@@ -22,10 +19,9 @@ var logger = new xlblogger("Castorama");
 	Castorama.Castorama_GetDetailsArticle = function(html, obj) {
 		var $ = cheerio.load(html);
 
-
-	  logger.logAttrVal('vumMsg',$('div#vumMsg').text())
-		if($('div#vumMsg').text().length) {
-	    logger.logAttrVal('Produit non disponible','Produit non disponible')
+	  logger.debug('vumMsg',$('div#vumMsg').text())
+		if ($('div#vumMsg').text().length) {
+	    logger.warn('Produit non disponible','Produit non disponible')
 			var output = {
 				requestID  :  obj.requestID,
 				error      :	"produit non disponible",
@@ -36,10 +32,10 @@ var logger = new xlblogger("Castorama");
 				process.send(output);
 				process.exit(1); // important !!
 			}
-
-			if (this.callback){
-				this.callback(output);
+			if (Castorama.callback){
+				Castorama.callback(output);
 			}
+      return;
 	  }
 
 
@@ -66,11 +62,11 @@ var logger = new xlblogger("Castorama");
 			}
 
 		} else {
-			console.log("suceed from");
-			console.log(obj.lasturl);
+			logger.debug("succeed from");
+			logger.info(obj.lasturl);
 		}
 
-		data = {};
+		var data = {};
 
 		var idToTreat = product.find("span.refNum").text();
 		var p = /([0-9]+)/;
@@ -181,10 +177,19 @@ var logger = new xlblogger("Castorama");
 		  var Caracteristiques = $("div#tabs_pd_pagetechnicTab div.prodDescMarker").text().trim();
 		  data.caracteristique = outils.prettify_me(Caracteristiques).split(";");
 		}
-		console.log(data);
 		//process.exit(0);
 		//logger.logAttrVal('DATA', data)
-		engine.export_products(data, obj);
+		//engine.export_products(data, obj);
+
+
+    if (Castorama.callback){
+      var output = {
+        requestID  :  obj.requestID,
+        data       :  data
+      };
+
+      Castorama.callback(output);
+    }
 	};
 
 	//Gets all articles and pushes them in the DB
@@ -262,7 +267,7 @@ var logger = new xlblogger("Castorama");
 			var n1 = $(this).find(".mm_t01_lnk").text().trim();
 
 			if (n1 ) {
-				logger.logAttrVal('N1', n1)
+				logger.debug('N1', n1)
 				//if ($(this).find("div.upperMenuPopup > div.menuContainer > ul > li > a").length) { // Modif. le 28/11/2016
 				//if ($(this).find(" div.menuContainer > ul > li > a").length) {
 					//$(this).find("div.upperMenuPopup > div.menuContainer > ul > li > a").each(function() { // Modif. le 28/11/2016
@@ -273,7 +278,7 @@ var logger = new xlblogger("Castorama");
 						newObj = engine.clone(obj);
 						newObj.tree.push(n1);
 						newObj.tree.push(n2);
-						logger.logTree(n1, n2, url);
+						logger.debug(n1, n2, url);
 
 						engine.AddRequest(url, {}, {}, Castorama.Castorama_SubNavigation, newObj);
 					});
@@ -297,14 +302,14 @@ var logger = new xlblogger("Castorama");
 		//console.log('retour chez casto', obj.jar.s_cdao);
 		//process.exit(0);
 		var clone = engine.clone(obj);
-		logger.logAttrVal("inside magasin", clone.MagasinId);
+		logger.debug("inside magasin", clone.MagasinId);
 
 		//clone.jar["s_cdao"] = clone.CodeMagasinCasto;
 		clone.jar.s_cdao = clone.CodeMagasinCasto;
 		//engine.AddRequest("/store/Salle-de-bains-et-WC-cat_id_3322.htm?navAction=jump&wrap=true", {}, {}, Castorama_Navigation, clone);
 		//engine.AddRequest("/store/Colle-en-pate-Hautes-performances-murs-sols-20-kg-PRDm498108.html?isSearchResult=true&navAction=jump", {}, {}, Castorama_GetDetailsArticle, clone);
 
-	   logger.logAttrVal('castorama navigation','castorama ' )
+	   logger.debug('castorama navigation','castorama ' )
 		//  /* !!!!!  */ 	engine.AddRequest("/store/", {}, {}, Castorama_Navigation, clone);
 		//DEV AND DEBUG
 		engine.AddRequest(clone.lookup, {}, {}, Castorama.Castorama_GetDetailsArticle, clone);
@@ -328,9 +333,9 @@ var logger = new xlblogger("Castorama");
 			clone.CodeMagasinCasto = codeMagasin;
 			//clone.MagasinId = codeMagasin;
 			clone.tree = [];
-			console.log('=====> Traitement mag ' + clone.MagasinId + ' - ' + clone.Magasin);
-			console.log('=====> url = ' + url);
-			logger.logAttrVal("start magasin", clone.MagasinId);
+			logger.debug('=====> Traitement mag ' + clone.MagasinId + ' - ' + clone.Magasin);
+			logger.debug('=====> url = ' + url);
+			logger.debug("start magasin", clone.MagasinId);
 
 			clone.jar.s_cdao = clone.CodeMagasinCasto;
 			//var options = {};
@@ -347,7 +352,7 @@ var logger = new xlblogger("Castorama");
 	};
 
 	Castorama.Castorama_ParseMagasins = function (html, obj) {
-		logger.logAttrVal("Level", "ParseMagasins");
+		logger.debug("Level", "ParseMagasins");
 
 		//var MagToDo = outils.FileToArray(LINK_MAG_FILE)
 
@@ -356,8 +361,9 @@ var logger = new xlblogger("Castorama");
 		//logger.logAttrVal("####","####");
 
 		try {
-			json = JSON.parse(html);
+      var json = JSON.parse(html);
 		} catch (err) {
+      logger.error("err: ", err);
 			engine.logError(obj, "json parse error ");
 			return;
 		}
@@ -369,8 +375,11 @@ var logger = new xlblogger("Castorama");
 			//logger.logAttrVal('magasinId',elm)
 			clone.MagasinId = elm;
 			clone.Magasin = listeMagasins[elm].name;
-			if (elm == obj.MagId) {
-					logger.logAttrVal("magasin to do ",elm);
+
+      if (elm == obj.MagId) {
+          logger.info("calling on mag: " + obj.MagId);
+
+          logger.debug("magasin to do ",elm);
 					engine.AddRequest('magasins.castorama.fr/' + listeMagasins[elm].url, {}, {}, Castorama.Castorama_TraiterMagasin, clone);
 				/*	if (MagToDo.indexOf(elm) > -1) {
 						logger.logTree("CONCRET","magasin to do ",elm);
@@ -383,14 +392,14 @@ var logger = new xlblogger("Castorama");
 	};
 
 	Castorama.Castorama_Patch = function (html, obj) {
-		logger.logAttrVal("Level", "Patch");
+		logger.debug("Level", "Patch");
 		// On aspire tous les magasins Castorama
 		var clone = engine.clone(obj);
 		engine.BindRequest("magasins.castorama.fr/point_of_sales.json", {}, {}, Castorama.Castorama_ParseMagasins, clone);
 	};
 
 	Castorama.Castorama_Patch0 = function (html, obj) {
-		logger.logAttrVal("Level", "ZERO_Patch");
+		logger.debug("Level", "ZERO_Patch");
 
 		// On aspire le magasin Web
 		if (engine.shouldBeDone(0)){
@@ -403,25 +412,32 @@ var logger = new xlblogger("Castorama");
 	};
 
 	Castorama.update = function (param, callback) {
+    engine._init(param.Enseigne);
+
 		Castorama.callback = callback;
 		var obj = {};
 		obj.hostname = "www.castorama.fr";
-		obj.Enseigne = name;
 		obj.tree = [];
-		logger.logAttrVal('PID',  obj.Enseigne +' / ' +process.pid)
-		logger.stopLog()
 
+    obj.Enseigne 	 = param.Enseigne;
+    obj.MagId  		 = param.MagasinId; // dont set obj.MagasinId at this level
+    obj.lookup		 = param.url;
+    obj.requestID	 = param.requestID;
+
+		logger.debug('PID',  obj.Enseigne +' / ' +process.pid)
+    engine.BindRequest("/", {}, {}, Castorama.Castorama_Patch, obj);
+/*
 		if (process.argv.length === 3 ) {
 			logger.logAttrVal("SCRAP", "MAGASIN ZERO");
 			engine.BindRequest("/", {}, {}, Castorama.Castorama_Patch0, obj);
-		}else {
+		} else {
 			if (process.argv.length === 4){
 				LINK_MAG_FILE = process.argv[3];
 				logger.logAttrVal("SCRAP", "LIST IN FILE: "+LINK_MAG_FILE);
 				engine.BindRequest("/", {}, {}, Castorama.Castorama_Patch, obj);
 
 			}
-		}
+		}*/
 	};
 
 
@@ -440,7 +456,7 @@ var logger = new xlblogger("Castorama");
 		obj.lookup = 'http://www.castorama.fr/store/Fauteuil-de-jardin-Roscana-lot-de-2-prod21800052.html';
 		obj.requestID = 0;
 
-	  engine.BindRequest("/", {}, {}, Castorama_Patch, obj);
+	  engine.BindRequest("/", {}, {}, Castorama.Castorama_Patch, obj);
 
 		/*
 		if (process.argv.length === 3 ) {

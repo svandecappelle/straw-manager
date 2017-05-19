@@ -4,6 +4,8 @@ var express = require('express'),
     app = express(),
     log4js = require("log4js"),
     logger = log4js.getLogger('Server');
+require("colors");
+
 var testing = false;
 
 nconf.argv()
@@ -14,13 +16,13 @@ nconf.argv()
 (function (ApplicationRoot) {
     "use strict";
 
-    console.log(process.title);
-
     if (process.title === "Testing CollectOnline API"){
       testing = true;
     } else {
-      process.title = "Optimix-CollectOnline";
+      process.title = "Opti-CollectOnline";
     }
+
+    console.log(process.title.red.bold);
 
     ApplicationRoot.run = function(opts, callback) {
       if ( !opts ){
@@ -50,7 +52,7 @@ nconf.argv()
         logger.debug("aspi" , nconf.get('aspiration'));
         app.use('/api', routes)
 
-        logger.info("server is listening on port", http_port);
+        logger.info("server is listening on port", "".concat(http_port).cyan);
         app.listen(http_port)
       }
 

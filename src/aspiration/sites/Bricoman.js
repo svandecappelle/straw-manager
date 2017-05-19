@@ -10,15 +10,15 @@
 	    console.log("[31m" + text + "[0m");
 	}
 
-    var name = "Bricoman",
-    	xlblogger = require('xlblogger'),
-    	//logger = new xlblogger("Bricoman"),
+  var name = "Bricoman",
+  	xlblogger = require('xlblogger'),
+  	//logger = new xlblogger("Bricoman"),
 		cheerio = require('cheerio'),
 		path = require('path'),
 		dateFormat = require('dateformat'),
 		logger = require("log4js").getLogger('sites/' + name),
 		outils = require("../engine/outils");
-		
+
 
 	Bricoman.Bricoman_Fiche = function(html, obj) {
 		var $ = cheerio.load(html);
@@ -38,8 +38,8 @@
 				process.send(output);
 				process.exit(1); // important !!
 			}
-			if (this.callback){
-				this.callback(output);
+			if (Bricoman.callback){
+				Bricoman.callback(output);
 			}
 		}
 		/* ------------------------------------------------------------------------ */
@@ -211,7 +211,7 @@
 
 				var cookie = 'smile_retailershop_id='+MagasinId;
 				ReqObject.xlbSetJar = cookie;
-				
+
 				// engine.BindRequest(url, {}, {}, that.Patch_magIN, ReqObject);
 				engine.BindRequest(url, {}, {}, Bricoman.Patch_magIN, ReqObject);
 			}

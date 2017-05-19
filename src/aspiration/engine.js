@@ -5,16 +5,12 @@ var _ = require('underscore'),
 
 engine = require("./engine/engine");
 
-console.red = function(text){
-    console.log("[31m" + text + "[0m");
-}
-
 (function (Engine) {
     "use strict";
 
     Engine.start = function (opts, callback) {
       var enseigne_lancher = require("./sites/" + opts.Enseigne);
-     
+
       //engine.config.auto_exit = false;
       // enseigne_lancher.engine = engine;
       var params = _.extend({
@@ -28,7 +24,7 @@ console.red = function(text){
       var callback_update = function(results){
         callback(results);
       };
-      
+
       enseigne_lancher.update(params, callback_update);
 
     };

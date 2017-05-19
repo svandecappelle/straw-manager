@@ -37,6 +37,7 @@
     "log4js": "^1.1.1",
     "moment": "^2.18.1",
     "nconf": "^0.8.4",
+    "node-yaml-config": "0.0.4",
     "ora": "^1.2.0",
     "q": "1.0.1",
     "readline-sync": "^1.4.5",
