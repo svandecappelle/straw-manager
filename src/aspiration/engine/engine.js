@@ -21,7 +21,7 @@ function Engine () {
     } else {
         logger.warn(`Configuration file ${config_path} not existing skipping loading`);
     }
-    logger.info("Configuration: ", this.config);
+    logger.debug("Configuration: ", this.config);
   }
 };
 

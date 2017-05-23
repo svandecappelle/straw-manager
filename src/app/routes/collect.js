@@ -21,7 +21,7 @@ router.use(bodyParser.json());
 
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
-  logger.info('Time: '.yellow, GREEN(moment().format('L [|] hh:mm:ss')))
+  logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green)
   //console.log(YELLOW('Time: '), GREEN(moment().format('MMMM Do YYYY, h:mm:ss a')))
   next()
 });
@@ -37,7 +37,7 @@ router.get('/about', function (req, res) {
 });
 
 router.get('/buffer', function (req, res) {
-  logger.info(RED('buffer requested !'));
+  logger.info('buffer requested !'.red);
   res.status(200).send(buffer.getBuffer())
 });
 
@@ -48,29 +48,29 @@ router.get('/request/:id', function (req, res) {
     });
 
     if (elem) {
-      logger.info(RED(req.params.id)+" sended");
+      logger.info("".concat(req.params.id).red + " sended");
       res.status(200).send(elem);
     } else {
-      logger.warn(RED(req.params.id)+" not found");
+      logger.warn("".concat(req.params.id).red + " not found");
       res.status(404).send({"Error":"the requested ID, doesn't exists"});
     }
 
 });
 // delete element
 router.delete('/drop/:id', function (req, res) {
- logger.info(RED(req.params.id)+" to delete !");
+ logger.info("".concat(req.params.id).red + " to delete !");
   var elem = buffer.drop({
     "requestID":req.params.id
   });
 
   if (elem) {
-    logger.info(RED(req.params.id)+" deleted");
+    logger.info("".concat(req.params.id).red + " deleted");
     res.status(200).send({
       "deleted"       :req.params.id,
       "bufferLength"  :buffer.getBuffer().length
     });
   } else {
-    logger.warn(RED(req.params.id)+" not found");
+    logger.warn("".concat(req.params.id).red + " not found");
     res.status(404).send({"Error":"a valid ID must be choosen"})
   }
 });
@@ -78,7 +78,7 @@ var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']')
 
 router.post('/update', function (req, res) {
     var tempo = req.body
-    logger.info(RED('server received :'), tempo);
+    logger.info('server received :'.red, tempo);
     if (buffer.validQuery(tempo)) {
       logger.info("querying aspiration...");
       spinner.start();
