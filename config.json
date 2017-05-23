@@ -6,7 +6,7 @@
     "interactive": true
   },
   "tests": {
-    "autorun_server": false,
+    "autorun_server": true,
     "timeout": 5000,
     "silent": true
   }
