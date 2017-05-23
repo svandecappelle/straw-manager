@@ -3,7 +3,6 @@
   "hostname": "localhost",
   "logLevel": "INFO",
   "aspiration": {
-    "type": "none",
     "interactive": true
   },
   "tests": {

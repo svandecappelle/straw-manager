@@ -288,6 +288,7 @@ function Request(url, opt, post, param) {
       if (html != undefined) { // && html != "") {
 
         var p = this.manager.mapTokenPromises[this.param.promiseToken];
+        console.log(p);
         p(html, _.cloneDeep(this.param));
       }
       this.manager.CleanRequest(this);

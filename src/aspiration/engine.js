@@ -5,14 +5,23 @@ var _ = require('underscore'),
 
 engine = require("./engine/engine");
 
+var site_engines = {};
+
 (function (Engine) {
     "use strict";
 
-    Engine.start = function (opts, callback) {
-      var enseigne_lancher = require("./sites/" + opts.Enseigne);
+    Engine.start = function (opts, eventEmitter) {
 
-      //engine.config.auto_exit = false;
-      // enseigne_lancher.engine = engine;
+      var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
+      var enseigne_lancher = new Initialiser(true);
+      enseigne_lancher.on('done', function(data){
+        eventEmitter.emit('done', data);
+      });
+
+      enseigne_lancher.on('fatal_error', function(data){
+        eventEmitter.emit('error', data);
+      });
+
       var params = _.extend({
         idProduit : '',
         Enseigne : '',
@@ -21,11 +30,7 @@ engine = require("./engine/engine");
         requestID : null
       }, opts);
 
-      var callback_update = function(results){
-        callback(results);
-      };
-
-      enseigne_lancher.update(params, callback_update);
+      enseigne_lancher.call(params);
 
     };
 

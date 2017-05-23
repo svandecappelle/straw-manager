@@ -429,7 +429,7 @@ RequestManager.prototype.LaunchNewRegiment = function(){
 // - Clone de la première requete pour permettre d'acceder a un magasin depuis la /home
 // - Les autres requetes sont raprochees du client par rapport aux IDClient / IdRegiment
 RequestManager.prototype.AddRequest = function(param, req_token, cb, xmlbuilder){
-
+    console.log("mapTokenPromises".red, cb);
     this.mapTokenPromises[param.promiseToken] = cb;
 
     if (!this.root){ // la toute premiere requete

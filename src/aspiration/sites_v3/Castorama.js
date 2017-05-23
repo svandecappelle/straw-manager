@@ -32,8 +32,8 @@ var xlblogger = require('xlblogger');
 				process.send(output);
 				process.exit(1); // important !!
 			}
-			if (Castorama.callback){
-				Castorama.callback(output);
+			if (Castorama.eventEmitter){
+				Castorama.eventEmitter.emit('error', output);
 			}
       return;
 	  }
@@ -182,13 +182,13 @@ var xlblogger = require('xlblogger');
 		//engine.export_products(data, obj);
 
 
-    if (Castorama.callback){
+    if (Castorama.eventEmitter){
       var output = {
         requestID  :  obj.requestID,
         data       :  data
       };
 
-      Castorama.callback(output);
+      Castorama.eventEmitter.emit('done', output);
     }
 	};
 
@@ -411,10 +411,13 @@ var xlblogger = require('xlblogger');
 
 	};
 
-	Castorama.update = function (param, callback) {
+  Castorama.setEventEmitter = function (eventEmitter) {
+    Castorama.eventEmitter = eventEmitter;
+  };
+
+	Castorama.update = function (param) {
     engine._init(param.Enseigne);
 
-		Castorama.callback = callback;
 		var obj = {};
 		obj.hostname = "www.castorama.fr";
 		obj.tree = [];

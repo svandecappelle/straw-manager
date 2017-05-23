@@ -1,5 +1,6 @@
 var _ = require('underscore'),
   nconf = require('nconf'),
+  events = require('events'),
   aspiration = require('./../../aspiration/interface');
 
 
@@ -31,9 +32,27 @@ var _ = require('underscore'),
 
   var requestBuffer = []
   var auto_increment = -1
+  var eventEmitter = new events.EventEmitter();
+
+  eventEmitter.on('done', function(results){
+    console.log("Aspiration done".cyan.bold, results.requestID);
+    Buffer.update(results);
+    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(results.requestID)})
+    if (requestBuffer[index].callback){
+      requestBuffer[index].callback(results);
+    }
+  });
+  eventEmitter.on('error', function(){
+    console.log("Errors on aspiration".red);
+  });
+
+  Buffer.pending_length = function(){
+    return _.where(requestBuffer, {status: 'pending'}).length;
+  };
 
   Buffer.add = function add(request, callback){
     auto_increment++;
+
     if (request) {
       var newRq = {
         requestID     : auto_increment,
@@ -45,30 +64,16 @@ var _ = require('underscore'),
         url           : request.url,
         status        : 'pending',
         data          : {
-        }
+        },
+        callback      : callback
       };
 
       requestBuffer.push(newRq);
-      
-      if (nconf.get('aspiration').type === 'fork'){
-        aspiration.update(newRq, function(results){
-          Buffer.update(results, callback);
-          if (callback){
-            callback(results);
-          }
-        });
-      } else {
-        aspiration.launch(newRq, function(results){
-          Buffer.update(results);
-          if (callback){
-            callback(results);
-          }
-        });
-      }
+
+      aspiration.launch(newRq, eventEmitter);
     }
     return newRq;
   };
-
 
   Buffer.update = function update(object){
     // update data, set status and responseDate

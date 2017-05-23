@@ -74,28 +74,40 @@ router.delete('/drop/:id', function (req, res) {
     res.status(404).send({"Error":"a valid ID must be choosen"})
   }
 });
+var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']')
 
 router.post('/update', function (req, res) {
     var tempo = req.body
     logger.info(RED('server received :'), tempo);
     if (buffer.validQuery(tempo)) {
       logger.info("querying aspiration...");
-      var spinner = ora('Aspire informations...').start();
+      spinner.start();
+      spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
 
-      if (nconf.get("aspiration:interactive")){
+      if (nconf.get("aspiration:interactive")) {
         // Mode interactive activated: The result is returned into POST return call.
         var elem = buffer.add(req.body, function(results){
-          spinner.stop();
+          console.log("Lenght buffer: ".concat(buffer.pending_length()).green.bold);
+          if (buffer.pending_length() === 0){
+            spinner.stop();
+          } else {
+            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
+          }
           logger.info("results sent");
           res.status(200).send(results);
         });
       } else {
-
         // Mode interactive activated: The result is not returned into POST return call.
         // User need to call buffer to now the status.
 
         var elem = buffer.add(req.body, function(results){
-          spinner.stop();
+
+          console.log("Lenght buffer: ".concat(buffer.pending_length()).green.bold);
+          if (buffer.pending_length() === 0){
+            spinner.stop();
+          } else {
+            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
+          }
           logger.info("results are now accessibles");
         });
 

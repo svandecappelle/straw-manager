@@ -1,12 +1,13 @@
 var chai = require('chai'),
-    request = require('request'),
     _ = require('underscore'),
+    request = require('request'),
     colors = require('colors'),
     nconf = require("nconf"),
-    async = require("async");
+    async = require("async"),
+    TestTraitement = require("./traitements_model");
 var expect = chai.expect; // we are using the "expect" style of Chai
 var $test_port = 15555;
-var $url_api = 'http://localhost:' + $test_port;
+$url_api = 'http://localhost:' + $test_port;
 
 process.title = "Testing CollectOnline API";
 
@@ -18,8 +19,8 @@ nconf.argv()
    .file({ file: './config.json' });
 
 const AUTORUN_SERVER = nconf.get("tests:autorun_server") !== undefined ? nconf.get("tests:autorun_server") : false;
-const DEFAULT_TEST_TIMEOUT = nconf.get("tests:timeout") !== undefined ? nconf.get("tests:timeout") : 45000;
 const SILENT_MODE = nconf.get("tests:silent") !== undefined ? nconf.get("tests:silent") : true;
+const PARALLEL_CALLS = 6;
 
 if (AUTORUN_SERVER) {
   console.log("Using auto run server".yellow.italic);
@@ -43,63 +44,26 @@ if (AUTORUN_SERVER) {
   run();
 }
 
-
-function convertToProcessingCall (value){
-  var output = function(){
-
-    console.log("Test case: ".red, value);
-
-    describe('POSTs tests for: ' + value.index + " -- " + value.Enseigne, function() {
-      it('Post should return in non interactive mode a request pending object [' + value.index + " -- " + value.Enseigne + ']', function(done) {
-        this.timeout(DEFAULT_TEST_TIMEOUT);
-        var opts = value;
-        console.log("Calls: " + $url_api.concat('/api/update').yellow );
-        request.post( $url_api.concat('/api/update'), { json : opts }, function (error, response, body) {
-            if (!error && response) {
-                if (response.statusCode == 200){
-                    done(body.status === 'pending' || body.status === 'set' || body.data !== undefined ? undefined : body);
-                } else {
-                    done(body);
-                }
-            } else {
-                done(error);
-            }
-        });
-      });
-
-      it('Get method should return results of aspiration [' + value.index + " -- " + value.Enseigne + ']', function (done){
-        console.log("Calls: " + $url_api.concat('/api/request/' + value.index).yellow );
-        this.timeout(DEFAULT_TEST_TIMEOUT);
-        request.get( $url_api.concat('/api/request/' + value.index), function (error, response, body){
-          if (!error && response) {
-              if (response.statusCode == 200){
-                  var result = JSON.parse(body);
-                  done(result.status === 'pending' || result.status === 'set' ? undefined : body);
-              } else {
-                  done(body);
-              }
-          } else {
-              done(error);
-          }
-        });
-      });
-    });
-  };
-  return output;
-}
-
-
 function run () {
   var index = 0;
+  console.log($case_tests.valids);
+  describe('POSTs tests:', function() {
+    it('Post should returns in non interactive mode a request pending object', function(done) {
+      this.timeout(1200000);
 
-  var processing_calls = _.map($case_tests.valids, function(value){
-    value.index = index;
-    index += 1;
-    return convertToProcessingCall(value);
-  });
+      async.eachLimit($case_tests.valids, PARALLEL_CALLS, function(value, next){
+        value.index = index;
+        index += 1;
 
-  async.parallelLimit(processing_calls, 5, function(){
-    logger.info("Done");
+        var traitment = new TestTraitement(value, next);
+        traitment.launch();
+
+      }, function (err, values) {
+        console.log("Done all parrallel calls".green, err);
+        done(err);
+      });
+
+    });
   });
 
   it('Invalid query id should return no results', function(done){
