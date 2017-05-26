@@ -3,6 +3,9 @@ var nconf = require("nconf"),
 const DEFAULT_TEST_TIMEOUT = nconf.get("tests:timeout") !== undefined ? nconf.get("tests:timeout") : 45000;
 
 var TestTraitement = function (opts, callback_test) {
+  this.maxtry = 5;
+  this.current_try = 1;
+  this.time_recheck = 2000;
   this.opts = opts;
   this.errors = null;
   this.server_returns = [];
@@ -16,13 +19,13 @@ TestTraitement.prototype.next = function(){
     console.log("Test has failed: ".red);
     this.callback_test(this.getResults());
   } else {
-    console.log("Calls next verify test...".yellow);
+    console.log(`Apsiration successfully return some datas ${this.getResults().requestID}`.green);
     this.callback_test();
   }
 };
 
 TestTraitement.prototype.hasFailed = function(isFailed){
-  return isFailed;
+  return this.isFailed;
 };
 
 TestTraitement.prototype.setHasFailed = function(isFailed){
@@ -74,14 +77,21 @@ TestTraitement.prototype.aspire = function (callback) {
     time : true,
     json: this.opts
   }, function (error, response, body) {
-    console.log(`Request time ${url} in ms`.yellow, response.elapsedTime);
 
     if (!error && response) {
+      console.log(`Request time ${url} in ms`.yellow, response.elapsedTime);
+
       that.setHasFailed(! (response.statusCode == 200 && (body.status === 'pending' || body.status === 'set' || body.data !== undefined)));
       that.results(body);
     } else {
-      that.setHasFailed(true);
-      that.results(error);
+      if (error.code === 'ETIMEDOUT'){
+        console.log("Connection take too much time ETIMEDOUT".red.underline);
+        console.log("Testing using checking".cyan);
+        callback()
+      } else {
+        that.setHasFailed(true);
+        that.results(error);
+      }
     }
     callback();
   });
@@ -101,16 +111,41 @@ TestTraitement.prototype.verify = function (callback) {
         var result = JSON.parse(body);
         // console.log(! (response.statusCode == 200 && (result.status === 'pending' || result.status === 'set' || result.data !== undefined)))
         that.setHasFailed(! (response.statusCode == 200 && (result.status === 'pending' || result.status === 'set' || result.data !== undefined)));
-        that.results(result);
 
+        if (result.status === 'pending'){
+          that.current_try += 1;
+          if (that.current_try >= that.maxtry){
+            that.setHasFailed(true);
+            that.results(new Error(`Aspiration ${that.getResults().requestID} take too much time ${that.maxtry * that.time_recheck}`));
+            return callback();
+          } else {
+            console.log(`Aspiration ${that.getResults().requestID} not yet finished check after ${that.current_try * that.time_recheck}ms`);
+            setTimeout(function(){
+                that.verify(callback);
+            }, that.time_recheck);
+            return
+          }
+        }
+        that.results(result);
     } else {
-      that.setHasFailed(true);
-      that.results(error);
+      if (error.code === 'ETIMEDOUT'){
+        console.log("Connection take too much time ETIMEDOUT".red.underline);
+        console.log(`${(that.current_try + 1).toString().cyan} + "° / ${that.maxtry} try`);
+        that.current_try += 1;
+        if (that.current_try >= that.maxtry){
+          that.setHasFailed(true);
+          that.results(error);
+        } else {
+          return that.verify(callback);
+        }
+      } else {
+        that.setHasFailed(true);
+        that.results(error);
+      }
     }
 
     callback();
   });
-  return;
 };
 
 module.exports = TestTraitement;

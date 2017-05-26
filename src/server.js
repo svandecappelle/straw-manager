@@ -1,6 +1,9 @@
 var express = require('express'),
-    routes = require('./app/routes/collect'),
+    api = require('./app/routes/api'),
+    views = require('./app/routes/views'),
     nconf = require('nconf'),
+    path = require('path'),
+    bodyParser = require('body-parser'),
     app = express(),
     log4js = require("log4js"),
     logger = log4js.getLogger('Server');
@@ -12,9 +15,13 @@ nconf.argv()
    .env()
    .file({ file: './config.json' });
 
+process.on('uncaughtException', function (err) {
+  logger.error('Caught exception: ', err);
+});
 
 (function (ApplicationRoot) {
     "use strict";
+
 
     if (process.title === "Testing CollectOnline API"){
       testing = true;
@@ -50,7 +57,15 @@ nconf.argv()
 
       if ( !opts || opts.run_server ) {
         logger.debug("aspi" , nconf.get('aspiration'));
-        app.use('/api', routes)
+        app.use('/api', api)
+
+        app.set('views', path.join(__dirname, 'app/views'));
+        app.set('view engine', 'pug');
+        app.use(bodyParser.json());
+        console.log(path.join(__dirname + '/../public'));
+
+        app.use('/public', express.static(path.join(__dirname + '/../public')));
+        app.use('/', views);
 
         logger.info("server is listening on port", "".concat(http_port).cyan);
         app.listen(http_port)

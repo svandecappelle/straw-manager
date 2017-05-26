@@ -6,7 +6,7 @@ var express = require('express'),
   moment = require('moment'),
   nconf = require('nconf');
   ora = require('ora'),
-  logger = require("log4js").getLogger('engine/collect');
+  logger = require("log4js").getLogger('app/routes/api');
 
 var GREEN = chalk.bold.green;
 var RED = chalk.bold.red;
@@ -21,9 +21,8 @@ router.use(bodyParser.json());
 
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
-  logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green)
-  //console.log(YELLOW('Time: '), GREEN(moment().format('MMMM Do YYYY, h:mm:ss a')))
-  next()
+  logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+  next();
 });
 
 // define the home page route
@@ -74,7 +73,7 @@ router.delete('/drop/:id', function (req, res) {
     res.status(404).send({"Error":"a valid ID must be choosen"})
   }
 });
-var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']')
+var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']\r')
 
 router.post('/update', function (req, res) {
     var tempo = req.body
@@ -82,16 +81,16 @@ router.post('/update', function (req, res) {
     if (buffer.validQuery(tempo)) {
       logger.info("querying aspiration...");
       spinner.start();
-      spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
+      spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
 
       if (nconf.get("aspiration:interactive")) {
         // Mode interactive activated: The result is returned into POST return call.
         var elem = buffer.add(req.body, function(results){
-          console.log("Lenght buffer: ".concat(buffer.pending_length()).green.bold);
+          console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
           if (buffer.pending_length() === 0){
             spinner.stop();
           } else {
-            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
+            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
           }
           logger.info("results sent");
           res.status(200).send(results);
@@ -102,11 +101,11 @@ router.post('/update', function (req, res) {
 
         var elem = buffer.add(req.body, function(results){
 
-          console.log("Lenght buffer: ".concat(buffer.pending_length()).green.bold);
+          console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
           if (buffer.pending_length() === 0){
             spinner.stop();
           } else {
-            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']';
+            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
           }
           logger.info("results are now accessibles");
         });

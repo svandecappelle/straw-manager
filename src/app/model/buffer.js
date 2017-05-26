@@ -42,8 +42,15 @@ var _ = require('underscore'),
       requestBuffer[index].callback(results);
     }
   });
-  eventEmitter.on('error', function(){
-    console.log("Errors on aspiration".red);
+  eventEmitter.on('error', function(error, req){
+    console.log("Errors on aspiration".red, error, req);
+    Buffer.update(req);
+
+    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
+    requestBuffer[index].error = error;
+    if (requestBuffer[index].callback){
+      requestBuffer[index].callback(requestBuffer[index]);
+    }
   });
 
   Buffer.pending_length = function(){
@@ -88,6 +95,7 @@ var _ = require('underscore'),
       requestBuffer[index].status = 'failed'
       requestBuffer[index].error = object.error
       requestBuffer[index].responseDate = Date.now()
+      console.log(`Request: ${object.requestID} failed: `.red.bold.underline, requestBuffer[index]);
     }
   };
 

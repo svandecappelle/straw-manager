@@ -1,0 +1,8 @@
+extends template
+
+block body
+  ul.list-group
+  each val in buffer
+    li.list-group-item
+      span.badge= val.status
+      span #{val.url}

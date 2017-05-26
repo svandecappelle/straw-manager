@@ -59,7 +59,7 @@ function run () {
         traitment.launch();
 
       }, function (err, values) {
-        console.log("Done all parrallel calls".green, err);
+        console.log("Done all parrallel calls".green);
         done(err);
       });
 

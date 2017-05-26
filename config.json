@@ -2,11 +2,12 @@
   "port": "65000",
   "hostname": "localhost",
   "logLevel": "INFO",
+  "proxies": "proxyRU.txt",
   "aspiration": {
-    "interactive": true
+    "interactive": false
   },
   "tests": {
-    "autorun_server": true,
+    "autorun_server": false,
     "timeout": 5000,
     "silent": true
   }

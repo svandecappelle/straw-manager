@@ -18,8 +18,8 @@ var site_engines = {};
         eventEmitter.emit('done', data);
       });
 
-      enseigne_lancher.on('fatal_error', function(data){
-        eventEmitter.emit('error', data);
+      enseigne_lancher.on('fatal_error', function(error, req){
+        eventEmitter.emit('error', error, req);
       });
 
       var params = _.extend({
