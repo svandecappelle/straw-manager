@@ -1,5 +1,6 @@
 var events = require('events'),
-  request = require('request'),
+  // request = require('request'),
+  needle = require('needle'),
   _ = require('underscore'),
   logger = require('log4js').getLogger('Engine'),
   path = require('path'),
@@ -35,7 +36,7 @@ Engine.prototype.request = function (req, viewtype) {
   if (this.use_proxy && !this.isProxyConnected()){
     this.proxy_connect(req, viewtype);
   } else {
-    request.get(req.url, {
+    needle.get(req.url, {
       time: true
     }, function(error, response, body){
       that.onResult(error, response, body, viewtype, req);
@@ -53,11 +54,11 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
     if ( !this.current_try ){
       this.current_try = 1;
     }
-    this.current_try +=1;
+    this.current_try += 1;
     console.log(`\r\nRetry ${this.current_try} / ${this.config.maxtry}`);
     if (error.code === 'ETIMEDOUT'){
 
-      if (this.current_try >= this.config.maxtry){
+      if (this.current_try > this.config.maxtry){
         logger.info(`Maximum number of tries [${this.current_try} / ${this.config.maxtry}]. Request marked as failed`, req);
         this.emit("fatal_error", error, req);
       } else {
@@ -66,7 +67,7 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
       }
 
     } else {
-      if (this.current_try >= this.config.maxtry){
+      if (this.current_try > this.config.maxtry){
         logger.info(`Maximum number of tries [${this.current_try}]. Request marked as failed`, req);
         this.emit("fatal_error", error, req);
       } else {
@@ -77,7 +78,9 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
     }
   } else {
     this.current_try = 1;
-    console.log("\rRequest take: ".concat(req.url).concat(" ---> "+ response.elapsedTime).concat(" ms").red);
+    var duration = Date.now() - req.requestDate;
+    req.duration = duration;
+    console.log("\rRequest take: ".concat(req.url).concat(" ---> " + duration).concat(" ms").red);
     // console.log(req);
     if ( !viewtype ){
       this.decode(body, req);
@@ -104,7 +107,7 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
     // proxy = '91.239.24.182:8085';
 
     that.proxy = proxy.trim();
-    request = request.defaults({'proxy': `http://${proxy}`});
+    needle.defaults({'proxy': `http://${proxy}`});
     console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
 
     that.request(req, viewtype);

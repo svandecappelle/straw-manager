@@ -5,7 +5,7 @@ var express = require('express'),
   moment = require('moment'),
   nconf = require('nconf');
   logger = require("log4js").getLogger('app/routes/views');
-
+const LOG_ALL_VIEWS_ACCESS = false;
 router.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -13,14 +13,21 @@ router.use(bodyParser.urlencoded({
 router.use(bodyParser.json());
 
 // middleware that is specific to this router
-router.use(function timeLog (req, res, next) {
-  logger.info('Views: Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
-  next();
-});
+if (LOG_ALL_VIEWS_ACCESS){
+  router.use(function timeLog (req, res, next) {
+    logger.info('Views: Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+    next();
+  });
+}
 
 // define the home page route
 router.get('/', function (req, res) {
-  res.render('index');
+  res.render('index', {
+    bufferLength: buffer.getBuffer().length,
+    pending: buffer.pending().length,
+    set: buffer.aspired().length,
+    failed: buffer.failed().length
+  });
 });
 
 // define the about route
@@ -39,7 +46,9 @@ router.get('/request/:id', function (req, res) {
       "requestID":req.params.id
     });
 
-    res.render('request', elem);
+    res.render('request', {
+      request: elem
+    });
 });
 
 module.exports = router

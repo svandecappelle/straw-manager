@@ -1,8 +1,19 @@
 doctype html
 html(lang="en")
   head
-    link(rel="stylesheet", type="text/css", href="public/assets/bootstrap/dist/css/bootstrap.min.css")
-    script(src="public/assets/bootstrap/dist/js/bootstrap.js")
+    link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
+    script(src="/public/assets/jquery/dist/jquery.min.js")
+    script(src="/public/assets/bootstrap/dist/js/bootstrap.js")
   body
+    nav.navbar.navbar-default
+      .container-fluid
+        .navbar-header
+          .collapse.navbar-collapse
+            ul.nav.navbar-nav
+              li#auto-refresh.active
+                a(href="#") auto-refresh
+            form.navbar-form.navbar-left
+              .form-group
+                input.form-control(type="text", placeholder="Search")
     div
       block body

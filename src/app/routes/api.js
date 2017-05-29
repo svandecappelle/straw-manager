@@ -21,13 +21,24 @@ router.use(bodyParser.json());
 
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
-  logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+  if (req.url !== '/status'){
+    logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green);  
+  }
   next();
 });
 
 // define the home page route
 router.get('/', function (req, res) {
   res.send('collectOnline API home page')
+});
+
+router.get('/status', function(req, res){
+  res.send({
+    bufferLength: buffer.getBuffer().length,
+    pending: buffer.pending().length,
+    set: buffer.aspired().length,
+    failed: buffer.failed().length
+  });
 });
 
 // define the about route
@@ -117,5 +128,6 @@ router.post('/update', function (req, res) {
       res.status(400).send({"Error":"a valid query must be a JSON that contains: Enseigne, MagasinId, idProduit and url"})
     }
 });
+
 
 module.exports = router

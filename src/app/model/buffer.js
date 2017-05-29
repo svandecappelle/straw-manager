@@ -54,7 +54,19 @@ var _ = require('underscore'),
   });
 
   Buffer.pending_length = function(){
-    return _.where(requestBuffer, {status: 'pending'}).length;
+    return Buffer.pending().length;
+  };
+
+  Buffer.pending = function(){
+    return _.where(requestBuffer, {status: 'pending'});
+  };
+
+  Buffer.failed = function(){
+    return _.where(requestBuffer, {status: 'failed'});
+  };
+
+  Buffer.aspired = function(){
+    return _.where(requestBuffer, {status: 'set'});
   };
 
   Buffer.add = function add(request, callback){

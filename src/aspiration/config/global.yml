@@ -6,4 +6,4 @@ default:
   minimum_msec_entre_mag: 500
   auto_exit: false
   writeCSV: false
-  maxtry: 1
+  maxtry: 2

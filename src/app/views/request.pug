@@ -1,0 +1,48 @@
+extends template
+
+block body
+  if !request
+    .page-header
+      h1 Request is invalid
+  else
+    .page-header.request-view(id="request-" + request.requestID, data-id=request.requestID)
+      h1 Request: #{request.requestID}
+        span.badge #{request.status}
+    a(href=request.url)= request.url
+    ul.list-group#datas
+      each val, index in request.data
+        li.list-group-item.row
+          .col-xs-6.col-md-4= index
+          .col-xs-6.col-md-4= val
+    script
+      :coffee-script
+        refresh_time = 500
+        decode = (request) ->
+          $("#request-" + request.requestID + " span.badge").text(request.status)
+          $("#datas").empty()
+          for data, value of request.data
+            obj = $("<li>", {
+              class: "list-group-item row" 
+            })
+            obj.append($("<div>", {
+              class: "col-xs-6 col-md-4"
+            }).text(data))
+            obj.append($("<div>", {
+              class: "col-xs-6 col-md-4"
+            }).text(value))
+            $("#datas").append(obj)
+            
+          if (request.status != "pending")
+            $("#auto-refresh").removeClass("active")
+        $ ->
+          $('#auto-refresh').click ->
+            $(this).toggleClass("active")
+            refresh()
+          callback = (response) -> 
+            decode(response)
+            auto_refresh = $("#auto-refresh").hasClass("active")
+            if auto_refresh
+              setTimeout(refresh, refresh_time)
+          refresh = () -> 
+            $.get "/api/request/" + $(".request-view").data('id'), callback
+          refresh()
