@@ -13,7 +13,7 @@ var site_engines = {};
     Engine.start = function (opts, eventEmitter) {
 
       var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
-      var enseigne_lancher = new Initialiser(true);
+      var enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1);
       enseigne_lancher.on('done', function(data){
         eventEmitter.emit('done', data);
       });

@@ -17,7 +17,7 @@ Bricoman.prototype.constructor = Bricoman;
 
 Bricoman.prototype.decode = function (html, req) {
   var $ = cheerio.load(html);
-	logger.debug('*********Fiche**************')
+	logger.info('*********Fiche**************', html);
 	var ReqObject = req;
 
 	/* ------------------------------------------------------------------------ */

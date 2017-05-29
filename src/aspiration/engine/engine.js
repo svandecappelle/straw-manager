@@ -105,7 +105,8 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
     // TODO comment this
     // Used for test timeout only
     // proxy = '91.239.24.182:8085';
-
+    // ssl
+    // proxy = '5.135.195.166:3128'
     that.proxy = proxy.trim();
     needle.defaults({'proxy': `http://${proxy}`});
     console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
