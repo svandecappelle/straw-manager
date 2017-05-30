@@ -4,7 +4,7 @@ section.sidebar.show
       .input-group
         h1 Connection
   .panel.panel-default.login-screen
-    form.form-horizontal(method='post')
+    form.form-horizontal(method='post', action='/login?redirect=' + urlfrom)
       .form-group
         label.col-sm-2.control-label(for="username") username
         .col-sm-10

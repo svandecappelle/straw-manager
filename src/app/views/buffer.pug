@@ -17,7 +17,8 @@ block body
         if ( $("#request-" + request.requestID).length == 0 )
           obj = $("<a>", {
             class: 'row list-group-item',
-            id: "request-" + request.requestID
+            id: "request-" + request.requestID,
+            href: "/request/" + request.requestID
           })
           obj.append($("<span>", {
             class: "col-xs-6 col-md-4"
@@ -29,11 +30,10 @@ block body
             class: "col-xs-4 col-md-2 badge"
           }).text(request.status))
           $("ul#buffer").append obj
-          
         $("#request-" + request.requestID + " span.badge").text(request.status)
         
       decode = (response) ->
-        
+        $("ul#buffer").empty()
         setStatus request for request in response
       $ ->
         auto_refresh = $("#auto-refresh").hasClass("active")
@@ -47,6 +47,6 @@ block body
           if auto_refresh
             setTimeout(refresh, refresh_time)
         refresh = () -> 
-          $.get "/api/", callback
+          $.get view, callback
         if auto_refresh
           refresh()

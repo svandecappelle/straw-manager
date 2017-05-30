@@ -18,7 +18,7 @@ block body
           .progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + set * 100 / bufferLength + "%;")
             span #{set * 100 / bufferLength} %
       li.list-group-item.text-center#failed
-        a.btn.btn-danger(href="/buffer") failed requests
+        a.btn.btn-danger(href="/failed") failed requests
         span.badge= failed
         .progress(style="margin-top: 5px")
           .progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + failed * 100 / bufferLength + "%;")

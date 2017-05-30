@@ -27,6 +27,7 @@ router.use(function timeLog (req, res, next) {
     next();
   } else if (req.url.indexOf("login") === -1) {
     logger.warn('Not Connected user Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+    req.session.urlfrom = req.url;
     res.redirect('/login');
   } else {
     next();
@@ -84,6 +85,15 @@ router.get('/failed', function (req, res) {
     buffer: buffer.failed(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'failed'
+  });
+});
+
+router.get('/search', function (req, res) {
+  logger.info('search into buffer requested !'.red);
+  res.render('buffer', {
+    buffer: buffer.search(req.query["q"]),
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    view: `search?q=${req.query["q"]}`
   });
 });
 

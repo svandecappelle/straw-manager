@@ -21,7 +21,13 @@
       app.get('/logout', authority.logout);
 
       app.get('/login', function (req, res) {
-        res.render('middleware/login');
+        var urlfrom = "/";
+        if (req.session.urlfrom){
+          urlfrom = req.session.urlfrom;
+        }
+        res.render('middleware/login', {
+          urlfrom: urlfrom
+        });
       });
 
       app.get('/check-authorization', function (req, res) {

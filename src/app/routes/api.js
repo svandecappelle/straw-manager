@@ -67,6 +67,11 @@ router.get('/failed', function (req, res) {
   res.send(buffer.failed());
 });
 
+router.get('/search', function (req, res) {
+  logger.info(`search into buffer requested ! ${req.query["q"]}`.red);
+  res.send(buffer.search(req.query["q"]));
+});
+
 router.get('/request/:id', function (req, res) {
 
     var elem = buffer.getElementByRequestID({

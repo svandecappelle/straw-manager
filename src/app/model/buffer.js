@@ -72,6 +72,12 @@ var _ = require('underscore'),
     return _.where(requestBuffer, {status: 'set'});
   };
 
+  Buffer.search = function(query){
+    return _.filter(requestBuffer, function(elem){
+      return JSON.stringify(elem).indexOf(query) !== -1;
+    });
+  }
+
   Buffer.add = function add(request, callback){
     auto_increment++;
 

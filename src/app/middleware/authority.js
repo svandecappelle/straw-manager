@@ -50,11 +50,15 @@
                     //user.logIP(userData.uid, req.ip);
                     logger.info("user '" + userData.uid + "' connected on: " + req.ip);
                 }
-                
-                res.status(200).json({
-                    status: 200,
-                    message: "user connected"
-                });
+                console.log(req.query);
+                if (req.query["redirect"]){
+                  res.redirect(req.query["redirect"]);
+                } else {
+                  res.status(200).json({
+                      status: 200,
+                      message: "user connected"
+                  });
+                }
             });
 
         })(req, res, next);
