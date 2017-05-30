@@ -51,7 +51,12 @@ Engine.prototype.request = function (req, viewtype) {
   }
 
   logger.info("using opts : ", options);
-  needle.get(req.url, options, function(error, response, body){
+  var needle_call = needle.get;
+  if (req.opts && req.opts.method === 'POST'){
+      needle_call = needle.post;
+  }
+
+  needle_call(req.url, options, function(error, response, body){
     if (response){
       if (response.cookies){
         var cookies = response.cookies;
@@ -129,7 +134,7 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
   that.proxy = proxy.trim();
   console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
   return {
-    'proxy': `http://${proxy}`,
+    'proxy': `http://${this.proxy}`,
     'parse_cookies': true,
     'follow_set_cookies': true
   };

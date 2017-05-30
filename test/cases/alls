@@ -11,3 +11,25 @@
   "idProduit":"22110002",
   "url":"http://www.castorama.fr/store/Coffret-de-6-tournevis-electricien-STANLEY-prod10650123.html?isFeaturedProduct=true&categoryId=cat_id_1771&navAction=jump"
 }
+
+
+
+
+{
+  "Enseigne":"Bricoman",
+  "idProduit":"519260",
+  "url":"https://www.bricoman.fr/nespoli-manche-balai-droit-bimat-130cm.html",
+  "stores": [26, 41]
+},
+{
+  "Enseigne":"Castorama",
+  "MagasinId": "4206",
+  "idProduit":"22110002",
+  "url":"http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-MAC-ALLISTER-MEDD20S-20V---15Ah-prod22110002.html?sortByValue=relevance&navCount=1&navAction=push"
+},
+{
+  "Enseigne":"Castorama",
+  "MagasinId": "4206",
+  "idProduit":"22110002",
+  "url":"http://www.castorama.fr/store/Coffret-de-6-tournevis-electricien-STANLEY-prod10650123.html?isFeaturedProduct=true&categoryId=cat_id_1771&navAction=jump"
+},

@@ -6,13 +6,13 @@ block body
         a.btn.btn-info(href="/buffer", target="_blank") Buffer length
         span.badge= bufferLength
       li.list-group-item.text-center#pending
-        a.btn.btn-warning(href="/buffer") pending requests
+        a.btn.btn-warning(href="/pending") pending requests
         span.badge= pending
         .progress(style="margin-top: 5px")
           .progress-bar.progress-bar-striped.active(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + 100 - (pending * 100 / bufferLength) + "%;")
             span #{100 - (pending  * 100 / bufferLength)} %
       li.list-group-item.text-center#set
-        a.btn.btn-info(href="/buffer") succeed requests
+        a.btn.btn-info(href="/set") succeed requests
         span.badge= set
         .progress(style="margin-top: 5px")
           .progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + set * 100 / bufferLength + "%;")

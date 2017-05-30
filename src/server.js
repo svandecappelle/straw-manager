@@ -1,4 +1,5 @@
 var express = require('express'),
+    session = require('express-session'),
     api = require('./app/routes/api'),
     views = require('./app/routes/views'),
     nconf = require('nconf'),
@@ -6,6 +7,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     app = express(),
     log4js = require("log4js"),
+    authentication = require("./app/routes/authentication"),
     logger = log4js.getLogger('Server');
 require("colors");
 
@@ -56,6 +58,11 @@ process.on('uncaughtException', function (err) {
       }
 
       if ( !opts || opts.run_server ) {
+        app.use(session({
+            secret: 'keyboard cat',
+            proxy: true // if you do SSL outside of node.
+        }));
+
         logger.debug("aspi" , nconf.get('aspiration'));
         app.use('/api', api)
 
@@ -66,6 +73,9 @@ process.on('uncaughtException', function (err) {
 
         app.use('/public', express.static(path.join(__dirname + '/../public')));
         app.use('/', views);
+
+        authentication.initialize(app);
+        authentication.load(app);
 
         logger.info("server is listening on port", "".concat(http_port).cyan);
         app.listen(http_port)

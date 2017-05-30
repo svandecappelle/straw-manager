@@ -60,6 +60,7 @@ Bricoman.prototype.getStores = function(params){
 
 Bricoman.prototype.aspireOnStore = function(req){
   var that = this;
+  req.stores = this.stores;
   _.each(this.stores, function(id){
     var param = _.clone(req);
     param.MagasinId = id;

@@ -8,31 +8,40 @@ block body
     .page-header.request-view(id="request-" + request.requestID, data-id=request.requestID)
       h1 Request: #{request.requestID}
         span.badge #{request.status}
-    a(href=request.url)= request.url
-    .error 
-      p= request.error
-    ul.list-group#datas
-      each val, index in request.data
-        li.list-group-item.row
-          .col-xs-6.col-md-4= index
-          .col-xs-6.col-md-4= val
-    if request.stores_detail
-      ul.list-group#stores-datas
-        li.list-group-item.row.active
-          .col-xs-6.col-md-4.text-center Magasin
-          .col-xs-6.col-md-4.text-center Prix
-          .col-xs-6.col-md-4.text-center Promo
-        
-        each store_detail, storeid in request.stores_detail
-          if store_detail
-            li.list-group-item.row
-              .col-xs-6.col-md-4= storeid
-              .col-xs-6.col-md-4= store_detail.prix
-              .col-xs-6.col-md-4= store_detail.promo
-          else
-            .message= store_detail
-    else
-      .message no detail mag
+    .col-xs-12.col-md-12
+      a(href=request.url)= request.url
+      if request.stores
+        .row
+          .col-xs-6.col-md-4 Magasins à aspirer
+            .badge= request.stores.length
+          .col-xs-6.col-md-4= request.stores
+      if request.error
+        .col-xs-12.col-md-12
+          .alert.alert-danger Error caught
+            .well
+              p= JSON.stringify(request.error)
+      ul.list-group#datas
+        each val, index in request.data
+          li.list-group-item.row
+            .col-xs-6.col-md-4= index
+            .col-xs-6.col-md-4= val
+      if request.stores_detail
+        ul.list-group#stores-datas
+          li.list-group-item.row.active
+            .col-xs-6.col-md-4.text-center Magasin
+            .col-xs-6.col-md-4.text-center Prix
+            .col-xs-6.col-md-4.text-center Promo
+          
+          each store_detail, storeid in request.stores_detail
+            if store_detail
+              li.list-group-item.row
+                .col-xs-6.col-md-4= storeid
+                .col-xs-6.col-md-4= store_detail.prix
+                .col-xs-6.col-md-4= store_detail.promo
+            else
+              .message= store_detail
+      else
+        .message no detail mag
     script
       :coffee-script
         refresh_time = 500

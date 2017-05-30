@@ -15,7 +15,17 @@ Castorama.prototype.call = function (params) {
 
 Castorama.prototype.constructor = Castorama;
 
-Castorama.prototype.decode = function (html, req) {
+Castorama.prototype.decode = function (html, req, response) {
+
+  if (html === ""){
+    logger.error("Not any html");
+    var output = {
+      requestID  :  req.requestID,
+      error      :	"Page non disponible",
+      data       :  undefined
+    };
+    return this.emit('fatal_error', output, req);
+  }
   var $ = cheerio.load(html);
 
   logger.debug('vumMsg',$('div#vumMsg').text())
@@ -27,7 +37,7 @@ Castorama.prototype.decode = function (html, req) {
       data       :  undefined
     };
 
-    return this.emit('error', output);
+    return this.emit('fata_error', output, req);
   }
 
   var product = $("div.productContent");

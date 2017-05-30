@@ -1,6 +1,7 @@
 extends template
 
 block body
+  a#api-link(href="/api/" + view)
   ul#buffer.list-group
     each val in buffer
       a.row.list-group-item(href="/request/" + val.requestID, id="request-" + val.requestID)
@@ -10,6 +11,7 @@ block body
 
   script
     :coffee-script
+      view = $("#api-link").attr("href")
       refresh_time = 250
       setStatus = (request) ->
         if ( $("#request-" + request.requestID).length == 0 )
@@ -45,6 +47,6 @@ block body
           if auto_refresh
             setTimeout(refresh, refresh_time)
         refresh = () -> 
-          $.get "/api/buffer", callback
+          $.get "/api/", callback
         if auto_refresh
           refresh()

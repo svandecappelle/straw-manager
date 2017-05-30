@@ -1,0 +1,23 @@
+section.sidebar.show
+  .search
+    .col-lg-8.col-md-8
+      .input-group
+        h1 Connection
+  .panel.panel-default.login-screen
+    form.form-horizontal(method='post')
+      .form-group
+        label.col-sm-2.control-label(for="username") username
+        .col-sm-10
+          input.form-control(type="text", id="username", name="username", placeholder="username")
+      .form-group
+        label.col-sm-2.control-label(for="password") password
+        .col-sm-10
+          input.form-control(type="password", id="password", name="password", placeholder="password")
+      .form-group
+        .col-sm-offset-2.col-sm-10
+            .checkbox
+            label
+              input(type="checkbox", name="remember")
+              span Remember me
+      .form-group(style='margin-right: 0px')
+        input.btn.btn-success.btn-lg.pull-right(id="login", style="margin-bottom: 15px;", type="submit", value="connect")

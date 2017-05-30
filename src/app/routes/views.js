@@ -3,7 +3,8 @@ var express = require('express'),
   buffer = require('./../model/buffer'),
   bodyParser = require('body-parser'),
   moment = require('moment'),
-  nconf = require('nconf');
+  _ = require("underscore"),
+  nconf = require('nconf'),
   logger = require("log4js").getLogger('app/routes/views');
 const LOG_ALL_VIEWS_ACCESS = false;
 router.use(bodyParser.urlencoded({
@@ -20,24 +21,70 @@ if (LOG_ALL_VIEWS_ACCESS){
   });
 }
 
+router.use(function timeLog (req, res, next) {
+  logger.info(req.url);
+  if (req.session && req.session.passport && req.session.passport.user){
+    next();
+  } else if (req.url.indexOf("login") === -1) {
+    logger.warn('Not Connected user Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+    res.redirect('/login');
+  } else {
+    next();
+  }
+});
+
 // define the home page route
 router.get('/', function (req, res) {
   res.render('index', {
     bufferLength: buffer.getBuffer().length,
     pending: buffer.pending().length,
     set: buffer.aspired().length,
-    failed: buffer.failed().length
+    failed: buffer.failed().length,
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
   });
 });
 
 // define the about route
 router.get('/about', function (req, res) {
-  res.render('about');
+  res.render('about', {
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+  });
 });
 
 router.get('/buffer', function (req, res) {
   logger.info('buffer requested !'.red);
-  res.render('buffer', {buffer: buffer.getBuffer()});
+  res.render('buffer', {
+    buffer: buffer.getBuffer(),
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    view: 'buffer'
+  });
+});
+
+router.get('/pending', function (req, res) {
+  logger.info('pending buffer requested !'.red);
+  res.render('buffer', {
+    buffer: buffer.pending(),
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    view: 'pending'
+  });
+});
+
+router.get('/set', function (req, res) {
+  logger.info('aspired buffer requested !'.red);
+  res.render('buffer', {
+    buffer: buffer.aspired(),
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    view: 'set'
+  });
+});
+
+router.get('/failed', function (req, res) {
+  logger.info('failed buffer requested !'.red);
+  res.render('buffer', {
+    buffer: buffer.failed(),
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    view: 'failed'
+  });
 });
 
 router.get('/request/:id', function (req, res) {
@@ -46,7 +93,8 @@ router.get('/request/:id', function (req, res) {
     });
 
     res.render('request', {
-      request: elem
+      request: elem ,
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
     });
 });
 
