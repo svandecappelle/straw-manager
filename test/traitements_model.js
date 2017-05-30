@@ -3,7 +3,7 @@ var nconf = require("nconf"),
 const DEFAULT_TEST_TIMEOUT = nconf.get("tests:timeout") !== undefined ? nconf.get("tests:timeout") : 45000;
 
 var TestTraitement = function (opts, callback_test) {
-  this.maxtry = 5;
+  this.maxtry = 10;
   this.current_try = 1;
   this.time_recheck = 2000;
   this.opts = opts;

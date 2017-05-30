@@ -41,7 +41,6 @@ router.get('/buffer', function (req, res) {
 });
 
 router.get('/request/:id', function (req, res) {
-
     var elem = buffer.getElementByRequestID({
       "requestID":req.params.id
     });

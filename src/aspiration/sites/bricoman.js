@@ -1,23 +1,101 @@
-var Engine = require("../engine/engine"),
-  cheerio = require('cheerio');
+var Engine = require('../engine/engine'),
+  cheerio = require('cheerio'),
+  _ = require('underscore');
 
 function Bricoman(use_proxy){
   this.name = "bricoman";
   this.use_proxy = use_proxy;
   Engine.call(this);
+  this.on("stores", this.parseStores);
+  this.on("home", this.home);
+
 };
 
 Bricoman.prototype = Object.create(Engine.prototype);
 
 Bricoman.prototype.call = function (params) {
-  this.request(params);
+  if (params.stores){
+    this.stores = params.stores;
+  }
+  logger.info("Parameters call engine", params);
+  this.home(null, params);
+
+  /*
+    this.request({
+      url: "https://www.bricoman.fr",
+      origin: params
+    }, 'home');
+  */
+
+  /*
+    params.cookies = {
+      'smile_retailershop_id': '21'
+    };
+    logger.info("Calls engine with: ", params);
+    this.request(params);
+  */
 };
 
 Bricoman.prototype.constructor = Bricoman;
 
+Bricoman.prototype.home = function (html, req) {
+  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  if (req.origin) {
+    req = req.origin
+  }
+  if ( this.stores !== undefined && this.stores.length > 0 ) {
+    this.aspireOnStore(req);
+  } else {
+    this.getStores(req);
+  }
+};
+
+Bricoman.prototype.getStores = function(params){
+  this.request({
+    url: "https://www.bricoman.fr/nos-magasins.html",
+    origin: params
+  },
+  "stores");
+};
+
+Bricoman.prototype.aspireOnStore = function(req){
+  var that = this;
+  _.each(this.stores, function(id){
+    var param = _.clone(req);
+    param.MagasinId = id;
+    param.cookies = {
+      'smile_retailershop_id': id
+    };
+    logger.info("Bricoman_MagasinList", id);
+    that.request(param);
+  });
+};
+
+Bricoman.prototype.parseStores = function (html, req, response) {
+  var that = this;
+  logger.info(response.cookies);
+  // console.log(html);
+	var $ = cheerio.load(html);
+  that.stores = [];
+	logger.info("Rentré dans Bricoman_MagasinList");
+
+	$("[id='shop_chooser'] option").each(function(idx) {
+		var url = $(this).attr('value')
+		var Magasin =  $(this).text().trim()
+		var MagasinId =  $(this).attr('data-shop-id')
+
+		logger.debug(Magasin, url, MagasinId)
+    that.stores.push(MagasinId);
+	});
+
+  logger.debug("Bricoman_MagasinList", this.stores);
+
+  this.aspireOnStore(req.origin);
+};
+
 Bricoman.prototype.decode = function (html, req) {
   var $ = cheerio.load(html);
-	logger.info('*********Fiche**************', html);
+	logger.debug('*********Fiche**************', req);
 	var ReqObject = req;
 
 	/* ------------------------------------------------------------------------ */
@@ -70,6 +148,7 @@ Bricoman.prototype.decode = function (html, req) {
 	})
 
 	data.prix = $(".item-price [itemprop='price']").text().trim().replace(/  /g,"");
+
 	if ($(".item-price .old-price").length > 0) {
 		logger.debug("HAVE OLD PRICE");
 		data.ancienPrix = $(".item-price  p.old-price span.price span").first().text().trim()
@@ -130,7 +209,6 @@ Bricoman.prototype.decode = function (html, req) {
 		requestID : ReqObject.requestID,
 		data			: data
 	};
-
   this.emit('done', output);
 };
 

@@ -43,6 +43,9 @@ var _ = require('underscore'),
     }
   });
   eventEmitter.on('error', function(error, req){
+    if (req.origin){
+      req = req.origin;
+    }
     console.log("Errors on aspiration".red, error, req);
     Buffer.update(req);
 
@@ -81,6 +84,7 @@ var _ = require('underscore'),
         MagasinId     : request.MagasinId,
         idProduit     : request.idProduit,
         url           : request.url,
+        stores        : request.stores,
         status        : 'pending',
         data          : {
         },
@@ -102,7 +106,18 @@ var _ = require('underscore'),
     if (index > -1 && object.data && object.data.enseigne) {
       requestBuffer[index].status = 'set'
       requestBuffer[index].responseDate = Date.now()
-      requestBuffer[index].data = object.data
+
+      if (object.data.magasinId){
+        requestBuffer[index].data = _.omit(object.data, ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo'])
+
+        if (!requestBuffer[index].stores_detail){
+          requestBuffer[index].stores_detail = {};
+        }
+        requestBuffer[index].stores_detail[object.data.magasinId] = object.data
+      } else {
+        requestBuffer[index].data = object.data;
+      }
+
     } else {
       requestBuffer[index].status = 'failed'
       requestBuffer[index].error = object.error
@@ -122,7 +137,7 @@ var _ = require('underscore'),
   };
 
   Buffer.validQuery = function validQuery(query) {
-    if (query && query.Enseigne && query.MagasinId && query.idProduit && query.url) {
+    if (query && query.Enseigne && query.idProduit && query.url) {
       return true
     } else {
       return false
