@@ -16,13 +16,12 @@ router.use(bodyParser.json());
 // middleware that is specific to this router
 if (LOG_ALL_VIEWS_ACCESS){
   router.use(function timeLog (req, res, next) {
-    logger.info('Views: Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+    logger.info(`${req.url} Time: `.yellow, moment().format('L [|] hh:mm:ss').green);
     next();
   });
 }
 
 router.use(function timeLog (req, res, next) {
-  logger.info(req.url);
   if (req.session && req.session.passport && req.session.passport.user){
     next();
   } else if (req.url.indexOf("login") === -1) {

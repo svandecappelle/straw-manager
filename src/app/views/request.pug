@@ -8,7 +8,7 @@ block body
     .page-header.request-view(id="request-" + request.requestID, data-id=request.requestID)
       h1 Request: #{request.requestID}
         span.badge #{request.status}
-    .col-xs-12.col-md-12
+    .col-xs-12.col-md-12.request
       a(href=request.url)= request.url
       if request.stores
         .row
@@ -18,8 +18,8 @@ block body
       if request.error
         .col-xs-12.col-md-12
           .alert.alert-danger Error caught
-            .well
-              p= JSON.stringify(request.error)
+            pre.well
+              p= JSON.stringify(request.error, null, 4)
       ul.list-group#datas
         each val, index in request.data
           li.list-group-item.row
@@ -48,6 +48,16 @@ block body
         decode = (request) ->
           $("#request-" + request.requestID + " span.badge").text(request.status)
           $("#datas").empty()
+          if request.error
+            if ($(".alert.alert-danger").length == 0)
+              $('.request').append($('<div>', {
+                "class": "col-xs-12 col-md-12"
+              }).append($("<div>", {
+                "class": "alert alert-danger"
+              }).text("Error caught").append($("<pre>", {
+                "class": "well"
+              }))))
+            $(".request .alert.alert-danger .well").text(JSON.stringify request.error, null, 4)
           for data, value of request.data
             obj = $("<li>", {
               class: "list-group-item row" 

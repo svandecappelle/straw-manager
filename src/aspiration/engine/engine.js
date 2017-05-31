@@ -33,15 +33,18 @@ function Engine () {
 Engine.prototype.__proto__ = events.EventEmitter.prototype;
 
 Engine.prototype.parse_cookies = function (req, cookies) {
-  logger.warn("Getting cookies: ", req.url, cookies);
+  logger.debug("Getting cookies: ", req.url, cookies);
 };
 
 Engine.prototype.request = function (req, viewtype) {
   var that = this;
 
   // console.log(that);
-  logger.warn("Using proxy check: ", req, this.use_proxy);
-  var options = {};
+  logger.debug("Using proxy check: ", req, this.use_proxy);
+  var options = {
+    timeout: 20000,
+    read_timeout: 20000
+  };
   if (this.use_proxy && !this.isProxyConnected()){
     options = this.proxy_connect(req, viewtype);
   }
@@ -62,7 +65,7 @@ Engine.prototype.request = function (req, viewtype) {
         var cookies = response.cookies;
         that.emit("cookies", req, cookies);
         that.cookies = merge(that.cookies, cookies);
-        logger.warn(req.url, cookies, that.cookies, req.cookies);
+        logger.debug(req.url, cookies, that.cookies, req.cookies);
       }
     }
     that.onResult(error, response, body, viewtype, req);
@@ -85,19 +88,21 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
 
       if (this.current_try > this.config.maxtry){
         logger.info(`Maximum number of tries [${this.current_try} / ${this.config.maxtry}]. Request marked as failed`, req);
-        this.emit("fatal_error", error, req);
+        this.emit("fatal_error", {message: `maximum number of connection try: ${this.config.maxtry}`, origin_error: error}, req);
       } else {
         logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
-        return this.proxy_connect(req, viewtype);
+        this.proxy = undefined;
+        return this.request(req, viewtype);
       }
 
     } else {
       if (this.current_try > this.config.maxtry){
         logger.info(`Maximum number of tries [${this.current_try}]. Request marked as failed`, req);
-        this.emit("fatal_error", error, req);
+        this.emit("fatal_error", {message: `maximum number of connection try: ${this.config.maxtry}`, origin_error: error}, req);
       } else {
         logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
-        return this.proxy_connect(req, viewtype);
+        this.proxy = undefined;
+        return this.request(req, viewtype);
       }
 
     }
@@ -120,8 +125,6 @@ Engine.prototype.isProxyConnected = function(){
 };
 
 Engine.prototype.proxy_connect = function (req, viewtype) {
-  var that = this;
-
   var data = fs.readFileSync(nconf.get("proxies"), 'utf8');
   var lines = data.split('\n');
   var proxy = lines[Math.floor(Math.random() * lines.length)];
@@ -131,7 +134,8 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
   // proxy = '91.239.24.182:8085';
   // ssl
   // proxy = '5.135.195.166:3128'
-  that.proxy = proxy.trim();
+  this.proxy = proxy.trim();
+  this.proxy = 'http://91.242.217.148:8085'
   console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
   return {
     'proxy': `http://${this.proxy}`,

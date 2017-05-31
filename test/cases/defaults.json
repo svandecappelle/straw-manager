@@ -27,7 +27,8 @@
     {
       "Enseigne":"Bricoman",
       "idProduit":"519260",
-      "url":"https://www.bricoman.fr/peinture-facade-hydropliolite-monocouche-blanc.html"
+      "url":"https://www.bricoman.fr/peinture-facade-hydropliolite-monocouche-blanc.html",
+      "stores": [26]
     }
   ],
   "invalids": [

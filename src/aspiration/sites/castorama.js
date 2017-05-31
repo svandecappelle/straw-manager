@@ -16,7 +16,8 @@ Castorama.prototype.call = function (params) {
 Castorama.prototype.constructor = Castorama;
 
 Castorama.prototype.decode = function (html, req, response) {
-
+  console.log("Decoding query: " + req.url);
+  
   if (html === ""){
     logger.error("Not any html");
     var output = {
