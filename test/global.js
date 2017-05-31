@@ -39,8 +39,8 @@ if (AUTORUN_SERVER) {
      .env()
      .file({ file: './config.json' });
 
-  $test_port = nconf.get("port");
-  $url_api = 'http://localhost:' + $test_port;
+  $test_port = nconf.get("tests:port");
+  $url_api = 'http://' + nconf.get("tests:hostname") + ':' + $test_port + nconf.get("tests:service_location");
   run();
 }
 

@@ -37,44 +37,48 @@ Engine.prototype.parse_cookies = function (req, cookies) {
 };
 
 Engine.prototype.request = function (req, viewtype) {
-  var that = this;
 
-  // console.log(that);
-  logger.debug("Using proxy check: ", req, this.use_proxy);
-  var options = {
-    timeout: 20000,
-    read_timeout: 20000
-  };
-  if (this.use_proxy && !this.isProxyConnected()){
-    options = this.proxy_connect(req, viewtype);
-  }
+  try {
+    var that = this;
+    // console.log(that);
+    logger.debug("Using proxy check: ", req, this.use_proxy);
+    var options = {
+      timeout: 20000,
+      read_timeout: 20000
+    };
+    if (this.use_proxy && !this.isProxyConnected()){
+      options = this.proxy_connect(req, viewtype);
+    }
 
-  if (req.cookies){
-    options.cookies = merge(req.cookies, that.cookies);
-  }
+    if (req.cookies){
+      options.cookies = merge(req.cookies, that.cookies);
+    }
 
-  logger.info("using opts : ", options);
-  var needle_call = needle.get;
-  if (req.opts && req.opts.method === 'POST'){
-      needle_call = needle.post;
-  }
+    logger.info("using opts : ", options);
+    var needle_call = needle.get;
+    if (req.opts && req.opts.method === 'POST'){
+        needle_call = needle.post;
+    }
 
-  needle_call(req.url, options, function(error, response, body){
-    if (response){
-      if (response.cookies){
-        var cookies = response.cookies;
-        that.emit("cookies", req, cookies);
-        that.cookies = merge(that.cookies, cookies);
-        logger.debug(req.url, cookies, that.cookies, req.cookies);
+    needle_call(req.url, options, function(error, response, body){
+      if (response){
+        if (response.cookies){
+          var cookies = response.cookies;
+          that.emit("cookies", req, cookies);
+          that.cookies = merge(that.cookies, cookies);
+          logger.debug(req.url, cookies, that.cookies, req.cookies);
+        }
       }
-    }
-    that.onResult(error, response, body, viewtype, req);
-  }).on('error', function(err){
-    logger.error("Error on calling request engine", err);
-    if (that.current_try >= that.config.maxtry){
-      that.emit("fatal_error", err, req);
-    }
-  });
+      that.onResult(error, response, body, viewtype, req);
+    }).on('error', function(err){
+      logger.error("Error on calling request engine", err);
+      if (that.current_try >= that.config.maxtry){
+        that.emit("fatal_error", err, req);
+      }
+    });
+  } catch (error) {
+    this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error}, req);
+  }
 };
 
 Engine.prototype.onResult = function (error, response, body, viewtype, req) {
@@ -125,7 +129,12 @@ Engine.prototype.isProxyConnected = function(){
 };
 
 Engine.prototype.proxy_connect = function (req, viewtype) {
-  var data = fs.readFileSync(nconf.get("proxies"), 'utf8');
+  var proxyFile = nconf.get("proxies");
+  if (!proxyFile){
+      logger.warn("Proxu files not defined use the default.");
+      proxyFile = "proxyRU.txt";
+  }
+  var data = fs.readFileSync(proxyFile, 'utf8');
   var lines = data.split('\n');
   var proxy = lines[Math.floor(Math.random() * lines.length)];
 
@@ -135,7 +144,7 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
   // ssl
   // proxy = '5.135.195.166:3128'
   this.proxy = proxy.trim();
-  this.proxy = 'http://91.242.217.148:8085'
+  // this.proxy = 'http://91.242.217.148:8085'
   console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
   return {
     'proxy': `http://${this.proxy}`,

@@ -25,7 +25,7 @@
         if (req.session.urlfrom){
           urlfrom = req.session.urlfrom;
         }
-        res.render('middleware/login', {
+        res.render('middleware/login.pug', {
           urlfrom: urlfrom
         });
       });

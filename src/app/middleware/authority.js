@@ -50,7 +50,6 @@
                     //user.logIP(userData.uid, req.ip);
                     logger.info("user '" + userData.uid + "' connected on: " + req.ip);
                 }
-                console.log(req.query);
                 if (req.query["redirect"]){
                   res.redirect(req.query["redirect"]);
                 } else {

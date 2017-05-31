@@ -45,6 +45,7 @@ block body
     script
       :coffee-script
         refresh_time = 500
+        rootPath = $("#root-collect-online").attr("href")
         decode = (request) ->
           $("#request-" + request.requestID + " span.badge").text(request.status)
           $("#datas").empty()
@@ -82,5 +83,5 @@ block body
             if auto_refresh
               setTimeout(refresh, refresh_time)
           refresh = () -> 
-            $.get "/api/request/" + $(".request-view").data('id'), callback
+            $.get rootPath + "api/request/" + $(".request-view").data('id'), callback
           refresh()

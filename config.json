@@ -7,6 +7,9 @@
     "interactive": false
   },
   "tests": {
+    "port": "12000",
+    "hostname": "localhost",
+    "service_location": "/CollectOnline",
     "autorun_server": false,
     "timeout": 5000,
     "silent": true

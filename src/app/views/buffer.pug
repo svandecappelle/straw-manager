@@ -1,10 +1,10 @@
 extends template
 
 block body
-  a#api-link(href="/api/" + view)
+  a#api-link(href= rootPath + "api/" + view)
   ul#buffer.list-group
     each val in buffer
-      a.row.list-group-item(href="/request/" + val.requestID, id="request-" + val.requestID)
+      a.row.list-group-item(href= rootPath + "request/" + val.requestID, id="request-" + val.requestID)
         span.col-xs-6.col-md-4= val.requestID
         span.col-xs-6.col-md-4= val.Enseigne
         span.col-xs-4.col-md-2.badge= val.status

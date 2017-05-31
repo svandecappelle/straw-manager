@@ -24,7 +24,6 @@ process.on('uncaughtException', function (err) {
 (function (ApplicationRoot) {
     "use strict";
 
-
     if (process.title === "Testing CollectOnline API"){
       testing = true;
     } else {

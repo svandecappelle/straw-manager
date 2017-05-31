@@ -1,9 +1,14 @@
 doctype html
 html(lang="en")
   head
-    link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
-    script(src="/public/assets/jquery/dist/jquery.min.js")
-    script(src="/public/assets/bootstrap/dist/js/bootstrap.js")
+    if rootPath
+      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/bootstrap/dist/css/bootstrap.min.css")
+      script(src=rootPath + "public/assets/jquery/dist/jquery.min.js")
+      script(src=rootPath + "public/assets/bootstrap/dist/js/bootstrap.js")
+    else
+      link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
+      script(src="/public/assets/jquery/dist/jquery.min.js")
+      script(src="/public/assets/bootstrap/dist/js/bootstrap.js")      
   body
     nav.navbar.navbar-default
       .container-fluid
@@ -11,7 +16,7 @@ html(lang="en")
           .collapse.navbar-collapse
             ul.nav.navbar-nav
               li
-                a(href="/") Home
+                a#root-collect-online(href=rootPath) Home
               li#auto-refresh
                 a(href="#") auto-refresh
             form.navbar-form.navbar-left
@@ -30,9 +35,10 @@ html(lang="en")
     script
       :coffee-script
         $ -> 
+          rootPath = $("#root-collect-online").attr("href")
           $("#search").on 'change', ->
-            window.location.replace('/search?q=' + $("#search").val())
+            window.location.replace(rootPath + 'search?q=' + $("#search").val())
           $("#search").on 'keypress', (e) ->
             if e.keyCode == 13
               e.preventDefault()
-              window.location.replace('/search?q=' + $("#search").val())
+              window.location.replace(rootPath + 'search?q=' + $("#search").val())
