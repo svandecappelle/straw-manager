@@ -29,7 +29,7 @@
     }
 
     // app.set('view engine', 'pug');
-    console.log(path.join(__dirname + '/../public'));
+    console.log(path.join(__dirname + '/public'));
     app.use(opts.rootPath + '/public', express.static(path.join(__dirname + '/public')));
     app.use(opts.rootPath, views);
 
