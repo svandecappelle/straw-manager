@@ -11,6 +11,10 @@ var TestTraitement = function (opts, callback_test) {
   this.server_returns = [];
   this.isFailed = false;
   this.callback_test = callback_test;
+  this.jar = opts.jar;
+
+  this.opts.jar = undefined;
+
   console.log("Test case: ".red, opts);
 }
 
@@ -75,7 +79,8 @@ TestTraitement.prototype.aspire = function (callback) {
   request.post(url,
   {
     time : true,
-    json: this.opts
+    json: this.opts,
+    jar: this.jar
   }, function (error, response, body) {
 
     if (!error && response) {
@@ -104,7 +109,8 @@ TestTraitement.prototype.verify = function (callback) {
   var url = $url_api.concat('/api/request/' + this.data.requestID);
   request.get( {
     url: url,
-    time : true
+    time : true,
+    jar: this.jar
   }, function (error, response, body){
     console.log(`Request ${url} time in ms`.yellow, response.elapsedTime);
     if (!error && response) {

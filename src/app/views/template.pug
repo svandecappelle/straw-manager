@@ -23,18 +23,24 @@ html(lang="en")
               .form-group
                 input.form-control#search(type="text", placeholder="Search")
 
-        ul.nav.navbar-nav.pull-right
+        ul.nav.navbar-nav.navbar-right.pull-right(style='padding: 15px;')
           li
             if session
-              a(href="#")= session.username
+              .dropdown
+                a.dropdown-toggle(href="#", type="button", id="usermenu", data-toggle="dropdown", aria-haspopup="false", aria-expanded="false")= session.username
+                  span.caret
+                ul.dropdown-menu(aria-labelledby="usermenu")
+                  li
+                    a(href="/logout") Logout
             else
-              a(href="/login") Login  
+              a(href="/login") Login
     div
       block body
     
     script
       :coffee-script
         $ -> 
+          $('.dropdown-toggle').dropdown()
           rootPath = $("#root-collect-online").attr("href")
           $("#search").on 'change', ->
             window.location.replace(rootPath + 'search?q=' + $("#search").val())

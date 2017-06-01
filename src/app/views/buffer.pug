@@ -8,11 +8,11 @@ block body
         span.col-xs-6.col-md-4= val.requestID
         span.col-xs-6.col-md-4= val.Enseigne
         span.col-xs-4.col-md-2.badge= val.status
-
+  script.
+    var refresh_time = #{refresh_time}
   script
     :coffee-script
       view = $("#api-link").attr("href")
-      refresh_time = 250
       setStatus = (request) ->
         if ( $("#request-" + request.requestID).length == 0 )
           obj = $("<a>", {

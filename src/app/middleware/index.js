@@ -7,10 +7,11 @@
     Middleware.render = function (req, res, view, obj){
       var rootPath = nconf.get("CollectOnlineRootPath");
       if (rootPath === undefined){
-        rootPath = '/';
+        rootPath = '';
       }
       res.render(view, merge(obj, {
-        rootPath: rootPath + '/'
+        rootPath: rootPath + '/',
+        refresh_time: 500
       }));
     };
 

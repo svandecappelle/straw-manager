@@ -42,9 +42,10 @@ block body
               .message= store_detail
       else
         .message no detail mag
+    script.
+      var refresh_time = #{refresh_time}
     script
       :coffee-script
-        refresh_time = 500
         rootPath = $("#root-collect-online").attr("href")
         decode = (request) ->
           $("#request-" + request.requestID + " span.badge").text(request.status)

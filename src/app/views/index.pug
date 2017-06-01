@@ -23,9 +23,10 @@ block body
         .progress(style="margin-top: 5px")
           .progress-bar(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + failed * 100 / bufferLength + "%;")
             span #{failed * 100 / bufferLength} %
+  script.
+    var refresh_time = #{refresh_time}
   script
     :coffee-script
-      refresh_time = 250
       rootPath = $("#root-collect-online").attr("href")
       decode = (response) -> 
         $("#buffer .badge").text(response.bufferLength)
