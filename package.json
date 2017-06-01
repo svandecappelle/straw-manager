@@ -6,7 +6,8 @@
   "private": true,
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "postinstall": "bower install"
   },
   "contributors": [
     {
