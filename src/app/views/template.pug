@@ -3,39 +3,52 @@ html(lang="en")
   head
     if rootPath
       link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/bootstrap/dist/css/bootstrap.min.css")
+      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/datatables/media/css/dataTables.material.min.css")
+      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/material-design-lite/material.min.css")
+      link(href=rootPath + "public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
       script(src=rootPath + "public/assets/jquery/dist/jquery.min.js")
-      script(src=rootPath + "public/assets/bootstrap/dist/js/bootstrap.js")
+      script(src=rootPath + "public/assets/bootstrap/dist/js/bootstrap.min.js")
+      script(src=rootPath + "public/assets/datatables/media/js/jquery.dataTables.min.js")
+      script(src=rootPath + "public/assets/datatables/media/js/dataTables.material.min.js")
+      script(src=rootPath + "public/assets/material-design-lite/material.min.js")
+      
     else
       link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
+      link(rel="stylesheet", type="text/css", href="/public/assets/datatables/media/css/dataTables.material.min.css")
+      link(rel="stylesheet", type="text/css", href="/public/assets/material-design-lite/material.min.css")
       script(src="/public/assets/jquery/dist/jquery.min.js")
-      script(src="/public/assets/bootstrap/dist/js/bootstrap.js")      
+      script(src="/public/assets/bootstrap/dist/js/bootstrap.min.js")
+      script(src="/public/assets/datatables/media/js/jquery.dataTables.min.js")
+      script(src="/public/assets/datatables/media/js/dataTables.material.min.js")
+      script(src="/public/assets/material-design-lite/material.min.js")
+      
   body
-    nav.navbar.navbar-default
-      .container-fluid
-        .navbar-header
-          .collapse.navbar-collapse
-            ul.nav.navbar-nav
-              li
-                a#root-collect-online(href=rootPath) Home
-              li#auto-refresh
+    .mdl-layout.mdl-js-layout
+      header.mdl-layout__header.mdl-layout--fixed-drawer
+        .mdl-layout__header-row
+          span.mdl-layout-title Collect online
+          .mdl-layout-spacer
+          .mdl-navigation
+            .mdl-textfield.mdl-js-textfield
+              input.mdl-textfield__input.mdl-textfield--dark#search(type="text", placeholder="Search")
+              // label.mdl-textfield__label(for="search") Search
+            button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-button--icon
+              i.material-icons more_vert
+            ul.mdl-menu.mdl-menu--bottom-right.mdl-js-menu.mdl-js-ripple-effect(for="demo-menu-lower-right")
+              li.mdl-menu__item Some Action
+              li.mdl-menu__item#auto-refresh
                 a(href="#") auto-refresh
-            form.navbar-form.navbar-left
-              .form-group
-                input.form-control#search(type="text", placeholder="Search")
-
-        ul.nav.navbar-nav.navbar-right.pull-right(style='padding: 15px;')
-          li
-            if session
-              .dropdown
-                a.dropdown-toggle(href="#", type="button", id="usermenu", data-toggle="dropdown", aria-haspopup="false", aria-expanded="false")= session.username
-                  span.caret
-                ul.dropdown-menu(aria-labelledby="usermenu")
-                  li
-                    a(href="/logout") Logout
-            else
-              a(href="/login") Login
-    div
-      block body
+              li.mdl-menu__item
+                if session
+                  a(href="/logout") Logout
+                else
+                  a(href="/login") Login
+      .mdl-layout__drawer
+        span.mdl-layout-title
+        nav.mdl-navigation
+          a.mdl-navigation__link#root-collect-online(href=rootPath) Home
+      main.mdl-layout__content
+        block body
     
     script
       :coffee-script

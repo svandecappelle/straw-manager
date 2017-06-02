@@ -2,40 +2,33 @@ extends template
 
 block body
   a#api-link(href= rootPath + "api/" + view)
-  ul#buffer.list-group
-    each val in buffer
-      a.row.list-group-item(href= rootPath + "request/" + val.requestID, id="request-" + val.requestID)
-        span.col-xs-6.col-md-4= val.requestID
-        span.col-xs-6.col-md-4= val.Enseigne
-        span.col-xs-4.col-md-2.badge= val.status
+  table#buffer.mdl-data-table(style='width: 100%;', cellspacing="0")
+    thead
+      tr
+        each column in schema
+          th= column.data
   script.
     var refresh_time = #{refresh_time}
+    var schema = !{JSON.stringify(schema)}
   script
     :coffee-script
       view = $("#api-link").attr("href")
+      table = null
       setStatus = (request) ->
-        if ( $("#request-" + request.requestID).length == 0 )
-          obj = $("<a>", {
-            class: 'row list-group-item',
-            id: "request-" + request.requestID,
-            href: "/request/" + request.requestID
-          })
-          obj.append($("<span>", {
-            class: "col-xs-6 col-md-4"
-          }).text(request.requestID))
-          obj.append($("<span>", {
-            class: "col-xs-6 col-md-4"
-          }).text(request.Enseigne))
-          obj.append($("<span>", {
-            class: "col-xs-4 col-md-2 badge"
-          }).text(request.status))
-          $("ul#buffer").append obj
-        $("#request-" + request.requestID + " span.badge").text(request.status)
-        
+        reload_callback = () ->
+          "ok"
+        table.ajax.reload( reload_callback , false)
       decode = (response) ->
         $("ul#buffer").empty()
         setStatus request for request in response
       $ ->
+        table = $('#buffer').DataTable({
+          paging: true,
+          retrieve: true,
+          searching: true,
+          ajax: {url: view, dataSrc: ''}, 
+          columns: schema
+        });
         auto_refresh = $("#auto-refresh").hasClass("active")
         $('#auto-refresh').click ->
           $(this).toggleClass("active")

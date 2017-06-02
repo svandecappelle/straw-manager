@@ -56,8 +56,25 @@ router.get('/about', function (req, res) {
 
 router.get('/buffer', function (req, res) {
   logger.info('buffer requested !'.red);
+  var bufferValues = buffer.getBuffer();
+  var columns = [
+    'requestID',
+    'requestDate',
+    'responseDate',
+    'Enseigne',
+    'idProduit',
+    'url',
+    'stores',
+    'status'
+  ];
+  var schema = [];
+  for (column of columns) {
+    schema.push({data: column});
+  }
+  console.log("columns: " , schema);
   middleware.render(req, res, 'buffer.pug', {
-    buffer: buffer.getBuffer(),
+    buffer: bufferValues,
+    schema: schema,
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'buffer'
   });

@@ -90,7 +90,7 @@ var _ = require('underscore'),
         MagasinId     : request.MagasinId,
         idProduit     : request.idProduit,
         url           : request.url,
-        stores        : request.stores,
+        stores        : request.stores ? request.stores : null,
         status        : 'pending',
         data          : {
         },

@@ -7,7 +7,7 @@
     "interactive": false
   },
   "tests": {
-    "default": "ProductOnline",
+    "default": "local",
     "environments": {
       "local": {
         "port": "65000",
