@@ -56,7 +56,7 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    console.log("Errors on aspiration".red, error, req);
+    console.log("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
@@ -120,16 +120,20 @@ var _ = require('underscore'),
     //
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)});
-    if (index > -1 && object.data && object.data.enseigne) {
+    if (index > -1 && object.data) {
 
       if (finished) {
         requestBuffer[index].status = 'set';
       }
 
+      if (object.stores && requestBuffer[index].stores === null){
+        requestBuffer[index].stores = object.stores;
+      }
+
       requestBuffer[index].responseDate = Date.now();
 
       if (object.data.magasin){
-        requestBuffer[index].data = _.omit(object.data, ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo'])
+        requestBuffer[index].data = _.extend(requestBuffer[index].data, _.omit(object.data, ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo']));
 
         if (!requestBuffer[index].stores_detail){
           requestBuffer[index].stores_detail = {};
@@ -137,6 +141,9 @@ var _ = require('underscore'),
 
         requestBuffer[index].aspired_stores.push(object.data.magasin);
         requestBuffer[index].stores_detail[object.data.magasin.id] = object.data;
+        _.sortBy(requestBuffer[index].stores_detail, function(value){
+          return value.magasin.id;
+        });
       } else {
         requestBuffer[index].data = object.data;
       }
@@ -145,7 +152,7 @@ var _ = require('underscore'),
       requestBuffer[index].status = 'failed';
       requestBuffer[index].error = object.error;
       requestBuffer[index].responseDate = Date.now();
-      console.log(`Request: ${object.requestID} failed: `.red.bold.underline, requestBuffer[index]);
+      console.log(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['stores_detail', 'aspired_stores']));
     }
   };
 

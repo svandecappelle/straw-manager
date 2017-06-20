@@ -15,7 +15,7 @@ block body
           if request.stores
             .badge= request.stores.length
         if request.stores
-          .col-xs-6.col-md-4= request.stores
+          .col-xs-6.col-md-4= JSON.stringify(request.stores.length)
         else
           .col-xs-6.col-md-4 all
       if request.error

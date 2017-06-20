@@ -73,8 +73,7 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
   that.stores = [];
 
   var $ = cheerio.load(html);
-  list = $("#myStoreM").children() // update 14-12-2o15
-  list.each(function(idx) {
+  $("#myStoreM").first().find("option").each(function(idx) {
     var MagasinName = $(this).data('url').replace(/\n/g,' ').replace(/\t/g,'').trim();
     var url = $(this).attr('data-url');
     var MagasinId = $(this).attr('value');
@@ -92,7 +91,7 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
       name: MagasinName
     });
   });
-
+  req.origin.stores = this.stores;
   logger.debug("Bricodepot_MagasinList", this.stores);
   this.aspireOnStore(req.origin);
 };
@@ -258,7 +257,8 @@ Bricodepot.prototype.decode = function (html, req) {
 
 	var output = {
 		requestID : req.requestID,
-		data			: data
+    stores: this.stores,
+		data: data
 	};
   this.emit('product', output);
 };

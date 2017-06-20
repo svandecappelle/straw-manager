@@ -42,7 +42,7 @@ Engine.prototype.__proto__ = events.EventEmitter.prototype;
 Engine.prototype.export = function (output) {
   this.aspiredDatas += 1;
 
-  if (this.stores.length >= this.aspiredDatas){
+  if (this.stores.length <= this.aspiredDatas){
     console.log("Done all datas aspiration".green);
     this.emit('done', output);
   }
@@ -92,7 +92,7 @@ Engine.prototype.request = function (req, viewtype) {
     }).on('error', function(err){
       logger.error("Error on calling request engine", err);
       if (that.current_try >= that.config.maxtry){
-        that.emit("fatal_error", err, req);
+        that.emit("fatal_error", { message: 'connecting maxtry',origin: err}, req);
       }
     }).on('redirect', function(url) {
       console.log(url.red);

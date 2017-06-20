@@ -30,11 +30,11 @@ block body
           "columnDefs": [
             {
               "render": (data, type, row ) ->
-                if (row['aspired_stores'])
-                  return row['aspired_stores'].length
-                return 1;
+                if (data && data.length)
+                  return data.length
+                return 0;
               ,
-              "targets": 8
+              "targets": [8, 6]            
             }
           ]
         });
