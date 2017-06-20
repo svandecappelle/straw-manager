@@ -78,7 +78,7 @@ Exporter.prototype.open = function (data) {
 };
 
 Exporter.prototype.filename = function(enseigne){
-  return path.join(__dirname, `../../../export/${enseigne}-${moment().locale('fr').format('ll')}.csv`);
+  return path.join(__dirname, `../../../export/${enseigne}-${moment().locale('fr').format('DD-MM-YYYY')}.csv`);
 }
 
 Exporter.prototype.export = function (data) {
