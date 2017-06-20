@@ -10,38 +10,50 @@ block body
         span.badge #{request.status}
     .col-xs-12.col-md-12.request
       a(href=request.url)= request.url
-      if request.stores
-        .row
-          .col-xs-6.col-md-4 Magasins à aspirer
+      .row
+        .col-xs-6.col-md-4 Magasins à aspirer
+          if request.stores
             .badge= request.stores.length
+        if request.stores
           .col-xs-6.col-md-4= request.stores
+        else
+          .col-xs-6.col-md-4 all
       if request.error
-        .col-xs-12.col-md-12
-          .alert.alert-danger Error caught
-            pre.well
-              p= JSON.stringify(request.error, null, 4)
-      ul.list-group#datas
-        each val, index in request.data
-          li.list-group-item.row
-            .col-xs-6.col-md-4= index
-            .col-xs-6.col-md-4= val
-      if request.stores_detail
+        .row
+          .col-xs-12.col-md-12
+            .alert.alert-danger Error caught
+              pre.well
+                p= JSON.stringify(request.error, null, 4)
+      .row
+        ul.list-group#datas
+          each val, index in request.data
+            li.list-group-item.row
+              .col-xs-6.col-md-4= index
+              .col-xs-6.col-md-4= val
+          if request.stores_detail
+            li.list-group-item.row
+              .col-xs-6.col-md-4 Aspired stores:
+              .col-xs-6.col-md-4= request.aspired_stores.length
         ul.list-group#stores-datas
           li.list-group-item.row.active
             .col-xs-6.col-md-4.text-center Magasin
             .col-xs-6.col-md-4.text-center Prix
             .col-xs-6.col-md-4.text-center Promo
-          
-          each store_detail, storeid in request.stores_detail
-            if store_detail
-              li.list-group-item.row
-                .col-xs-6.col-md-4= storeid
-                .col-xs-6.col-md-4= store_detail.prix
-                .col-xs-6.col-md-4= store_detail.promo
+          if request.stores_detail
+            each store_detail, storeid in request.stores_detail
+              if store_detail
+                li.list-group-item.row
+                  .col-xs-6.col-md-4
+                    if store_detail.url
+                      a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
+                    else
+                      #{storeid}
+                  .col-xs-6.col-md-4= store_detail.prix
+                  .col-xs-6.col-md-4= store_detail.promo
+              else
+                .message= store_detail
             else
-              .message= store_detail
-      else
-        .message no detail mag
+              .message no detail mag
     script.
       var refresh_time = #{refresh_time}
     script

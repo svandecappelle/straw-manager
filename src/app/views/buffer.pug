@@ -19,7 +19,6 @@ block body
           "ok"
         table.ajax.reload( reload_callback , false)
       decode = (response) ->
-        $("ul#buffer").empty()
         setStatus request for request in response
       $ ->
         table = $('#buffer').DataTable({
@@ -27,19 +26,35 @@ block body
           retrieve: true,
           searching: true,
           ajax: {url: view, dataSrc: ''}, 
-          columns: schema
+          columns: schema,
+          "columnDefs": [
+            {
+              "render": (data, type, row ) ->
+                if (row['aspired_stores'])
+                  return row['aspired_stores'].length
+                return 1;
+              ,
+              "targets": 8
+            }
+          ]
         });
-        auto_refresh = $("#auto-refresh").hasClass("active")
-        $('#auto-refresh').click ->
-          $(this).toggleClass("active")
-          auto_refresh = !auto_refresh
+
+        auto_refresh = $("#auto-refresh").is(':checked')
+        $('#buffer tbody').on 'click', 'tr', ->
+          data = table.row( this ).data()
+          window.open("/request/" + data.requestID, "_blank")
+
+        $('#auto-refresh').change -> 
+          auto_refresh = $("#auto-refresh").is(':checked')
           if auto_refresh
             refresh()
+
         callback = (response) -> 
           decode(response)
           if auto_refresh
             setTimeout(refresh, refresh_time)
+
         refresh = () -> 
-          $.get view, callback
+            $.get view, callback
         if auto_refresh
           refresh()

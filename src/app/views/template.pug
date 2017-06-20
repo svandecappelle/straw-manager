@@ -22,27 +22,42 @@ html(lang="en")
       script(src="/public/assets/datatables/media/js/dataTables.material.min.js")
       script(src="/public/assets/material-design-lite/material.min.js")
       
+    style.
+      .mdl-switch__track{
+        background-color: rgba(255, 255, 255, 0.26);
+      }
+      .mdl-textfield__input{
+        border-bottom-color: rgba(255, 255, 255, 0.26);
+      }
+      .mdl-switch.is-checked .mdl-switch__track {
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .mdl-switch.is-checked .mdl-switch__thumb {
+        background: #09c1ff;
+      }
+
   body
     .mdl-layout.mdl-js-layout
-      header.mdl-layout__header.mdl-layout--fixed-drawer
+      header.mdl-layout__header
         .mdl-layout__header-row
           span.mdl-layout-title Collect online
           .mdl-layout-spacer
-          .mdl-navigation
-            .mdl-textfield.mdl-js-textfield
-              input.mdl-textfield__input.mdl-textfield--dark#search(type="text", placeholder="Search")
-              // label.mdl-textfield__label(for="search") Search
-            button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-button--icon
-              i.material-icons more_vert
-            ul.mdl-menu.mdl-menu--bottom-right.mdl-js-menu.mdl-js-ripple-effect(for="demo-menu-lower-right")
-              li.mdl-menu__item Some Action
-              li.mdl-menu__item#auto-refresh
-                a(href="#") auto-refresh
-              li.mdl-menu__item
-                if session
-                  a(href="/logout") Logout
-                else
-                  a(href="/login") Login
+          .mdl-textfield.mdl-js-textfield.mdl-textfield--expandable.mdl-textfield--floating-label
+            label.mdl-button.mdl-js-button.mdl-button--icon(for="search")
+              i.material-icons search
+            .mdl-textfield__expandable-holder
+              input.mdl-textfield__input#search(type="text")
+          label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 200px;")
+            input#auto-refresh.mdl-switch__input(type="checkbox")
+            span.mdl-switch__label auto-refresh
+          button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon
+            i.material-icons more_vert
+          ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
+            li.mdl-menu__item
+              if session
+                a(href="/logout") Logout
+              else
+                a(href="/login") Login
       .mdl-layout__drawer
         span.mdl-layout-title
         nav.mdl-navigation
@@ -53,7 +68,6 @@ html(lang="en")
     script
       :coffee-script
         $ -> 
-          $('.dropdown-toggle').dropdown()
           rootPath = $("#root-collect-online").attr("href")
           $("#search").on 'change', ->
             window.location.replace(rootPath + 'search?q=' + $("#search").val())

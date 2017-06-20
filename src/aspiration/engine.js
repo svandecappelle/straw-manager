@@ -17,6 +17,10 @@ var site_engines = {};
       enseigne_lancher.on('done', function(data){
         eventEmitter.emit('done', data);
       });
+      
+      enseigne_lancher.on('product', function(data){
+        eventEmitter.emit('product', data);
+      });
 
       enseigne_lancher.on('fatal_error', function(error, req){
         eventEmitter.emit('error', error, req);

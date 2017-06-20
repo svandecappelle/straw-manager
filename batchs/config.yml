@@ -1,0 +1,13 @@
+default:
+  server:
+    port: 65000
+    hostname: localhost
+    use_auth: true
+    service_location: ""
+    autorun_server: false
+    timeout: 5000
+    silent: true
+    credentials:
+      user: Brico1,
+      password: Brico1
+  input-file: batch.json

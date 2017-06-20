@@ -4,7 +4,8 @@
       "Enseigne":"Castorama",
       "MagasinId": "4206",
       "idProduit":"22110002",
-      "url":"http://www.castorama.fr/stsdtion=push"
+      "url":"http://www.castorama.fr/stsdtion=push",
+      "stores": [4206]
     },
     {
       "Enseigne":"Bricoman",
@@ -15,19 +16,21 @@
       "Enseigne":"Castorama",
       "MagasinId": "4206",
       "idProduit":"22110002",
-      "url":"http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-MAC-ALLISTER-MEDD20S-20V---15Ah-prod22110002.html?sortByValue=relevance&navCount=1&navAction=push"
+      "url":"http://www.castorama.fr/store/Perceuse-visseuse-sans-fil-MAC-ALLISTER-MEDD20S-20V---15Ah-prod22110002.html?sortByValue=relevance&navCount=1&navAction=push",
+      "stores": [4206]
     },
     {
       "Enseigne":"Castorama",
       "MagasinId": "4206",
       "idProduit":"22110002",
-      "url":"http://www.castorama.fr/store/Coffret-de-6-tournevis-electricien-STANLEY-prod10650123.html?isFeaturedProduct=true&categoryId=cat_id_1771&navAction=jump"
+      "url":"http://www.castorama.fr/store/Coffret-de-6-tournevis-electricien-STANLEY-prod10650123.html?isFeaturedProduct=true&categoryId=cat_id_1771&navAction=jump",
+      "stores": [4206]
     },
     {
       "Enseigne":"Bricoman",
       "idProduit":"519260",
       "url":"https://www.bricoman.fr/peinture-facade-hydropliolite-monocouche-blanc.html",
-      "stores": [26]
+      "stores": [41, 26, 32]
     }
   ],
   "invalids": [

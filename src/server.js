@@ -13,9 +13,13 @@ require("colors");
 
 var testing = false;
 
+String.prototype.replaceAll = function(find, replace) {
+	return this.replace(new RegExp(find, 'g'), replace);
+};
+
 nconf.argv()
    .env()
-   .file({ file: './config.json' });
+   .file({ file: path.resolve(__dirname, '../config.json' )});
 
 process.on('uncaughtException', function (err) {
   logger.error('Caught exception: ', err);
@@ -50,9 +54,9 @@ process.on('uncaughtException', function (err) {
       } else {
         if (process.argv[2] === "dev"){
           logger.info("entering dev mode");
-          log4js.configure('logger-dev.json', {});
+          log4js.configure(path.resolve(__dirname, '../logger-dev.json'), {});
         } else {
-          log4js.configure('logger.json', {});
+          log4js.configure(path.resolve(__dirname, '../logger.json'), {});
         }
       }
 

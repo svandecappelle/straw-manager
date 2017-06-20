@@ -18,14 +18,13 @@ Bricoman.prototype.call = function (params) {
     this.stores = params.stores;
   }
   logger.info("Parameters call engine", params);
-  this.home(null, params);
+  //this.home(null, params);
 
-  /*
-    this.request({
-      url: "https://www.bricoman.fr",
-      origin: params
-    }, 'home');
-  */
+  this.request({
+    url: "https://www.bricoman.fr",
+    origin: params
+  }, 'home');
+
 
   /*
     params.cookies = {
@@ -61,13 +60,13 @@ Bricoman.prototype.getStores = function(params){
 Bricoman.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  _.each(this.stores, function(id){
+  _.each(this.stores, function(magasin){
     var param = _.clone(req);
-    param.MagasinId = id;
+    param.magasin = magasin;
     param.cookies = {
-      'smile_retailershop_id': id
+      'smile_retailershop_id': magasin.id
     };
-    logger.info("Bricoman_MagasinList", id);
+    logger.info("Bricoman_MagasinList", magasin.name);
     that.request(param);
   });
 };
@@ -86,7 +85,10 @@ Bricoman.prototype.parseStores = function (html, req, response) {
 		var MagasinId =  $(this).attr('data-shop-id')
 
 		logger.debug(Magasin, url, MagasinId)
-    that.stores.push(MagasinId);
+    that.stores.push({
+      name: Magasin,
+      id: MagasinId
+    });
 	});
 
   logger.debug("Bricoman_MagasinList", this.stores);
@@ -107,14 +109,13 @@ Bricoman.prototype.decode = function (html, req) {
 			error      :	"produit non disponible",
 			data       :  undefined
 		};
-
-    return this.emit('fatal_error', output);
+    return this.emit('fatal_error', { 'message': output.error }, output);
 	}
-	/* ------------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------------ */
 	var data = {};
 	data.enseigne = req['Enseigne'];
-	data.magasin = req['Magasin'];
-	data.magasinId = req['MagasinId'];
+	data.magasin = req.magasin;
 	data.categories = []
 
 	try {
@@ -210,7 +211,7 @@ Bricoman.prototype.decode = function (html, req) {
 		requestID : ReqObject.requestID,
 		data			: data
 	};
-  this.emit('done', output);
+  this.emit('product', output);
 };
 
 module.exports = Bricoman

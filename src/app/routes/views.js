@@ -14,6 +14,25 @@ router.use(bodyParser.urlencoded({
 
 router.use(bodyParser.json());
 
+function getBufferTableSchema(){
+  var columns = [
+    'requestID',
+    'requestDate',
+    'responseDate',
+    'Enseigne',
+    'idProduit',
+    'url',
+    'stores',
+    'status',
+    'aspired_stores'
+  ];
+  var schema = [];
+  for (column of columns) {
+    schema.push({data: column});
+  }
+  return schema;
+}
+
 var rootPath = nconf.get('CollectOnlineRootPath');
 
 // middleware that is specific to this router
@@ -57,24 +76,10 @@ router.get('/about', function (req, res) {
 router.get('/buffer', function (req, res) {
   logger.info('buffer requested !'.red);
   var bufferValues = buffer.getBuffer();
-  var columns = [
-    'requestID',
-    'requestDate',
-    'responseDate',
-    'Enseigne',
-    'idProduit',
-    'url',
-    'stores',
-    'status'
-  ];
-  var schema = [];
-  for (column of columns) {
-    schema.push({data: column});
-  }
-  console.log("columns: " , schema);
+
   middleware.render(req, res, 'buffer.pug', {
     buffer: bufferValues,
-    schema: schema,
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'buffer'
   });
@@ -84,6 +89,7 @@ router.get('/pending', function (req, res) {
   logger.info('pending buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.pending(),
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'pending'
   });
@@ -93,6 +99,7 @@ router.get('/set', function (req, res) {
   logger.info('aspired buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.aspired(),
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'set'
   });
@@ -102,6 +109,7 @@ router.get('/failed', function (req, res) {
   logger.info('failed buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.failed(),
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: 'failed'
   });
@@ -111,6 +119,7 @@ router.get('/search', function (req, res) {
   logger.info('search into buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.search(req.query["q"]),
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     view: `search?q=${req.query["q"]}`
   });
@@ -123,6 +132,7 @@ router.get('/request/:id', function (req, res) {
 
   middleware.render(req, res, 'request.pug', {
     request: elem ,
+    schema: getBufferTableSchema(),
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
   });
 });

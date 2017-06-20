@@ -3,6 +3,7 @@ var Engine = require("../engine/engine"),
   Entities = require('html-entities').XmlEntities;
 
 function Castorama(use_proxy){
+  this.name = 'castorama';
   Engine.call(this);
   this.use_proxy = use_proxy;
 };
@@ -10,6 +11,9 @@ function Castorama(use_proxy){
 Castorama.prototype = Object.create(Engine.prototype);
 
 Castorama.prototype.call = function (params) {
+  if (params.stores){
+    this.stores = params.stores;
+  }
   this.request(params);
 };
 
@@ -17,7 +21,7 @@ Castorama.prototype.constructor = Castorama;
 
 Castorama.prototype.decode = function (html, req, response) {
   console.log("Decoding query: " + req.url);
-  
+
   if (html === ""){
     logger.error("Not any html");
     var output = {
@@ -189,7 +193,7 @@ Castorama.prototype.decode = function (html, req, response) {
     data       :  data
   };
 
-  this.emit('done', output);
+  this.emit('product', output);
 };
 
 module.exports = Castorama

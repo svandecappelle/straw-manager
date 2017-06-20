@@ -12,6 +12,11 @@ var TestTraitement = function (opts, callback_test) {
   this.isFailed = false;
   this.callback_test = callback_test;
   this.jar = opts.jar;
+  if (opts.url_api){
+    this.url_api = opts.url_api;
+  } else {
+    this.url_api = $url_api;
+  }
 
   this.opts.jar = undefined;
 
@@ -75,7 +80,7 @@ TestTraitement.prototype.launch = function(next){
 TestTraitement.prototype.aspire = function (callback) {
   var that = this;
   // console.log("Calls: " + $url_api.concat('/api/update').yellow );
-  var url = $url_api.concat('/api/update');
+  var url = this.url_api.concat('/api/update');
   request.post(url,
   {
     time : true,
@@ -106,12 +111,14 @@ TestTraitement.prototype.aspire = function (callback) {
 TestTraitement.prototype.verify = function (callback) {
   var that = this;
   // console.log("Calls: " + $url_api.concat('/api/request/' + this.data.requestID ).yellow );
-  var url = $url_api.concat('/api/request/' + this.data.requestID);
+  var url = this.url_api.concat('/api/request/' + this.data.requestID);
+  console.log(url);
   request.get( {
     url: url,
     time : true,
     jar: this.jar
   }, function (error, response, body){
+    console.log(`Request ${url} time in ms`.yellow, error);
     console.log(`Request ${url} time in ms`.yellow, response.elapsedTime);
     if (!error && response) {
         var result = JSON.parse(body);

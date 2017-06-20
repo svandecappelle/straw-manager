@@ -4,6 +4,5 @@ default:
   nb_clients_par_mag: 1
   mag_parrallele: 1
   minimum_msec_entre_mag: 500
-  auto_exit: false
-  writeCSV: false
+  export: true
   maxtry: 2

@@ -17,6 +17,7 @@ function Engine () {
   events.EventEmitter.call(this);
   this.config = yaml_config.load(config_name("global"));
   this.cookies = {};
+  this.aspiredDatas = 0;
   if (this.name){
     var config_path = config_name("sites/" + this.name);
     if (fs.existsSync(config_path)){
@@ -28,9 +29,25 @@ function Engine () {
   }
 
   this.on('cookies', this.parse_cookies);
+
+  this.on('product', this.export);
+  if (this.config.export){
+
+
+  }
 };
 
 Engine.prototype.__proto__ = events.EventEmitter.prototype;
+
+Engine.prototype.export = function (output) {
+  this.aspiredDatas += 1;
+
+  if (this.stores.length >= this.aspiredDatas){
+    console.log("Done all datas aspiration".green);
+    this.emit('done', output);
+  }
+
+};
 
 Engine.prototype.parse_cookies = function (req, cookies) {
   logger.debug("Getting cookies: ", req.url, cookies);
@@ -44,7 +61,8 @@ Engine.prototype.request = function (req, viewtype) {
     logger.debug("Using proxy check: ", req, this.use_proxy);
     var options = {
       timeout: 20000,
-      read_timeout: 20000
+      read_timeout: 20000,
+      follow_max: 3
     };
     if (this.use_proxy && !this.isProxyConnected()){
       options = this.proxy_connect(req, viewtype);
@@ -54,7 +72,7 @@ Engine.prototype.request = function (req, viewtype) {
       options.cookies = merge(req.cookies, that.cookies);
     }
 
-    logger.info("using opts : ", options);
+    logger.debug("using opts : ", options);
     var needle_call = needle.get;
     if (req.opts && req.opts.method === 'POST'){
         needle_call = needle.post;
@@ -69,12 +87,15 @@ Engine.prototype.request = function (req, viewtype) {
           logger.debug(req.url, cookies, that.cookies, req.cookies);
         }
       }
+
       that.onResult(error, response, body, viewtype, req);
     }).on('error', function(err){
       logger.error("Error on calling request engine", err);
       if (that.current_try >= that.config.maxtry){
         that.emit("fatal_error", err, req);
       }
+    }).on('redirect', function(url) {
+      console.log(url.red);
     });
   } catch (error) {
     this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error}, req);
