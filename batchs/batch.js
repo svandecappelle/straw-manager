@@ -1,9 +1,12 @@
+#!/usr/bin/env node
+
 var chai = require('chai'),
     _ = require('underscore'),
     request = require('request'),
     path = require('path'),
     colors = require('colors'),
     nconf = require("nconf"),
+    argv = require("argv"),
     yaml_config = require('node-yaml-config'),
     fs = require('fs'),
     async = require("async"),
@@ -29,13 +32,26 @@ function config_file(name){
 nconf.argv()
    .env()
    .file({ file: path.resolve(__dirname,'../config.json')});
+argv.version("1.0");
+argv.option({
+   name: 'file',
+   short: 'f',
+   type: 'path',
+   description: 'batch file JSON formatted'
+});
+var args = argv.run();
 const configuration = yaml_config.load(config_file("config"));
+var input_file = path.resolve(__dirname, './'.concat(configuration["input-file"]));
+if (args.options.file){
+  input_file = args.options.file;
+}
 
-if (!fs.existsSync(path.resolve(__dirname, './'.concat(configuration["input-file"])))){
-  console.log(`Error batch file not exists: ${configuration["input-file"]}`.bold.red);
+if (!fs.existsSync(input_file)){
+  console.log(`Error batch file not exists: ${input_file}`.bold.red);
   process.exit(1);
 }
-const $case_tests = require(path.resolve(__dirname, './'.concat(configuration["input-file"])));
+
+const $case_tests = require(input_file);
 
 console.log("Batch environment".yellow, configuration.server);
 
