@@ -3,7 +3,24 @@ var fs = require('fs'),
   events = require('events'),
   fastcsv = require('fast-csv'),
   _ = require('underscore'),
+  camelize = require("underscore.string/camelize"),
   moment = require('moment');
+
+var export_scheme = {
+  enseigne: "",
+  magasin: "",
+  id_produit: "",
+  url: "",
+  src_image: "",
+  libelles: "",
+  categories: "",
+  dispo: "",
+  prix: "",
+  prix_normalise: "",
+  timestamp: "",
+  promo: "",
+  caracteristique: ""
+}
 
 function Exporter() {
 
@@ -52,7 +69,15 @@ Exporter.prototype.open = function (data) {
       delimiter: ';'
     })
     .transform(function(data){
-      return _.omit(data, 'isExported');
+      var output = {};
+      _.each(export_scheme, function(value, key){
+        if (data[camelize(key)]){
+          output[key] = data[camelize(key)];
+        } else {
+          output[key] = value;
+        }
+      });
+      return output;
     }),
     writableStream = fs.createWriteStream(this.filename(data.enseigne), {
     flags: 'a'
@@ -82,7 +107,6 @@ Exporter.prototype.filename = function(enseigne){
 }
 
 Exporter.prototype.export = function (data) {
-  console.log("export");
   if (this.data[data.enseigne] === undefined){
     this.data[data.enseigne] = [];
   }
