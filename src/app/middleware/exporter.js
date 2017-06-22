@@ -108,11 +108,15 @@ Exporter.prototype.filename = function(enseigne){
 }
 
 Exporter.prototype.export = function (data) {
-  if (this.data[data.enseigne] === undefined){
-    this.data[data.enseigne] = [];
+  if (data.enseigne){
+    if (this.data[data.enseigne] === undefined){
+      this.data[data.enseigne] = [];
+    }
+    this.data[data.enseigne].push(data);
+    this.emit('write');
+  } else {
+    console.log("WARN: an export request is about undefined Enseigne type".yellow.bold, data);
   }
-  this.data[data.enseigne].push(data);
-  this.emit('write');
 };
 
 module.exports = Exporter;

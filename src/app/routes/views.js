@@ -24,7 +24,8 @@ function getBufferTableSchema(){
     'url',
     'stores',
     'status',
-    'aspired_stores'
+    'aspired_stores',
+    'not_found_in_stores'
   ];
   var schema = [];
   for (column of columns) {

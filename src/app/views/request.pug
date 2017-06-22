@@ -11,11 +11,12 @@ block body
     .col-xs-12.col-md-12.request
       a(href=request.url)= request.url
       .row
-        .col-xs-6.col-md-4 Magasins à aspirer
-          if request.stores
-            .badge= request.stores.length
-        if request.stores
-          .col-xs-6.col-md-4= JSON.stringify(request.stores.length)
+        .col-xs-6.col-md-4 Magasins aspirés
+        if request.stores && request.aspired_stores
+          .col-xs-6.col-md-4
+            span= JSON.stringify(request.aspired_stores.length) + '/' + JSON.stringify(request.stores.length)
+            if request.not_found_in_stores
+              span= '(Not in: ' + JSON.stringify(request.not_found_in_stores.length) + ')'
         else
           .col-xs-6.col-md-4 all
       if request.error
@@ -30,10 +31,13 @@ block body
             li.list-group-item.row
               .col-xs-6.col-md-4= index
               .col-xs-6.col-md-4= val
-          if request.stores_detail
+      
+      if request.stores_detail
+        .row
+          ul.list-group
             li.list-group-item.row
               .col-xs-6.col-md-4 Aspired stores:
-              .col-xs-6.col-md-4= request.aspired_stores.length
+              .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.stores_detail).length)
         ul.list-group#stores-datas
           li.list-group-item.row.active
             .col-xs-6.col-md-4.text-center Magasin

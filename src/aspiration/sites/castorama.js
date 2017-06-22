@@ -113,7 +113,6 @@ Castorama.prototype.parseStores = function (json, req, response) {
 
   logger.debug("Castorama_MagasinList", this.stores);
   this.aspireStoreDetails(req);
-  // this.aspireOnStore(req.origin);
 };
 
 Castorama.prototype.aspireStoreDetails = function (req){

@@ -105,10 +105,11 @@ Bricodepot.prototype.decode = function (html, req) {
     var output = {
       requestID  :  req.requestID,
       error      :	"produit non disponible",
-      data       :  undefined
+      data       :  {},
+      req        : req
     };
 
-    return this.emit('fatal_error', { 'message': output.error }, output);
+    return this.emit('not_found', output, { 'message': output.error });
   }
 
   var tampon = '';
@@ -254,13 +255,23 @@ Bricodepot.prototype.decode = function (html, req) {
     //engine.export_products(produit, obj);
   });
 
+  if (_.isEmpty(data)){
+    logger.warn("Empty data on product page: ", req.url);
+    var output = {
+      requestID  :  req.requestID,
+      error      :	"produit non disponible",
+      data       :  {},
+      req        : req
+    };
+    return this.emit('not_found', output, { 'message': output.error });
+  }
 
 	var output = {
 		requestID : req.requestID,
     stores: this.stores,
 		data: data
 	};
-  this.emit('product', output);
+  this.emit('product', output, req);
 };
 
 module.exports = Bricodepot

@@ -31,10 +31,7 @@ function Engine () {
   this.on('cookies', this.parse_cookies);
 
   this.on('product', this.export);
-  if (this.config.export){
-
-
-  }
+  this.on('not_found', this.export);
 };
 
 Engine.prototype.__proto__ = events.EventEmitter.prototype;

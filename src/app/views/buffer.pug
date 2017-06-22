@@ -34,7 +34,13 @@ block body
                   return data.length
                 return 0;
               ,
-              "targets": [8, 6]            
+              "targets": [8, 6, 9]            
+            },
+            {
+              "render": (data) ->
+                return '<a href="' + data + '" onClick="event.stopPropagation(); Window.open(\'' + data + '\');">Fiche</a>'
+              ,
+              "targets": [5]
             }
           ]
         });
