@@ -39,7 +39,7 @@ block body
               .col-xs-6.col-md-4 Aspired stores:
               .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.stores_detail).length)
         ul.list-group#stores-datas
-          li.list-group-item.row.active
+          li.list-group-item.row.active(style='position: sticky; top: 0;')
             .col-xs-6.col-md-4.text-center Magasin
             .col-xs-6.col-md-4.text-center Prix
             .col-xs-6.col-md-4.text-center Promo

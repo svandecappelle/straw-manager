@@ -66,8 +66,9 @@ Engine.prototype.request = function (req, viewtype) {
     // console.log(that);
     this.logger.debug("Using proxy check: ", req, this.use_proxy);
     var options = {
-      timeout: 20000,
-      read_timeout: 20000,
+      timeout: 50000,
+      read_timeout: 60000,
+      open_timeout: 60000,
       follow_max: 3
     };
     if (this.use_proxy && !this.isProxyConnected()){
