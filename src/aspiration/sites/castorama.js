@@ -1,11 +1,17 @@
-var Engine = require("../engine/engine"),
+var Engine = require('../engine/engine'),
+  async = require('async'),
+  tree = require('pretty-tree'),
+  Entities = require('html-entities').XmlEntities,
   cheerio = require('cheerio'),
-  Entities = require('html-entities').XmlEntities;
+  _ = require('underscore');
 
 function Castorama(use_proxy){
-  this.name = 'castorama';
-  Engine.call(this);
+  this.name = "Castorama";
   this.use_proxy = use_proxy;
+  Engine.call(this);
+  this.on("stores", this.parseStores);
+  this.on("home", this.home);
+  this.on("store-detail", this.aspireOnStore)
 };
 
 Castorama.prototype = Object.create(Engine.prototype);
@@ -14,12 +20,120 @@ Castorama.prototype.call = function (params) {
   if (params.stores){
     this.stores = params.stores;
   }
-  this.request(params);
+
+  logger.info("Parameters call engine", params);
+
+  this.request({
+    url: "http://www.castorama.fr",
+    origin: params
+  }, 'home');
 };
 
 Castorama.prototype.constructor = Castorama;
 
-Castorama.prototype.decode = function (html, req, response) {
+Castorama.prototype.home = function (html, req) {
+  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  if (req.origin) {
+    req = req.origin
+  }
+  if ( this.stores !== undefined && this.stores.length > 0 ) {
+    this.aspireOnStore(req);
+  } else {
+    this.getStores(req);
+  }
+};
+
+Castorama.prototype.getStores = function(params){
+  this.request({
+    url: "magasins.castorama.fr/point_of_sales.json",
+    origin: params
+  },
+  "stores");
+};
+
+Castorama.prototype.aspireOnStore = function(html, req, reponse){
+  var that = this;
+  var $ = cheerio.load(html);
+
+  var url = $("div.mem-store-button a").attr("href");
+  var pattern = /[0-9]+/;
+  var codeMagasin = pattern.exec(url) ? pattern.exec(url)[0] : "";
+  if (req.url.indexOf('778078-castorama-les-ulis') !== -1){
+    codeMagasin = 2375;
+  }
+
+  if(codeMagasin) {
+    var magasin = _.filter(this.stores, function(store){
+      return req.url.indexOf(store.url) !== -1;
+    })[0];
+    console.log(tree(magasin));
+    magasin.idTech = codeMagasin
+    logger.debug('=====> Traitement mag ' + codeMagasin + ' - ' + magasin.name);
+    logger.debug('=====> url = ' + magasin.url);
+    logger.debug("start magasin", magasin.id);
+
+    var param = _.clone(req.origin);
+    param.magasin = magasin;
+    param.stores = this.stores;
+    param.cookies = {
+      's_cdao': codeMagasin
+    };
+    logger.debug("Castorama_MagasinList", codeMagasin);
+    that.request(param);
+  } else {
+    that.emit("fatal_error", {message: `magasin ${req.url} not found`, requestID: req.requestID}, req.origin);
+  }
+};
+
+Castorama.prototype.parseStores = function (json, req, response) {
+  var that = this;
+  logger.info(response.cookies);
+  // console.log(html);
+	//var $ = cheerio.load(html);
+  that.stores = [];
+	logger.info("Rentré dans Castorama_MagasinList");
+
+  logger.debug("Level", "ParseMagasins");
+
+  //var MagToDo = outils.FileToArray(LINK_MAG_FILE)
+
+  //logger.logAttrVal("####","####");
+  //console.log(MagToDo);
+  //logger.logAttrVal("####","####");
+
+  var listeMagasins = json["points_of_sale"]["France"];
+
+  for (var elm in listeMagasins) {
+    this.stores.push({
+      id: elm,
+      name: listeMagasins[elm].name,
+      url: listeMagasins[elm].url
+    });
+  }
+
+  logger.debug("Castorama_MagasinList", this.stores);
+  this.aspireStoreDetails(req);
+  // this.aspireOnStore(req.origin);
+};
+
+Castorama.prototype.aspireStoreDetails = function (req){
+  var that = this;
+  async.each(this.stores, function(store){
+    that.request({
+      url: "magasins.castorama.fr/" + store.url,
+      origin: req.origin
+    },
+    'store-detail');
+  }, function(err){
+    if (err){
+      return console.error("error", err);
+    }
+    // this.aspireOnStore();
+  });
+}
+
+
+Castorama.prototype.decode = function (html, req) {
   console.log("Decoding query: " + req.url);
 
   if (html === ""){
@@ -171,9 +285,10 @@ Castorama.prototype.decode = function (html, req, response) {
   data.isPremierPrix = (product.find("img[src='/images/brands/L_PREMIER_PRIX.jpg']").length > 0) ? 1 : 0;
 
   data.timestamp = +(new Date());
-  data.enseigne = req['Enseigne'];
-  data.magasin = req['Magasin'];
-  data.magasinId = req['MagasinId'];
+  data.enseigne = req.Enseigne;
+  /*data.magasin = req['Magasin'];
+  data.magasinId = req['MagasinId'];*/
+  data.magasin = req.magasin;
   // data.idxProduit = engine.getidxProduit(req.tree);
   data.ean = undefined;
   data.dispo = $("input.buttonCart").length ? 1 : 0;
@@ -190,7 +305,8 @@ Castorama.prototype.decode = function (html, req, response) {
 
   var output = {
     requestID  :  req.requestID,
-    data       :  data
+    data       :  data,
+    stores: this.stores
   };
 
   this.emit('product', output);

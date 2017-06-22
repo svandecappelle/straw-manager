@@ -62,7 +62,7 @@ Bricodepot.prototype.aspireOnStore = function(req){
     req.origin = req.url;
     param.origin = req.url;
     param.url = req.url.replace('/saint-etienne/', magasin.name);
-    logger.info("Bricodepot_MagasinList", magasin.name);
+    logger.debug("Bricodepot_MagasinList", magasin.name);
     that.request(param);
   });
 };
@@ -83,7 +83,7 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
       return;
     }
 
-    console.log(`Entrer dans le magasin ${MagasinId}`);
+    logger.trace(`Entrer dans le magasin ${MagasinId}`);
     //ReqObject.xlbSetJar = cookie;
     logger.debug(url, MagasinId);
     that.stores.push({
@@ -249,7 +249,7 @@ Bricodepot.prototype.decode = function (html, req) {
     NumLigne ++;
     logger.debug("Product Export from page :"+req.origin);
     logger.debug('# FICHE ##',"###")
-    console.log(data);
+    logger.debug(data);
     logger.debug('# FICHE ##',"###")
     //engine.export_products(produit, obj);
   });

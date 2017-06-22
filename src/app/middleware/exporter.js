@@ -77,6 +77,7 @@ Exporter.prototype.open = function (data) {
           output[key] = value;
         }
       });
+      output.magasin = data.magasin.id;
       return output;
     }),
     writableStream = fs.createWriteStream(this.filename(data.enseigne), {
