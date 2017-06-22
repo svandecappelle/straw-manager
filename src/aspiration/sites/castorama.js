@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  logger = require('log4js').getLogger('Castorama'),
   async = require('async'),
   tree = require('pretty-tree'),
   Entities = require('html-entities').XmlEntities,

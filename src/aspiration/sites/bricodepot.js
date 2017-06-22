@@ -181,7 +181,7 @@ Bricodepot.prototype.decode = function (html, req) {
 
     if (data.libelles[1]){
       // On regarde si le libellé du produit (dans le tableau) n'est pas présent dans le libellé général du produit
-      tampon = outils.ChaineSansAccent(data.libelles[1]);
+      tampon = data.libelles[1].latinise();
       tampon = tampon.toUpperCase();
       // S'il est présent, on va le supprimer car on va ajouter au libelle général les libellés des différentes lignes du tableau
       if (data.libelles[0].indexOf(tampon) != -1){

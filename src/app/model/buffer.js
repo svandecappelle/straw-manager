@@ -66,13 +66,15 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    console.log("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores_detail"]));
+    console.log("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
-    requestBuffer[index].error = error;
-    if (requestBuffer[index].callback){
-      requestBuffer[index].callback(requestBuffer[index]);
+    if (index > -1){
+      requestBuffer[index].error = error;
+      if (requestBuffer[index].callback){
+        requestBuffer[index].callback(requestBuffer[index]);
+      }
     }
   });
 
@@ -154,7 +156,7 @@ var _ = require('underscore'),
       } else {
         requestBuffer[index].data = object.data;
       }
-    } else if (index > -1 && _.isEmpty(object.data)){
+    } else if (index > -1 && _.isEmpty(object.data) && object.req && object.req.magasin.id){
       if (requestBuffer[index].status === 'pending'){
         requestBuffer[index].status = 'partial_pending';
       }

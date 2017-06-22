@@ -10,12 +10,8 @@ var express = require('express'),
     authentication = require("./app/routes/authentication"),
     logger = log4js.getLogger('Server');
 require("colors");
-
+require("./tools");
 var testing = false;
-
-String.prototype.replaceAll = function(find, replace) {
-	return this.replace(new RegExp(find, 'g'), replace);
-};
 
 nconf.argv()
    .env()

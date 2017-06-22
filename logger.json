@@ -13,6 +13,34 @@
       "backups": 3,
       "category": "Bricoman"
     },
+    {
+      "type": "file",
+      "filename": "logs/sites/BricoDepot.log",
+      "maxLogSize": 300000,
+      "backups": 3,
+      "category": "BricoDepot"
+    },
+    {
+      "type": "file",
+      "filename": "logs/sites/LeroyMerlin.log",
+      "maxLogSize": 300000,
+      "backups": 3,
+      "category": "LeroyMerlin"
+    },
+    {
+      "type": "file",
+      "filename": "logs/sites/Bricomarche.log",
+      "maxLogSize": 300000,
+      "backups": 3,
+      "category": "Bricomarche"
+    },
+    {
+      "type": "file",
+      "filename": "logs/sites/Bricorama.log",
+      "maxLogSize": 300000,
+      "backups": 3,
+      "category": "Bricorama"
+    },
     { "type": "console" }
   ],
   "levels": {

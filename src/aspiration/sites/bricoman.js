@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  logger = require('log4js').getLogger('Bricoman'),
   cheerio = require('cheerio'),
   _ = require('underscore');
 
