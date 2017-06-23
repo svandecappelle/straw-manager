@@ -27,6 +27,9 @@ block body
           .col-xs-12.col-md-12
             .alert.alert-danger Error caught
               pre.well
+                =request.error.req.stores = 'hidden'
+                =request.error.req.aspired_stores = 'hidden'
+                =request.error.req.data = 'hidden'
                 p= JSON.stringify(request.error, null, 4)
       .row
         ul.list-group#datas

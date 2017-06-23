@@ -59,6 +59,9 @@ var _ = require('underscore'),
   eventEmitter.on('product', function(results){
     console.log("Aspiration of one product".cyan.bold, results.requestID);
     results.data.idLogique = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idLogique;
+    results.data.codeProduit = results.data.idProduit;
+    results.data.idProduit = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idProduit;
+
     exporter.export(results.data);
     Buffer.update(results, false);
   });

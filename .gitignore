@@ -1,3 +1,6 @@
 node_modules/
 logs/
 public/assets
+build/
+export/
+dist/

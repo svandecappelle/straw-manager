@@ -10,7 +10,7 @@ var export_scheme = {
   enseigne: "",
   magasin: "",
   id_produit: "",
-  idLogique: "",
+  id_logique: "",
   url: "",
   src_image: "",
   libelles: "",

@@ -54,7 +54,7 @@ Bricodepot.prototype.getStores = function(params){
 Bricodepot.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  async.each(this.stores, function(magasin){
+  async.eachLimit(this.stores, this.config.parallel,function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
     param.cookies = {
@@ -64,7 +64,7 @@ Bricodepot.prototype.aspireOnStore = function(req){
     param.origin = req.url;
     param.url = req.url.replace('/saint-etienne/', magasin.name);
     logger.debug("Bricodepot_MagasinList", magasin.name);
-    that.request(param);
+    that.request(param, next);
   });
 };
 
@@ -126,7 +126,7 @@ Bricodepot.prototype.decode = function (html, req) {
     var tds = $(this).children("td");
     var indexId = 0
     data.promo = 0;
-    data.timestamp = +(new Date());
+    data.timestamp = new Date();
     data.enseigne = req['Enseigne'];
     data.magasin = req.magasin;
     data.url = req.url;
