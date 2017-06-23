@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   cheerio = require('cheerio'),
   _ = require('underscore');
 
@@ -90,14 +91,14 @@ Bricorama.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
   logger.info("req.stores ===>", req.stores);
-  _.each(this.stores, function(magasin){
+  async.eachLimit(this.stores, this.config.parallel, function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
 
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
-       that.request(param);
+       that.request(param, ext);
   });
 };
 
@@ -122,7 +123,7 @@ Bricorama.prototype.decode = function (html, req, response) {
 
   /* ------------------------------------------------------------------------ */
 	var data = {}
-  data.timestamp = +(new Date())
+  data.timestamp = new Date()
 	data.enseigne = req['Enseigne']
   data.magasin = req.magasin
   data.categories = []
@@ -150,7 +151,8 @@ Bricorama.prototype.decode = function (html, req, response) {
 
   var output = {
     requestID : ReqObject.requestID,
-    data			: data
+    data			: data,
+    stores: this.stores
   };
 
   this.emit('product', output);

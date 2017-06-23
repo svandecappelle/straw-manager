@@ -6,7 +6,13 @@ block body
     thead
       tr
         each column in schema
-          th= column.data
+          th(style='text-align:center;')= column.data
+    tbody
+    tfoot
+      tr
+        each column in schema
+          th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
+            input.column-filter(type="text", style='width: 33%;')
   script.
     var refresh_time = #{refresh_time}
     var schema = !{JSON.stringify(schema)}
@@ -14,18 +20,31 @@ block body
     :coffee-script
       view = $("#api-link").attr("href")
       table = null
+      calcDataTableHeight = () ->
+        return Math.round($( document ).height() - 350)
       setStatus = (request) ->
         reload_callback = () ->
           "ok"
-        table.ajax.reload( reload_callback , false)
+          table.rows().recalcHeight().draw();
+        table.ajax.reload( reload_callback , false)  
       decode = (response) ->
         setStatus request for request in response
       $ ->
+        #$('#buffer').height(calcDataTableHeight() + 'px');
         table = $('#buffer').DataTable({
           paging: true,
+          "lengthMenu": [[50, 100, -1], [50, 100, "All"]]
           retrieve: true,
           searching: true,
+          fixedHeader: {
+            header: true
+          },
+          colReorder: {
+            realtime: true
+          },
           ajax: {url: view, dataSrc: ''}, 
+          scrollY: calcDataTableHeight() + 'px',
+          scrollCollapse: true,
           columns: schema,
           "columnDefs": [
             {
@@ -34,17 +53,28 @@ block body
                   return data.length
                 return 0;
               ,
-              "targets": [8, 6, 9]            
+              "targets": [9, 7, 10]            
             },
+            {"visible": false,  "targets": [ 6 ]}, 
             {
-              "render": (data) ->
-                return '<a href="' + data + '" onClick="event.stopPropagation(); Window.open(\'' + data + '\');">Fiche</a>'
+              "render": (data, type, row) ->
+                return '<a href="' + row.url + '" onClick="event.stopPropagation(); Window.open(\'' + row.url + '\');">' + row.data.libelles + '</a>'
               ,
               "targets": [5]
             }
           ]
         });
-
+        
+        table.columns().every( () ->
+          that = this
+          console.log(this.footer());
+          $( 'input.column-filter', this.footer()).on( 'keyup change', () ->
+            console.log(that.search(), this.value);
+            if ( this.value != that.search() )
+              that.search( this.value ).draw()
+          )
+        )
+        
         auto_refresh = $("#auto-refresh").is(':checked')
         $('#buffer tbody').on 'click', 'tr', ->
           data = table.row( this ).data()

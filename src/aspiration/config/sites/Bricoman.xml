@@ -1,9 +1,0 @@
-<config>
-  <!--<liste_proxy>/home/svandecappelle/git/CollectOnline/proxyRU.txt</liste_proxy>-->
-  <nombres_requetes_paralleles>50</nombres_requetes_paralleles>
-  <nb_clients_par_mag>1</nb_clients_par_mag>
-  <mag_parrallele>1</mag_parrallele>
-  <minimum_msec_entre_mag>500</minimum_msec_entre_mag>
-  <auto_exit>false</auto_exit>
-  <writeCSV>false</writeCSV>
-</config>

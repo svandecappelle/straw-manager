@@ -21,6 +21,7 @@ function getBufferTableSchema(){
     'responseDate',
     'Enseigne',
     'idProduit',
+    'libelles',
     'url',
     'stores',
     'status',
@@ -29,7 +30,7 @@ function getBufferTableSchema(){
   ];
   var schema = [];
   for (column of columns) {
-    schema.push({data: column});
+    schema.push({data: column, searchable: true});
   }
   return schema;
 }

@@ -11,10 +11,10 @@ request({
   }
 }, (error, _ , body) => {
   if (!error) {
-    fs.writeFileSync('//192.168.1.106/PartageCommun/Dev_Aspiration/prx/sharedProxy', body)
-    fs.writeFileSync('//192.168.1.106/PartageCommun/Dev_Aspiration/prx/proxyRU.txt', body)
+    fs.writeFileSync(path.resolve(__dirname, '../sharedProxy', body)
+    fs.writeFileSync(path.resolve(__dirname, '../proxyRU.txt', body)
     console.log('proxy update ok')
-  }else {
+  } else {
     console.warn('proxy update failed')
   }
-})
+});

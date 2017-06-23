@@ -11,3 +11,13 @@ default:
       user: Brico1,
       password: Brico1
   input-file: batch.json
+database:
+    type          : oracle
+    user          : LNK_BRICODEPOT
+    password      : LNK_BRICODEPOT
+    connectString : 192.168.1.129/RECETTE
+    master        : BricoDepot
+    poolMax       : 2,
+    poolMin       : 1,
+    poolIncrement : 1,
+    poolTimeout   : 4

@@ -118,12 +118,12 @@ Castorama.prototype.parseStores = function (json, req, response) {
 
 Castorama.prototype.aspireStoreDetails = function (req){
   var that = this;
-  async.each(this.stores, function(store){
+  async.eachLimit(this.stores, this.config.parallel, function(store, next){
     that.request({
       url: "magasins.castorama.fr/" + store.url,
       origin: req.origin
     },
-    'store-detail');
+    'store-detail', next);
   }, function(err){
     if (err){
       return console.error("error", err);
@@ -284,7 +284,7 @@ Castorama.prototype.decode = function (html, req) {
   data.lienProduit = req.produitURL;
   data.isPremierPrix = (product.find("img[src='/images/brands/L_PREMIER_PRIX.jpg']").length > 0) ? 1 : 0;
 
-  data.timestamp = +(new Date());
+  data.timestamp = new Date();
   data.enseigne = req.Enseigne;
   /*data.magasin = req['Magasin'];
   data.magasinId = req['MagasinId'];*/

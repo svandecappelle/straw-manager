@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   logger = require('log4js').getLogger('Bricoman'),
   cheerio = require('cheerio'),
   _ = require('underscore');
@@ -61,14 +62,14 @@ Bricoman.prototype.getStores = function(params){
 Bricoman.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  _.each(this.stores, function(magasin){
+  async.eachLimit(this.stores, this.config.parallel, function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
     logger.info("Bricoman_MagasinList", magasin.name);
-    that.request(param);
+    that.request(param, next);
   });
 };
 
@@ -159,7 +160,7 @@ Bricoman.prototype.decode = function (html, req) {
 
 	data.prixUnite = $(".item-price  .unit").first().text().trim()
 	//data.categories = obj.tree;
-	data.timestamp = +(new Date());
+	data.timestamp = new Date();
 	data.promo = data.ancienPrix ? 1 : 0;
 	data.promoDirecte = data.promo;
 	data.dispo = ($(".availability.in-stock .label").text().indexOf('En stock') > 0) ? 1 : 0;
@@ -210,7 +211,8 @@ Bricoman.prototype.decode = function (html, req) {
 	//process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
 	var output = {
 		requestID : ReqObject.requestID,
-		data			: data
+		data			: data,
+    stores: this.stores
 	};
   this.emit('product', output);
 };
