@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   htmlToText = require('html-to-text'),
   cheerio = require('cheerio'),
   log4js = require("log4js"),
@@ -53,7 +54,7 @@ Bricodepot.prototype.getStores = function(params){
 Bricodepot.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  _.each(this.stores, function(magasin){
+  async.each(this.stores, function(magasin){
     var param = _.clone(req);
     param.magasin = magasin;
     param.cookies = {

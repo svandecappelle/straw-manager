@@ -10,6 +10,7 @@ var export_scheme = {
   enseigne: "",
   magasin: "",
   id_produit: "",
+  idLogique: "",
   url: "",
   src_image: "",
   libelles: "",
@@ -19,7 +20,7 @@ var export_scheme = {
   prix_normalise: "",
   timestamp: "",
   promo: "",
-  caracteristique: ""
+  caracteristique: "",
 }
 
 function Exporter() {

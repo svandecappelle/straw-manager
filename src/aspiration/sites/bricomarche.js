@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   cheerio = require('cheerio'),
   _ = require('underscore');
 
@@ -17,7 +18,7 @@ Bricomarche.prototype.call = function (params) {
   if (params.stores){
     this.stores = params.stores;
   }
-  logger.info("Parameters call engine", params);
+  this.logger.info("Parameters call engine", params);
 
   this.request({
     url: "https://www.bricomarche.com",
@@ -28,7 +29,7 @@ Bricomarche.prototype.call = function (params) {
 Bricomarche.prototype.constructor = Bricomarche;
 
 Bricomarche.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  this.logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -51,13 +52,13 @@ Bricomarche.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
 
-  _.each(this.stores, function(magasin){
+  async.each(this.stores, function(magasin){
     var param = _.clone(req);
     param.magasin = magasin
     param.cookies = {
       "ID_PDV":magasin.id
      }
-     logger.info("Param In aspireOnStore", param.url);
+     this.logger.debug("Param In aspireOnStore", param.url);
     that.request(param)
 
   });
@@ -66,12 +67,12 @@ Bricomarche.prototype.aspireOnStore = function(req){
 
 Bricomarche.prototype.parseStores = function (html, req, response) {
   var that = this;
-  //logger.info(response.cookies);
+  //this.logger.info(response.cookies);
   // console.log(html);
 
 	var $ = cheerio.load(html);
   that.stores = [];
-	logger.info("Rentré dans Example_MagasinList");
+	this.logger.debug("Rentré dans Example_MagasinList");
 
 	$("[id='select_advmag'] option").each(function(idx) {
 		var urlMag = $(this).attr('value')
@@ -79,7 +80,7 @@ Bricomarche.prototype.parseStores = function (html, req, response) {
 
 		var MagasinId =  urlMag.substring(urlMag.lastIndexOf("/") + 1).trim()
 
-		logger.debug(Magasin, MagasinId)
+		that.logger.debug(Magasin, MagasinId)
 
     that.stores.push({
       id: MagasinId,
@@ -88,14 +89,14 @@ Bricomarche.prototype.parseStores = function (html, req, response) {
 
 	});
 
-  logger.debug("Example_MagasinList", this.stores);
+  this.logger.debug("Example_MagasinList", this.stores);
 
   this.aspireOnStore(req.origin);
 };
 
 Bricomarche.prototype.decode = function (html, req, response) {
   var $ = cheerio.load(html);
-	logger.info('*********Fiche**************', response.cookies);
+	this.logger.debug('*********Fiche**************', response.cookies);
 		/* ------------------------------------------------------------------------ */
 	// manage fail
   if ($('.label-store-name').length == -1) {
@@ -133,7 +134,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
       }
 
   })
-  data.timestamp = +(new Date());
+  data.timestamp = new Date();
   data.enseigne = req['Enseigne'];
   data.magasin = req.magasin;
 	data.libelles = [];
@@ -148,8 +149,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
     data.prixUnite = textPrix.split('soit')[1].trim()
   }
   if (!data.prix) {
-    logger.info(response);
-    process.exit(1);
+    this.emit("fatal_error", {error: 'price not found on page', requestID: req.requestID, req, req}, req);
   }
   //data.ancienPrix =  htmlToText.fromString($('.fiche-price .old-price').html(), { wordwrap: false }).replace(/\n/g," ");
   data.ancienPrix = $('.fiche-price .old-price').first().text()
@@ -161,14 +161,14 @@ Bricomarche.prototype.decode = function (html, req, response) {
     var id = html.split("'id': '")[1].split("',")[0].trim()
     data.idProduit = id;
   } catch (e) {
-    //logger.logValColor(e)
+    //this.logger.logValColor(e)
   }
 
   try {
     var ref = desc_html.split('<p>Ref')[1].split('</p>')[0].trim()
     data.cip7 = ref; // idxProduit => cip7
   } catch (e) {
-    //logger.logValColor(e)
+    //this.logger.logValColor(e)
   }
 
 
@@ -176,13 +176,13 @@ Bricomarche.prototype.decode = function (html, req, response) {
     var reference = desc_html.split('rence')[1].split('<')[0].trim()
     data.cip13 = reference; //idProduit2 => cip13
   } catch (e) {
-    //logger.logValColor(e)
+    //this.logger.logValColor(e)
   }
   try {
     var marque = desc_html.split('<td><strong>Marque</strong></td>')[1].split('</td>')[0].trim().split('<td>')[1]
     data.marque = marque;
   } catch (e) {
-    //logger.logValColor(e)
+    //this.logger.logValColor(e)
   }
 
   data.promo = data.ancienPrix ? 1 : 0;
@@ -210,7 +210,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
 		data.caracteristique.push(attribut+" = "+valeur);
 	})
 
-  logger.info('DATA', data)
+  this.logger.trace('DATA', data)
 	var output = {
 		requestID : req.requestID,
 		data			: data

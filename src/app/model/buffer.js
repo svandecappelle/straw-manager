@@ -31,13 +31,19 @@ var _ = require('underscore'),
 (function (Buffer) {
   "use strict";
 
-  var requestBuffer = []
+  var requestBuffer = [];
   var auto_increment = -1
   var eventEmitter = new events.EventEmitter();
   var exporter = new Exporter();
 
   eventEmitter.on('done', function(results){
     console.log("Aspiration done".cyan.bold, results.requestID);
+    var mem = process.memoryUsage();
+    console.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+    if (mem.heapUsed > 1000000000){
+      // 1Go clear memory
+      Buffer.flush();
+    }
     //Buffer.update(results, true);
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(results.requestID)})
     if (requestBuffer[index].callback){
@@ -52,6 +58,7 @@ var _ = require('underscore'),
 
   eventEmitter.on('product', function(results){
     console.log("Aspiration of one product".cyan.bold, results.requestID);
+    results.data.idLogique = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idLogique;
     exporter.export(results.data);
     Buffer.update(results, false);
   });
@@ -77,6 +84,15 @@ var _ = require('underscore'),
       }
     }
   });
+
+  Buffer.flush = function(){
+    requestBuffer = _.filter(requestBuffer, function(elem){
+        return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
+    });
+
+    var mem = process.memoryUsage();
+    console.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+  };
 
   Buffer.pending_length = function(){
     return Buffer.pending().length;
@@ -114,6 +130,7 @@ var _ = require('underscore'),
         url           : request.url,
         stores        : request.stores ? request.stores : null,
         status        : 'pending',
+        idLogique     : request.idLogique,
         aspired_stores: [],
         data          : {
         },

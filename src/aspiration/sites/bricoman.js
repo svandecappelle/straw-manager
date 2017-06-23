@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   logger = require('log4js').getLogger('Bricoman'),
   cheerio = require('cheerio'),
   _ = require('underscore');
@@ -61,7 +62,7 @@ Bricoman.prototype.getStores = function(params){
 Bricoman.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  _.each(this.stores, function(magasin){
+  async.each(this.stores, function(magasin){
     var param = _.clone(req);
     param.magasin = magasin;
     param.cookies = {

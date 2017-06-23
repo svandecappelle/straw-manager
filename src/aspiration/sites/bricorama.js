@@ -1,4 +1,5 @@
 var Engine = require('../engine/engine'),
+  async = require('async'),
   cheerio = require('cheerio'),
   _ = require('underscore');
 
@@ -90,7 +91,7 @@ Bricorama.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
   logger.info("req.stores ===>", req.stores);
-  _.each(this.stores, function(magasin){
+  async.each(this.stores, function(magasin){
     var param = _.clone(req);
     param.magasin = magasin;
 

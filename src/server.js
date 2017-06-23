@@ -15,7 +15,10 @@ var testing = false;
 
 nconf.argv()
    .env()
-   .file({ file: path.resolve(__dirname, '../config.json' )});
+   .file({
+     file: path.resolve(__dirname, '../config.yml' ),
+     format: require('nconf-yaml')
+   });
 
 process.on('uncaughtException', function (err) {
   logger.error('Caught exception: ', err);
