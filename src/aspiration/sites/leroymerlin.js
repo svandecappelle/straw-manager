@@ -128,7 +128,8 @@ LeroyMerlin.prototype.decode = function (html, req) {
 
   var output = {
     requestID : req.requestID,
-    data			: data
+    data			: data,
+    stores    : this.stores
   };
 
   this.emit('product', output);
