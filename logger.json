@@ -41,6 +41,13 @@
       "backups": 3,
       "category": "Bricorama"
     },
+    {
+      "type": "file",
+      "filename": "logs/sites/Weldom.log",
+      "maxLogSize": 300000,
+      "backups": 3,
+      "category": "Weldom"
+    },
     { "type": "console" }
   ],
   "levels": {

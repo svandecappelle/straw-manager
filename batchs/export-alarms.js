@@ -8,7 +8,17 @@ var qmaker = require("qmaker"),
   jsonfile = require('jsonfile'),
   transform = require('stream-transform'),
   moment = require('moment'),
+  argv = require("argv"),
   configFile = __dirname + '/config.yml';
+
+argv.version("1.0");
+argv.option({
+   name: 'output',
+   short: 'o',
+   type: 'path',
+   description: 'batch output JSON file'
+});
+var args = argv.run();
 
 nconf.argv().env();
 if (nconf.get('config')) {
@@ -24,34 +34,19 @@ nconf.defaults({
   base_dir: __dirname
 });
 
-nconf.set("database", {
-    "type"          : "oracle",
-    "user"          : "LNK_BRICODEPOT",
-    "password"      : "LNK_BRICODEPOT",
-    "connectString" : "192.168.1.129/RECETTE",
-    "master"        : "BricoDepot",
-    "poolMax"       : 2,
-    "poolMin"       : 1,
-    "poolIncrement" : 1,
-    "poolTimeout"   : 4
-});
-
 var database = require("./database");
 
 database.on("ready", function(){
-/*  var alarms = new qmaker.Query();
-  alarms.select("ID_PRODUIT");
-  alarms.select("LIEN_FICHEPRODUIT");
-  alarms.select("LIBELLE").as("ENSEIGNE");
-
-  alarms.from("USER_ALARMS");
-  alarms.innerJoin("(SELECT LIEN_FICHEPRODUIT, ENSEIGNE.LIBELLE, ID FROM PRODUIT, ENSEIGNE) PRODUIT").on("PRODUIT.ID").equals("USER_ALARMS.ID_PRODUIT");
-*/
 
   var query = fs.readFileSync(path.resolve(__dirname,'./queries/user-alarms.sql'), 'utf8');
 
   database.execute(query, (err, results) => {
-    var file = `data-${moment().locale('fr').format('DD-MM-YYYY hh:mm:ss')}.json`;
+    var file;
+    if (args.options.output){
+      file = args.options.output;
+    } else {
+      file = `data-${moment().locale('fr').format('DD-MM-YYYY hh:mm:ss')}.json`;
+    }
     if (err){
       return console.error(query.toString(), err);
     }

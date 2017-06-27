@@ -2,6 +2,7 @@ port: 65000
 hostname: localhost
 logLevel: INFO
 proxies: proxyRU.txt
+max-memory: 2000
 aspiration:
   interactive: false
 tests:

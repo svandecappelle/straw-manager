@@ -76,9 +76,11 @@ process.on('uncaughtException', function (err) {
         app.use('/public', express.static(path.join(__dirname + '/../public')));
         app.use('/', views);
 
+        /*
+        TODO check if necessary to use scrib for logs
         var scribe = require('scribe-js')();
         app.use('/logs', scribe.webPanel());
-
+        */
         authentication.initialize(app);
         authentication.load(app);
 

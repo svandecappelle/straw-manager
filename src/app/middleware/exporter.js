@@ -65,8 +65,10 @@ Exporter.prototype.onWrite = function () {
 };
 
 Exporter.prototype.open = function (data) {
+  var file = this.filename(data.enseigne);
+
   var csvStream = fastcsv.createWriteStream({
-      headers: true,
+      headers: !fs.existsSync(file),
       delimiter: ';'
     })
     .transform(function(data){
@@ -82,7 +84,7 @@ Exporter.prototype.open = function (data) {
       output.timestamp = output.timestamp.getTime();
       return output;
     }),
-    writableStream = fs.createWriteStream(this.filename(data.enseigne), {
+    writableStream = fs.createWriteStream(file, {
     flags: 'a'
   });
   writableStream.on("close", function(){

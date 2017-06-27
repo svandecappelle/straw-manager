@@ -40,7 +40,7 @@ var _ = require('underscore'),
     console.log("Aspiration done".cyan.bold, results.requestID);
     var mem = process.memoryUsage();
     console.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
-    if (mem.heapUsed > 1000000000){
+    if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000){
       // 1Go clear memory
       Buffer.flush();
     }

@@ -19,7 +19,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'build/',
-          src: ['**'],
+          src: ['**', '.*'],
           dest: '/<%= pkg.name %>-<%= pkg.version %>'
         }]
       }

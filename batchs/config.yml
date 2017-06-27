@@ -45,7 +45,7 @@ database:
     password      : LNK_BRICODEPOT
     connectString : 192.168.1.129/RECETTE
     master        : BricoDepot
-    poolMax       : 2,
-    poolMin       : 1,
-    poolIncrement : 1,
+    poolMax       : 2
+    poolMin       : 1
+    poolIncrement : 1
     poolTimeout   : 4
