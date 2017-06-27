@@ -79,6 +79,7 @@ Exporter.prototype.open = function (data) {
         }
       });
       output.magasin = data.magasin.id;
+      output.timestamp = output.timestamp.getTime();
       return output;
     }),
     writableStream = fs.createWriteStream(this.filename(data.enseigne), {

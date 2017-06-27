@@ -30,7 +30,7 @@ var _ = require('underscore'),
 
 (function (Buffer) {
   "use strict";
-
+  const SHOPS_PROPERTIES = ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'magasin'];
   var requestBuffer = [];
   var auto_increment = -1
   var eventEmitter = new events.EventEmitter();
@@ -163,13 +163,13 @@ var _ = require('underscore'),
       requestBuffer[index].responseDate = Date.now();
 
       if (object.data.magasin){
-        requestBuffer[index].data = _.extend(requestBuffer[index].data, _.omit(object.data, ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo']));
+        requestBuffer[index].data = _.extend(requestBuffer[index].data, _.omit(object.data, SHOPS_PROPERTIES));
 
         if (!requestBuffer[index].stores_detail){
           requestBuffer[index].stores_detail = {};
         }
 
-        requestBuffer[index].stores_detail[object.data.magasin.id] = object.data;
+        requestBuffer[index].stores_detail[object.data.magasin.id] = _.pick(object.data, SHOPS_PROPERTIES);
         _.sortBy(requestBuffer[index].stores_detail, function(value){
           return value.magasin.id;
         });
@@ -183,7 +183,7 @@ var _ = require('underscore'),
       if (!requestBuffer[index].not_found_in_stores){
         requestBuffer[index].not_found_in_stores = [];
       }
-      requestBuffer[index].not_found_in_stores.push(object.req.magasin.id);
+      requestBuffer[index].not_found_in_stores.push(object.req.magasin);
     } else if (index > -1){
       requestBuffer[index].status = 'failed';
       requestBuffer[index].error = object.error;

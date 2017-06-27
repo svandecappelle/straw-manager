@@ -22,9 +22,9 @@ function Engine () {
     this.logger = require('log4js').getLogger(this.name);
     var config_path = config_name("sites/" + this.name);
     if (fs.existsSync(config_path)){
-        _.extend(this.config, yaml_config.load(config_path));
+      this.config = _.extend(this.config, yaml_config.load(config_path));
     } else {
-        this.logger.warn(`Configuration file ${config_path} not existing skipping loading`);
+      this.logger.warn(`Configuration file ${config_path} not existing skipping loading`);
     }
     this.logger.debug("Configuration: ", this.config);
   } else {

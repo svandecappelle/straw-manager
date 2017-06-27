@@ -2,16 +2,16 @@ extends template
 
 block body
   a#api-link(href= rootPath + "api/" + view)
-  table#buffer.mdl-data-table(style='width: 100%;', cellspacing="0")
+  table#buffer.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp(style='width: 100%;', cellspacing="0")
     thead
       tr
         each column in schema
-          th(style='text-align:center;')= column.data
+          th.mdl-data-table__cell--non-numeric(style='text-align:center;')= column.data
     tbody
     tfoot
       tr
         each column in schema
-          th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
+          th.mdl-data-table__cell--non-numeric(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
             input.column-filter(type="text", style='width: 33%;')
   script.
     var refresh_time = #{refresh_time}
@@ -53,21 +53,40 @@ block body
                   return data.length
                 return 0;
               ,
-              "targets": [9, 7, 10]            
+              "targets": [10, 8, 11]
             },
-            {"visible": false,  "targets": [ 6 ]}, 
+            {
+              "render": (data, type, row ) ->
+                if (!data)
+                  return "-";
+                return new Date(data).toISOString().slice(0, 19).replace('T', ' ');
+              ,
+              "targets": [1, 2]
+            },
+            {
+              "render": (data, type, row ) ->
+                if (row.responseDate == 0)
+                  return 'null';
+                time_in_minutes = ((row.responseDate - row.requestDate)  / 1000 / 60)
+                if (time_in_minutes < 0.01)
+                  time_in_secs = time_in_minutes * 60
+                  return Math.round(time_in_secs * 100) / 100 + ' secs';
+                return Math.round(time_in_minutes * 100) / 100 + ' mins';
+              ,
+              "targets": [3]
+            },
+            {"visible": false,  "targets": [ 2, 7 ]}, 
             {
               "render": (data, type, row) ->
                 return '<a href="' + row.url + '" onClick="event.stopPropagation(); Window.open(\'' + row.url + '\');">' + row.data.libelles + '</a>'
               ,
-              "targets": [5]
+              "targets": [6]
             }
           ]
         });
         
         table.columns().every( () ->
           that = this
-          console.log(this.footer());
           $( 'input.column-filter', this.footer()).on( 'keyup change', () ->
             console.log(that.search(), this.value);
             if ( this.value != that.search() )

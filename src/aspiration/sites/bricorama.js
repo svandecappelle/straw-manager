@@ -9,7 +9,6 @@ function Bricorama(use_proxy){
   Engine.call(this);
   this.on("stores", this.parseStores);
   this.on("home", this.home);
-
 };
 
 Bricorama.prototype = Object.create(Engine.prototype);
@@ -114,7 +113,7 @@ Bricorama.prototype.decode = function (html, req, response) {
 		     var output = {
 			        requestID  :  ReqObject.requestID,
 			        error      :	"produit non disponible",
-			        data       :  undefined
+			        data       :  undefined,
               req        :  req
 		  };
       return this.emit('not_found', output);

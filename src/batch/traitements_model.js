@@ -1,11 +1,13 @@
 var nconf = require("nconf"),
+  logger = require('log4js').getLogger('Batch'),
   request = require('request');
 const DEFAULT_TEST_TIMEOUT = nconf.get("tests:timeout") !== undefined ? nconf.get("tests:timeout") : 45000;
+logger.setLevel('INFO');
 
 var TestTraitement = function (opts, callback_test) {
-  this.maxtry = 10;
+  this.maxtry = opts['max-checking'] ? opts['max-checking'] :10;
   this.current_try = 1;
-  this.time_recheck = 2000;
+  this.time_recheck = opts['checking-interval'] ? opts['checking-interval'] : 2000;
   this.opts = opts;
   this.errors = null;
   this.server_returns = [];
@@ -20,15 +22,16 @@ var TestTraitement = function (opts, callback_test) {
 
   this.opts.jar = undefined;
 
-  console.log("Test case: ".red, opts);
+  logger.info("Test case: ".red, opts);
 }
 
 TestTraitement.prototype.next = function(){
+
   if (this.hasFailed()){
-    console.log("Test has failed: ".red);
+    logger.error("Test has failed: ".red);
     this.callback_test(this.getResults());
   } else {
-    console.log(`Apsiration successfully return some datas ${this.getResults().requestID}`.green);
+    logger.info(`Aspiration successfully return some datas ${this.getResults().requestID}`.green);
     this.callback_test();
   }
 };
@@ -52,11 +55,12 @@ TestTraitement.prototype.getResults = function (data) {
 TestTraitement.prototype.checking = function(){
   var that = this;
   if (this.hasFailed()){
-    console.log("error: ", this.getResults());
+    logger.error("error: ", this.getResults());
     this.next();
   }
   that.verify(function(){
-    console.log("Verifing...".yellow);
+    logger.info("Verifing...".yellow);
+
     that.next();
   });
 }
@@ -71,7 +75,8 @@ TestTraitement.prototype.last_server_returns = function(){
 
 TestTraitement.prototype.launch = function(next){
   var that = this;
-  console.log("launched".green);
+  logger.info("launched".green);
+
   that.aspire(function(){
     that.checking();
   });
@@ -89,14 +94,14 @@ TestTraitement.prototype.aspire = function (callback) {
   }, function (error, response, body) {
 
     if (!error && response) {
-      console.log(`Request time ${url} in ms`.yellow, response.elapsedTime);
-
-      that.setHasFailed(! (response.statusCode == 200 && (body.status === 'pending' || body.status === 'set' || body.data !== undefined)));
+      // console.log(`Request time ${url} in ms`.yellow, response.elapsedTime);
+      logger.debug(`Request time ${url} in ms`.yellow, response.elapsedTime);
+      that.setHasFailed(! (response.statusCode == 200 && (body.status.indexOf('pending') !== -1 || body.status.indexOf('partial') !== -1 || body.status === 'set' || body.data !== undefined)));
       that.results(body);
     } else {
       if (error.code === 'ETIMEDOUT'){
-        console.log("Connection take too much time ETIMEDOUT".red.underline);
-        console.log("Testing using checking".cyan);
+        logger.warn("Connection take too much time ETIMEDOUT".red.underline);
+        logger.warn("Testing using checking".cyan);
         callback()
       } else {
         that.setHasFailed(true);
@@ -112,38 +117,38 @@ TestTraitement.prototype.verify = function (callback) {
   var that = this;
   // console.log("Calls: " + $url_api.concat('/api/request/' + this.data.requestID ).yellow );
   var url = this.url_api.concat('/api/request/' + this.data.requestID);
-  console.log(url);
+
   request.get( {
     url: url,
     time : true,
     jar: this.jar
   }, function (error, response, body){
-    console.log(`Request ${url} time in ms`.yellow, error);
-    console.log(`Request ${url} time in ms`.yellow, response.elapsedTime);
     if (!error && response) {
-        var result = JSON.parse(body);
-        // console.log(! (response.statusCode == 200 && (result.status === 'pending' || result.status === 'set' || result.data !== undefined)))
-        that.setHasFailed(! (response.statusCode == 200 && (result.status === 'pending' || result.status === 'set' || result.data !== undefined)));
+      logger.debug(`Request ${url} time in ms`.yellow, response.elapsedTime);
+      var result = JSON.parse(body);
+      that.setHasFailed(! (response.statusCode == 200 && (result.status.indexOf('pending') !== -1 || result.status.indexOf('partial') !== -1 || result.status === 'set' || result.data !== undefined)));
 
-        if (result.status === 'pending'){
-          that.current_try += 1;
-          if (that.current_try >= that.maxtry){
-            that.setHasFailed(true);
-            that.results(new Error(`Aspiration ${that.getResults().requestID} take too much time ${that.maxtry * that.time_recheck}`));
-            return callback();
-          } else {
-            console.log(`Aspiration ${that.getResults().requestID} not yet finished check after ${that.current_try * that.time_recheck}ms`);
-            setTimeout(function(){
-                that.verify(callback);
-            }, that.time_recheck);
-            return
-          }
+      if (result.status.indexOf('pending') !== -1){
+        that.current_try += 1;
+        if (that.current_try >= that.maxtry){
+          that.setHasFailed(true);
+          that.results(new Error(`Aspiration ${that.getResults().requestID} take too much time ${that.maxtry * that.time_recheck}`));
+          return callback();
+        } else {
+          logger.debug(`Aspiration ${that.getResults().requestID} not yet finished check after ${that.current_try * that.time_recheck}ms`);
+          setTimeout(function(){
+              that.verify(callback);
+          }, that.time_recheck);
+          return
         }
-        that.results(result);
+      }
+      that.results(result);
     } else {
+      logger.error(`Request ${url} time in ms`.yellow, error);
       if (error.code === 'ETIMEDOUT'){
-        console.log("Connection take too much time ETIMEDOUT".red.underline);
-        console.log(`${(that.current_try + 1).toString().cyan} + "° / ${that.maxtry} try`);
+        logger.warn("Connection take too much time ETIMEDOUT".red.underline);
+        logger.warn(`${(that.current_try + 1).toString().cyan} + "° / ${that.maxtry} try`);
+
         that.current_try += 1;
         if (that.current_try >= that.maxtry){
           that.setHasFailed(true);

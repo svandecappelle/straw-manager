@@ -19,6 +19,7 @@ function getBufferTableSchema(){
     'requestID',
     'requestDate',
     'responseDate',
+    'time',
     'Enseigne',
     'idProduit',
     'libelles',

@@ -20,7 +20,7 @@ module.exports = function(grunt) {
           expand: true,
           cwd: 'build/',
           src: ['**'],
-          dest: '/'
+          dest: '/<%= pkg.name %>-<%= pkg.version %>'
         }]
       }
     },

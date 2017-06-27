@@ -1,4 +1,19 @@
 default:
+  logger:
+    appenders:
+      - type: file
+        filename: logs/batchs.log
+        maxLogSize: 300000
+        backups: 3
+        level: INFO
+      - out:
+        type: console
+        layout:
+          type: basic
+    categories:
+      default:
+        appenders: ['out']
+        level: error
   server:
     port: 65000
     hostname: localhost
@@ -10,7 +25,20 @@ default:
     credentials:
       user: Brico1,
       password: Brico1
-  input-file: batch.json
+  batchs:
+    checking-interval: 2000
+    max-checking: 9999
+    input-file: batch.json
+    pre-processing:
+      cwd: 'ls'
+      arguements:
+        - value: -la
+        - value: /usr
+    post-processing:
+      cwd: 'ls'
+      arguements:
+        - value: -la
+        - value: /usr
 database:
     type          : oracle
     user          : LNK_BRICODEPOT

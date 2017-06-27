@@ -11,17 +11,25 @@ block body
     if request.data.libelles
       .col-xs-12.col-md-12.request
         a(href=request.url)= request.data.libelles.join("\t")
+    ul.list-group(style="top:0px;position:sticky;z-index:1")
+      li.list-group-item.row.active
+        .col-xs-12.col-md-12.request
+          a(href=request.url)= request.url
+          .row
+            .col-xs-6.col-md-4 Magasins aspirés
+            if request.stores && request.aspired_stores
+              .col-xs-6.col-md-4
+                span= JSON.stringify(request.aspired_stores.length) + '/' + JSON.stringify(request.stores.length)
+                if request.not_found_in_stores
+                  span= '(Not in: ' + JSON.stringify(request.not_found_in_stores.length) + ')'
+            else
+              .col-xs-6.col-md-4 all
+          
+        li.list-group-item.row.active
+          .col-xs-6.col-md-4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-xs-6.col-md-4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-xs-6.col-md-4= "Temps passé: " + ((request.responseDate - request.requestDate) / 1000 / 60) + ' mins'
     .col-xs-12.col-md-12.request
-      a(href=request.url)= request.url
-      .row
-        .col-xs-6.col-md-4 Magasins aspirés
-        if request.stores && request.aspired_stores
-          .col-xs-6.col-md-4
-            span= JSON.stringify(request.aspired_stores.length) + '/' + JSON.stringify(request.stores.length)
-            if request.not_found_in_stores
-              span= '(Not in: ' + JSON.stringify(request.not_found_in_stores.length) + ')'
-        else
-          .col-xs-6.col-md-4 all
       if request.error
         .row
           .col-xs-12.col-md-12
@@ -46,7 +54,7 @@ block body
               .col-xs-6.col-md-4 Aspired stores:
               .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.stores_detail).length)
         ul.list-group#stores-datas
-          li.list-group-item.row.active(style='position: sticky; top: 0;')
+          li.list-group-item.row.active(style='position: sticky; top: 110px;z-index: 1;')
             .col-xs-6.col-md-4.text-center Magasin
             .col-xs-6.col-md-4.text-center Prix
             .col-xs-6.col-md-4.text-center Promo
@@ -55,7 +63,7 @@ block body
               if store_detail
                 li.list-group-item.row
                   .col-xs-6.col-md-4
-                    if store_detail.url
+                    if store_detail.magasin
                       a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
                     else
                       #{storeid}

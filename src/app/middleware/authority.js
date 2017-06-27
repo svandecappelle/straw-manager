@@ -3,7 +3,9 @@
 
     var passport = require('passport'),
       nconf = require('nconf'),
+      path = require('path'),
       logger = require('log4js').getLogger("authority"),
+      yaml_config = require('node-yaml-config'),
       _ = require("underscore");
 
     var LOGIN_DURATION = 60 * 24;
@@ -68,9 +70,10 @@
         if (!username || !password) {
             return done(new Error('[[error:invalid-user-data]]'));
         }
-        var autorizations = require("../../../authorizations").users;
+        const autorizations = yaml_config.load(path.resolve(__dirname, "../../../authorizations.yml")).users;
 
-        var user = _.where(autorizations, {'username': username, 'password': ''});
+        var user = _.findWhere(autorizations, {'username': username, 'password': password});
+        console.log(user);
         if (user){
           return done(null, {
               uid: username

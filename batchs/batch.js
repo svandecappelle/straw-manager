@@ -9,11 +9,17 @@ var chai = require('chai'),
     argv = require("argv"),
     yaml_config = require('node-yaml-config'),
     fs = require('fs'),
+    log4js = require('log4js'),
+    logger = log4js.getLogger('BatchEntryPoint'),
     async = require("async"),
+    ora = require("ora"),
+    spinner = ora('Running batch process...\r'),
     TestTraitement = require("../src/batch/traitements_model");
 var expect = chai.expect; // we are using the "expect" style of Chai
 var $test_port = 15555;
 var $url_api = 'http://localhost:' + $test_port;
+
+logger.setLevel("INFO");
 
 String.prototype.replaceAll = function(find, replace) {
 	return this.replace(new RegExp(find, 'g'), replace);
@@ -41,19 +47,21 @@ argv.option({
 });
 var args = argv.run();
 const configuration = yaml_config.load(config_file("config"));
+log4js.configure(configuration.logger);
+
 var input_file = path.resolve(__dirname, './'.concat(configuration["input-file"]));
 if (args.options.file){
   input_file = args.options.file;
 }
 
 if (!fs.existsSync(input_file)){
-  console.log(`Error batch file not exists: ${input_file}`.bold.red);
+  logger.error(`Error batch file not exists: ${input_file}`.bold.red);
   process.exit(1);
 }
 
 const $case_tests = require(input_file);
 
-console.log("Batch environment".yellow, configuration.server);
+logger.info("Batch environment".yellow, configuration.server);
 
 const AUTORUN_SERVER = configuration.server.autorun_server !== undefined ? configuration.server.autorun_server : false;
 const SILENT_MODE = configuration.server.silent !== undefined ? configuration.server.silent : true;
@@ -61,7 +69,7 @@ const PARALLEL_CALLS = 6;
 
 if (AUTORUN_SERVER) {
   var apiServer = require("./../src/server");
-  console.log("Using auto run server".yellow.italic);
+  logger.info("Using auto run server".yellow.italic);
   apiServer.run({
 
     port: $test_port,
@@ -104,13 +112,13 @@ function connect(){
         password: configuration.server.credentials.password
       },
       json: true
-    }, function (error, response, body){
+    }, (error, response, body) => {
       if (!error && response) {
-        console.log("Connected to CollectOnline server".green);
+        logger.info("Connected to CollectOnline server".green);
         run();
       } else {
-        console.error(error);
-        console.log("Cannot connect to CollectOnline server".red);
+        logger.error(error);
+        logger.error("Cannot connect to CollectOnline server".red);
         process.exit(1);
       }
     });
@@ -120,18 +128,50 @@ function connect(){
 
 }
 
+function callProcessing(type){
+  var type = type + '-processing';
+
+  const spawn = require('child_process').spawn;
+  const cwd = spawn(configuration.batchs[type].cwd, _.pluck(configuration.batchs[type].arguements, 'value'));
+
+  cwd.stdout.on('data', (data) => {
+    console.log(`stdout: ${data}`);
+  });
+
+  cwd.stderr.on('data', (data) => {
+    console.log(`stderr: ${data}`);
+  });
+
+  cwd.on('close', (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+}
+
 function run () {
   var index = 0;
-  async.eachLimit($case_tests.valids, PARALLEL_CALLS, function(value, next){
+  callProcessing('pre');
+  spinner.start();
+
+  async.eachLimit($case_tests.valids, PARALLEL_CALLS, (value, next) => {
     value.index = index;
     value.jar = jar;
     value.url_api = $url_api;
+    value['checking-interval'] = configuration.batchs['checking-interval'];
+    value['max-checking'] = configuration.batchs['max-checking'];
+
     index += 1;
-    console.log(`Call aspiration on ${value.url}`);
+    logger.debug(`Call aspiration on ${value.url}`);
     var traitment = new TestTraitement(value, next);
     traitment.launch();
 
-  }, function (err, values) {
-    console.log("Done all parrallel calls".green);
+  }, (err, values) => {
+
+    spinner.stop();
+    logger.info("Done all parrallel calls".green);
+
+    if (!err){
+      callProcessing('post');
+    }
   });
 }

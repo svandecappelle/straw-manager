@@ -141,9 +141,10 @@ Castorama.prototype.decode = function (html, req) {
     var output = {
       requestID  :  req.requestID,
       error      :	"Page non disponible",
-      data       :  undefined
+      data       :  undefined,
+      req        :  req
     };
-    return this.emit('fatal_error', output, req);
+    return this.emit('not_found', output, req);
   }
   var $ = cheerio.load(html);
 
@@ -153,10 +154,11 @@ Castorama.prototype.decode = function (html, req) {
     var output = {
       requestID  :  req.requestID,
       error      :	"produit non disponible",
-      data       :  undefined
+      data       :  undefined,
+      req        :  req
     };
 
-    return this.emit('fata_error', output, req);
+    return this.emit('not_found', output, req);
   }
 
   var product = $("div.productContent");

@@ -82,17 +82,19 @@ Bricomarche.prototype.parseStores = function (html, req, response) {
   this.logger.debug('Rentré dans Example_MagasinList')
 
   $("[id='select_advmag']").first().find('option').each(function (idx) {
-    var urlMag = $(this).attr('value')
-    var Magasin = $(this).text().trim()
+    var urlMag = $(this).attr('value');
+    if (urlMag){
+      var Magasin = $(this).text().trim()
 
-    var MagasinId = urlMag.substring(urlMag.lastIndexOf('/') + 1).trim()
+      var MagasinId = urlMag.substring(urlMag.lastIndexOf('/') + 1).trim()
 
-    that.logger.debug(Magasin, MagasinId)
+      that.logger.debug(Magasin, MagasinId)
 
-    that.stores.push({
-      id: MagasinId,
-      name: Magasin
-    })
+      that.stores.push({
+        id: MagasinId,
+        name: Magasin
+      })
+    }
   })
 
   this.logger.debug('Example_MagasinList', this.stores)
