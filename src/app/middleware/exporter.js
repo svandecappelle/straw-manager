@@ -39,12 +39,10 @@ function Exporter() {
 Exporter.prototype.__proto__ = events.EventEmitter.prototype;
 
 Exporter.prototype.listen = function () {
-  logger.info("openned files: ", _.where(this.file_descriptors, {isOpen: true}));
   var that = this;
   _.each(that.file_descriptors, (fd, enseigne) => {
     if (fd.isOpen) {
       if (_.isEmpty(_.where(that.data[enseigne], {isExported: false}))) {
-        logger.info("all is exported");
         fd.close();
       }
     }
