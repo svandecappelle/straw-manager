@@ -121,22 +121,22 @@ function connect(){
 
 function callProcessing(type){
   var type = type + '-processing';
+  if (configuration.batchs[type]) {
+    const spawn = require('child_process').spawn;
+    const cwd = spawn(configuration.batchs[type].cwd, _.pluck(configuration.batchs[type].arguements, 'value'));
 
-  const spawn = require('child_process').spawn;
-  const cwd = spawn(configuration.batchs[type].cwd, _.pluck(configuration.batchs[type].arguements, 'value'));
+    cwd.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    });
 
-  cwd.stdout.on('data', (data) => {
-    console.log(`stdout: ${data}`);
-  });
+    cwd.stderr.on('data', (data) => {
+      console.log(`stderr: ${data}`);
+    });
 
-  cwd.stderr.on('data', (data) => {
-    console.log(`stderr: ${data}`);
-  });
-
-  cwd.on('close', (code) => {
-    console.log(`child process exited with code ${code}`);
-  });
-
+    cwd.on('close', (code) => {
+      console.log(`child process exited with code ${code}`);
+    });
+  }
 }
 
 function run () {
