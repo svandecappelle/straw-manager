@@ -1,5 +1,6 @@
 {
   "appenders": [
+    { "type": "log4js-scribe-js", "timezoneOffset": "UTC+01:00", "level": "INFO"},
     {
       "type": "file",
       "filename": "logs/output.log",

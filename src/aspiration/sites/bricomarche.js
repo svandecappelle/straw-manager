@@ -139,6 +139,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
       data.categories.push($(this).text())
     }
   })
+  data.url = req.url;
   data.timestamp = new Date()
   data.enseigne = req['Enseigne']
   data.magasin = req.magasin

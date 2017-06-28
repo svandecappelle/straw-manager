@@ -26,6 +26,7 @@ default:
       user: Brico1,
       password: Brico1
   batchs:
+    parallel: 6
     checking-interval: 2000
     max-checking: 9999
     input-file: batch.json

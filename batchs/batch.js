@@ -5,7 +5,6 @@ var chai = require('chai'),
     request = require('request'),
     path = require('path'),
     colors = require('colors'),
-    nconf = require("nconf"),
     argv = require("argv"),
     yaml_config = require('node-yaml-config'),
     fs = require('fs'),
@@ -35,9 +34,6 @@ function config_file(name){
   return path.resolve(__dirname, "./".concat(name)).concat(".").concat("yml");
 }
 
-nconf.argv()
-   .env()
-   .file({ file: path.resolve(__dirname,'../config.json')});
 argv.version("1.0");
 argv.option({
    name: 'file',
@@ -65,7 +61,7 @@ logger.info("Batch environment".yellow, configuration.server);
 
 const AUTORUN_SERVER = configuration.server.autorun_server !== undefined ? configuration.server.autorun_server : false;
 const SILENT_MODE = configuration.server.silent !== undefined ? configuration.server.silent : true;
-const PARALLEL_CALLS = 6;
+const PARALLEL_CALLS = configuration.batch.parallel !== undefined ? configuration.batch.parallel : 6;
 
 if (AUTORUN_SERVER) {
   var apiServer = require("./../src/server");
@@ -80,11 +76,6 @@ if (AUTORUN_SERVER) {
     connect();
   });
 } else {
-  var nconf = require("nconf");
-  nconf.argv()
-     .env()
-     .file({ file: './config.json' });
-
   $test_port = configuration.server.port;
   $url_api = 'http://' + configuration.server.hostname + ':' + $test_port + configuration.server.service_location;
   connect();

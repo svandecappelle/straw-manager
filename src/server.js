@@ -7,6 +7,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     app = express(),
     log4js = require("log4js"),
+    scribe = require('scribe-js')(),
     authentication = require("./app/routes/authentication"),
     logger = log4js.getLogger('Server');
 require("colors");
@@ -51,12 +52,7 @@ process.on('uncaughtException', function (err) {
             }
         });
       } else {
-        if (process.argv[2] === "dev"){
-          logger.info("entering dev mode");
-          log4js.configure(path.resolve(__dirname, '../logger-dev.json'), {});
-        } else {
-          log4js.configure(path.resolve(__dirname, '../logger.json'), {});
-        }
+        log4js.configure(path.resolve(__dirname, '../logger.json'));
       }
 
       if ( !opts || opts.run_server ) {
@@ -76,11 +72,9 @@ process.on('uncaughtException', function (err) {
         app.use('/public', express.static(path.join(__dirname + '/../public')));
         app.use('/', views);
 
-        /*
-        TODO check if necessary to use scrib for logs
-        var scribe = require('scribe-js')();
+        // scribe logger
         app.use('/logs', scribe.webPanel());
-        */
+        app.use(scribe.express.logger());
         authentication.initialize(app);
         authentication.load(app);
 
