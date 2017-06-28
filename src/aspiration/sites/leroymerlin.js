@@ -29,7 +29,7 @@ LeroyMerlin.prototype.call = function (params) {
 LeroyMerlin.prototype.constructor = LeroyMerlin;
 
 LeroyMerlin.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -124,7 +124,7 @@ LeroyMerlin.prototype.decode = function (html, req) {
   }
   data.promo = data.ancienPrix? 1 : 0 ;
   data.ean = html.split('product_ean :')[1].split(',')[0].replace(/'/g, '');
-  logger.info(data)
+  logger.debug(data)
 
   var output = {
     requestID : req.requestID,

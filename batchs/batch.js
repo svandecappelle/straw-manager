@@ -61,7 +61,7 @@ logger.info("Batch environment".yellow, configuration.server);
 
 const AUTORUN_SERVER = configuration.server.autorun_server !== undefined ? configuration.server.autorun_server : false;
 const SILENT_MODE = configuration.server.silent !== undefined ? configuration.server.silent : true;
-const PARALLEL_CALLS = configuration.batch.parallel !== undefined ? configuration.batch.parallel : 6;
+const PARALLEL_CALLS = configuration.batchs.parallel !== undefined ? configuration.batchs.parallel : 6;
 
 if (AUTORUN_SERVER) {
   var apiServer = require("./../src/server");

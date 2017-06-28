@@ -48,8 +48,7 @@
       "maxLogSize": 300000,
       "backups": 3,
       "category": "Weldom"
-    },
-    { "type": "console" }
+    }
   ],
   "levels": {
       "[all]": "INFO"

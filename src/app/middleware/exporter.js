@@ -1,10 +1,13 @@
 var fs = require('fs'),
   path = require('path'),
+  logger = require('log4js').getLogger('Exporter'),
   events = require('events'),
   fastcsv = require('fast-csv'),
   _ = require('underscore'),
   camelize = require("underscore.string/camelize"),
   moment = require('moment');
+
+const TIME_TO_CLOSE_FILE = 3000;
 
 var export_scheme = {
   enseigne: "",
@@ -30,44 +33,50 @@ function Exporter() {
   this.file_descriptors = {};
   this.data = {};
   this.listen();
-  this.on('write', this.onWrite);
+  // this.on('write', this.onWrite);
 }
 
 Exporter.prototype.__proto__ = events.EventEmitter.prototype;
 
 Exporter.prototype.listen = function () {
-
-  _.each(this.file_descriptors, (fd, enseigne) => {
-    if (_.isEmpty(this.data[enseigne])) {
-      if (fd.isOpen){
-          fd.close();
+  logger.info("openned files: ", _.where(this.file_descriptors, {isOpen: true}));
+  var that = this;
+  _.each(that.file_descriptors, (fd, enseigne) => {
+    if (fd.isOpen) {
+      if (_.isEmpty(_.where(that.data[enseigne], {isExported: false}))) {
+        logger.info("all is exported");
+        fd.close();
       }
-    } else {
-      setTimeout(this.listen, 1000);
     }
   });
 
-};
-
-Exporter.prototype.onWrite = function () {
-  _.each(this.data, (rows_data, enseigne) => {
-    if (!this.file_descriptors[enseigne] || !this.file_descriptors[enseigne].isOpen){
-      this.open(_.first(rows_data));
-    }
-
-    _.each(rows_data, (row) => {
-      if (!row.isExported){
-        row.isExported = true;
-        this.file_descriptors[enseigne].stream.write(row);
+  _.each(that.data, (rows_data, enseigne) => {
+    if (rows_data !== undefined && rows_data.length > 0 && enseigne){
+      if (!that.file_descriptors[enseigne] || !that.file_descriptors[enseigne].isOpen){
+        logger.info("########################### Open FILE ############################", _.first(rows_data).enseigne);
+        that.open(_.first(rows_data));
       }
-    });
+
+      _.each(rows_data, (row) => {
+        if (!row.isExported && that.file_descriptors[enseigne]){
+          logger.debug("########################### Exporting ############################", row);
+          that.file_descriptors[enseigne].stream.write(row);
+          row.isExported = true;
+        }
+      });
+    }
   });
+
+  setTimeout(function(){
+    that.listen();
+  }, TIME_TO_CLOSE_FILE);
 };
 
 Exporter.prototype.open = function (data) {
   var file = this.filename(data.enseigne);
 
-  var csvStream = fastcsv.createWriteStream({
+  var that = this;
+  var csvStream = fastcsv.format({
       headers: !fs.existsSync(file),
       delimiter: ';'
     })
@@ -85,22 +94,25 @@ Exporter.prototype.open = function (data) {
       return output;
     }),
     writableStream = fs.createWriteStream(file, {
-    flags: 'a'
-  });
+      flags: 'a'
+    });
   writableStream.on("close", function(){
-    console.log('closed output file'.green);
-    file_descriptors[enseigne].isOpen = false;
+    logger.info('closed output file'.green);
+    that.data[data.enseigne] = _.where(that.data[data.enseigne], {isExported: false});
+
+    that.file_descriptors[data.enseigne].isOpen = false;
   });
   writableStream.on("finish", function(){
-    console.log("DONE!".green);
+    logger.info("DONE!".green);
   });
   csvStream.pipe(writableStream);
+
   this.file_descriptors[data.enseigne] = {
     stream: csvStream,
     isOpen: true,
     enseigne: data.enseigne,
     close: function(){
-      console.log("Closing export file");
+      logger.info("Closing export file");
       csvStream.end();
       writableStream.close();
     }
@@ -116,10 +128,10 @@ Exporter.prototype.export = function (data) {
     if (this.data[data.enseigne] === undefined){
       this.data[data.enseigne] = [];
     }
+    data.isExported = false;
     this.data[data.enseigne].push(data);
-    this.emit('write');
   } else {
-    console.log("WARN: an export request is about undefined Enseigne type".yellow.bold, data);
+    logger.warn("WARN: an export request is about undefined Enseigne type".yellow.bold, data);
   }
 };
 

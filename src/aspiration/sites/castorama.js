@@ -33,7 +33,7 @@ Castorama.prototype.call = function (params) {
 Castorama.prototype.constructor = Castorama;
 
 Castorama.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -88,7 +88,7 @@ Castorama.prototype.aspireOnStore = function(html, req, reponse){
 
 Castorama.prototype.parseStores = function (json, req, response) {
   var that = this;
-  logger.info(response.cookies);
+  logger.debug(response.cookies);
   // console.log(html);
 	//var $ = cheerio.load(html);
   that.stores = [];
@@ -185,7 +185,7 @@ Castorama.prototype.decode = function (html, req) {
 
   } else {
     logger.debug("succeed from");
-    logger.info(req.lasturl);
+    logger.debug(req.lasturl);
   }
 
   var data = {};

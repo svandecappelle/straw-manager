@@ -40,7 +40,7 @@ Bricoman.prototype.call = function (params) {
 Bricoman.prototype.constructor = Bricoman;
 
 Bricoman.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -68,14 +68,14 @@ Bricoman.prototype.aspireOnStore = function(req){
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
-    logger.info("Bricoman_MagasinList", magasin.name);
+    logger.debug("Bricoman_MagasinList", magasin.name);
     that.request(param, next);
   });
 };
 
 Bricoman.prototype.parseStores = function (html, req, response) {
   var that = this;
-  logger.info(response.cookies);
+  logger.debug(response.cookies);
   // console.log(html);
 	var $ = cheerio.load(html);
   that.stores = [];

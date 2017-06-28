@@ -18,7 +18,7 @@ Weldom.prototype.call = function (params) {
   if (params.stores) {
     this.stores = params.stores
   }
-  logger.info('Parameters call engine', params)
+  this.logger.info('Parameters call engine', params)
 
   this.request({
     url: 'https://www.weldom.fr',
@@ -29,7 +29,7 @@ Weldom.prototype.call = function (params) {
 Weldom.prototype.constructor = Weldom
 
 Weldom.prototype.home = function (html, req) {
-  logger.info('Home view: ', this.stores !== undefined && this.stores.length > 0)
+  this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0)
   if (req.origin) {
     req = req.origin
   }
@@ -53,7 +53,7 @@ Weldom.prototype.parseStores = function (html, req, response) {
   // console.log(html)
   var $ = cheerio.load(html)
   that.stores = []
-  logger.info('Rentré dans Weldom_MagasinList')
+  this.logger.info('Rentré dans Weldom_MagasinList')
 
   $('#contenair-mag a').each(function (idx) {
     var url = $(this).attr('href')
@@ -62,19 +62,19 @@ Weldom.prototype.parseStores = function (html, req, response) {
       try {
         url = url.replace("\"https", "http");
         var ville = url.split('http://www.weldom.fr/')[1].split('/')[0]
-        logger.info('Ville', ville, url)
+        that.logger.debug('Ville', ville, url)
         var urlMag = url + 'customdev/index/getWebsiteUrl/?storelocator_id%5Bstorelocator%5D=' + ville + '&url=%2F' + ville + '%2F'
         var magasin = $(this).text().trim()
-        logger.info(magasin, urlMag)
+        that.logger.debug(magasin, urlMag)
         that.stores.push({
           name: magasin,
           url: urlMag,
           id: magasin
         })
 
-        logger.debug('Weldom_MagasinList', this.stores)
+        that.logger.debug('Weldom_MagasinList', this.stores)
       } catch (e) {
-        logger.error('Error on parseStores', e)
+        that.logger.error('Error on parseStores', e)
       }
     }
   })
@@ -83,13 +83,12 @@ Weldom.prototype.parseStores = function (html, req, response) {
 
 Weldom.prototype.aspireOnStore = function (req) {
   var that = this
-  logger.info(that.stores)
   // var MagasinId = response.cookies
   req.stores = this.stores
   async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
     var param = _.clone(req)
     param.magasin = magasin
-    logger.debug('Prod Mag Url', magasin.url)
+    that.logger.debug('Prod Mag Url', magasin.url)
     that.request({
       url: magasin.url,
       origin: param,
@@ -99,8 +98,8 @@ Weldom.prototype.aspireOnStore = function (req) {
 }
 
 Weldom.prototype.patch = function (html, req, response) {
-  logger.info('Cookies ===>', response.cookies.shop_id) // _.omit(response, ['body']
-  logger.info('Lien Mag' , req.origin.magasin.url)
+  this.logger.debug('Cookies ===>', response.cookies.shop_id) // _.omit(response, ['body']
+  this.logger.debug('Lien Mag' , req.origin.magasin.url)
   req.origin.magasin.id = response.cookies.shop_id;
   if (req.origin.magasin.id){
     try {
@@ -135,7 +134,7 @@ Weldom.prototype.patch = function (html, req, response) {
     var toReplace = req.origin.url.split(protocol + '://www.weldom.fr/')[1].split('/')[0];
     var prodUrl = req.origin.url.split(toReplace + '/')[1];
     req.url = req.origin.magasin.url.concat(prodUrl);
-    logger.debug('Url du Produit', req.url);
+    this.logger.debug('Url du Produit', req.url);
     this.request(req.origin, req.callback);
   } else {
     req.origin.magasin.id = '' + response.cookies.shop_id;
@@ -152,8 +151,8 @@ Weldom.prototype.patch = function (html, req, response) {
 Weldom.prototype.decode = function (html, req, response) {
   var $ = cheerio.load(html)
   // req.magasin.id = response.cookies.shop_id
-  logger.info('Id Mag in Decode', response.cookies) // _.omit(response, ['body']
-  logger.debug('*********Fiche**************', req)
+  this.logger.info('Id Mag in Decode', response.cookies) // _.omit(response, ['body']
+  this.logger.debug('*********Fiche**************', req)
   /* ------------------------------------------------------------------------ */
   // manage fail
   if ($('.errorPage').length > 0) {
@@ -194,7 +193,7 @@ Weldom.prototype.decode = function (html, req, response) {
   }
   var ean = html.split('>code barre</th>')[1].split('</td>')[0]
   data.ean = ean.split('"data">')[1]
-  logger.info(data)
+  this.logger.debug(data)
 
   var output = {
     requestID: req.requestID,

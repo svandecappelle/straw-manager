@@ -28,7 +28,7 @@ Bricorama.prototype.call = function (params) {
 Bricorama.prototype.constructor = Bricorama;
 
 Bricorama.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -71,7 +71,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
     var dont = false
     if(desc.indexOf('span class="error">')>= 0 ){
         //dont = true
-        logger.info('Pas de vente en ligne', MagasinId)
+        logger.debug('Pas de vente en ligne', MagasinId)
     }
     if (!dont) {
       that.stores.push({
@@ -81,7 +81,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
     }
 
   };
-  logger.info("Bricorama_MagasinList", this.stores);
+  logger.debug("Bricorama_MagasinList");
   this.aspireOnStore(req.origin);
 }
 
@@ -89,7 +89,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
 Bricorama.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  logger.info("req.stores ===>", req.stores);
+  logger.debug("req.stores ===>", req.stores);
   async.eachLimit(this.stores, this.config.parallel, function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
@@ -146,7 +146,7 @@ Bricorama.prototype.decode = function (html, req, response) {
   //data.prixUnite =
   //data.Promodirecte =
   //data.dispo =
-  logger.info(data)
+  logger.debug(data)
 
   var output = {
     requestID : ReqObject.requestID,

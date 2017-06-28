@@ -32,7 +32,7 @@ Bricodepot.prototype.call = function (params) {
 Bricodepot.prototype.constructor = Bricodepot;
 
 Bricodepot.prototype.home = function (html, req) {
-  logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -69,7 +69,7 @@ Bricodepot.prototype.aspireOnStore = function(req){
 };
 
 Bricodepot.prototype.parseStores = function (html, req, response) {
-	logger.info("Rentré dans Bricodepot_MagasinList");
+	logger.debug("Rentré dans Bricodepot_MagasinList");
   var that = this;
   that.stores = [];
 
