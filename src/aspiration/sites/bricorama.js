@@ -17,7 +17,7 @@ Bricorama.prototype.call = function (params) {
   if (params.stores){
     this.stores = params.stores;
   }
-  logger.info("Parameters call engine", params);
+  this.logger.info("Parameters call engine", params);
 
   this.request({
     url: "http://www.bricorama.fr",
@@ -28,7 +28,7 @@ Bricorama.prototype.call = function (params) {
 Bricorama.prototype.constructor = Bricorama;
 
 Bricorama.prototype.home = function (html, req) {
-  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  this.logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -53,7 +53,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
   // console.log(html);
   var $ = cheerio.load(html);
   that.stores = [];
-  logger.info("Rentré dans Bricorama_MagasinList");
+  this.logger.info("Rentré dans Bricorama_MagasinList");
   var jsCont = html.split("BricoramaStoreLocator.vars.map.markers = ")[1].split("});")[0]
   jsCont = jsCont.replace(';', '')
   jsCont = jsCont.substring(0, jsCont.lastIndexOf(',')) + ']'
@@ -71,7 +71,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
     var dont = false
     if(desc.indexOf('span class="error">')>= 0 ){
         //dont = true
-        logger.debug('Pas de vente en ligne', MagasinId)
+        this.logger.debug('Pas de vente en ligne', MagasinId)
     }
     if (!dont) {
       that.stores.push({
@@ -81,7 +81,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
     }
 
   };
-  logger.debug("Bricorama_MagasinList");
+  this.logger.debug("Bricorama_MagasinList");
   this.aspireOnStore(req.origin);
 }
 
@@ -89,7 +89,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
 Bricorama.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  logger.debug("req.stores ===>", req.stores);
+  this.logger.debug("req.stores ===>", req.stores);
   async.eachLimit(this.stores, this.config.parallel, function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
@@ -97,7 +97,7 @@ Bricorama.prototype.aspireOnStore = function(req){
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
-       that.request(param, ext);
+       that.request(param, next);
   });
 };
 
@@ -146,7 +146,7 @@ Bricorama.prototype.decode = function (html, req, response) {
   //data.prixUnite =
   //data.Promodirecte =
   //data.dispo =
-  logger.debug(data)
+  this.logger.debug(data)
 
   var output = {
     requestID : ReqObject.requestID,
