@@ -109,7 +109,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
       options = _.extends(options, req.opts);
     }
 
-    needle_call(req.url, req.opts && req.opts.method === 'POST' ? options.data : options, req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb)
+    needle_call(req.url, req.opts && req.opts.method === 'POST' ? options.data : options, req.opts && req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb)
     .on('error', function(err){
       that.logger.error("Error on calling request engine", err);
       if (req.current_try >= that.config.maxtry){
@@ -123,7 +123,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
     });
 
   } catch (error) {
-    this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error}, req);
+    this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error, stack: error.stack}, req);
     if (callback){
       callback();
     }
