@@ -1,5 +1,6 @@
-var request = require('request')
-var fs = require('fs')
+var request = require('request'),
+    fs = require('fs'),
+    path = require('path');
 
 request({
   url: 'http://account.fineproxy.org/api/getproxy',
@@ -13,8 +14,8 @@ request({
   }
 }, (error, _ , body) => {
   if (!error) {
-    fs.writeFileSync(path.resolve(__dirname, '../sharedProxy', body)
-    fs.writeFileSync(path.resolve(__dirname, '../proxyRU.txt', body)
+    fs.writeFileSync(path.resolve(__dirname, '../sharedProxy', body))
+    fs.writeFileSync(path.resolve(__dirname, '../proxyRU.txt', body))
     console.log('proxy update ok')
   } else {
     console.warn('proxy update failed')

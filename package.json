@@ -61,7 +61,7 @@
     "readline-sync": "^1.4.5",
     "request": ">=2.33.0",
     "request-persistent": "^1.0.1",
-    "scribe-js": "^2.0.4",
+    "scribe-js": "3.0.0-alpha.10",
     "sprintf-js": "0.0.7",
     "stream-transform": "^0.1.2",
     "underscore": "^1.8.3",

@@ -89,7 +89,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
         needle_call = needle.post;
     }
 
-    needle_call(req.url, options, function(error, response, body){
+    var http_response_cb = function(error, response, body){
       if (response){
         if (response.cookies){
           var cookies = response.cookies;
@@ -113,7 +113,13 @@ Engine.prototype.request = function (req, viewtype, callback) {
       }
     }).on('redirect', function(url) {
       console.log(url.red);
-    });
+    }
+
+    if (req.opts) {
+      options = _.extends(options, req.opts);
+    }
+
+    needle_call(req.url, req.opts.method === 'POST' ? options.data : options, req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb);
   } catch (error) {
     this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error}, req);
     if (callback){

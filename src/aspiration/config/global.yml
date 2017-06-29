@@ -6,5 +6,5 @@ default:
   minimum_msec_entre_mag: 500
   export: true
   maxtry: 2,
-  use_proxy: false
+  use_proxy: true
   parallel: 25

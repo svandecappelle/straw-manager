@@ -1,6 +1,9 @@
 port: 65000
 hostname: localhost
 logLevel: INFO
+scribe_logger:
+  use: true
+  version: 3
 proxies: proxyRU.txt
 max-memory: 2000
 aspiration:

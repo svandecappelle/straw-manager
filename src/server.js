@@ -7,7 +7,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     app = express(),
     log4js = require("log4js"),
-    scribe = require('scribe-js')(),
+    yaml_config = require('node-yaml-config'),
     authentication = require("./app/routes/authentication"),
     logger = log4js.getLogger('Server');
 require("colors");
@@ -52,7 +52,41 @@ process.on('uncaughtException', function (err) {
             }
         });
       } else {
-        log4js.configure(path.resolve(__dirname, '../logger.json'));
+
+        var logOptions = yaml_config.load(path.resolve(__dirname, '../logger.yml'))
+
+
+        // scribe logger
+        if (nconf.get('scribe_logger:use')) {
+          if (nconf.get('scribe_logger:version') === 3){
+            const Scribe = require('scribe-js');
+            const console = Scribe.create(yaml_config.load(path.resolve(__dirname, './config/scribe-log.yml')));
+            const scribeLogger = new Scribe.Middleware.ExpressRequestLogger(console);
+            const viewer = new Scribe.Router.Viewer(console);
+
+            logOptions.appenders.push({
+              type: path.resolve(__dirname, './logger/log4js-scribe3-js'),
+              timezoneOffset: 'UTC+01:00',
+              level: 'INFO'
+            });
+            // express logger
+            // app.use(scribeLogger.getMiddleware());
+            // viewer
+            app.use('/logs', viewer.getRouter());
+          } else {
+            const Scribe = require('scribe-js')();
+            app.use('/logs', scribe.webPanel());
+            app.use(scribe.express.logger());
+
+            logOptions.appenders.push({
+              type: 'log4js-scribe-js',
+              timezoneOffset: 'UTC+01:00',
+              level: 'INFO'
+            });
+          }
+        }
+
+        log4js.configure(logOptions);
       }
 
       if ( !opts || opts.run_server ) {
@@ -61,20 +95,15 @@ process.on('uncaughtException', function (err) {
             proxy: true // if you do SSL outside of node.
         }));
 
-        logger.debug("aspi" , nconf.get('aspiration'));
         app.use('/api', api)
 
         app.set('views', path.join(__dirname, 'app/views'));
         app.set('view engine', 'pug');
         app.use(bodyParser.json());
-        console.log(path.join(__dirname + '/../public'));
 
         app.use('/public', express.static(path.join(__dirname + '/../public')));
         app.use('/', views);
 
-        // scribe logger
-        app.use('/logs', scribe.webPanel());
-        app.use(scribe.express.logger());
         authentication.initialize(app);
         authentication.load(app);
 
