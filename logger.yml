@@ -1,5 +1,6 @@
 default:
   appenders:
+    - type: console
     - type: file
       filename: logs/output.log
       maxLogSize: 300000

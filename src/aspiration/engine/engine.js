@@ -103,7 +103,14 @@ Engine.prototype.request = function (req, viewtype, callback) {
       if (callback){
         callback();
       }
-    }).on('error', function(err){
+    };
+
+    if (req.opts) {
+      options = _.extends(options, req.opts);
+    }
+
+    needle_call(req.url, req.opts.method === 'POST' ? options.data : options, req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb)
+    .on('error', function(err){
       that.logger.error("Error on calling request engine", err);
       if (req.current_try >= that.config.maxtry){
         that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
@@ -113,13 +120,8 @@ Engine.prototype.request = function (req, viewtype, callback) {
       }
     }).on('redirect', function(url) {
       console.log(url.red);
-    }
+    });
 
-    if (req.opts) {
-      options = _.extends(options, req.opts);
-    }
-
-    needle_call(req.url, req.opts.method === 'POST' ? options.data : options, req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb);
   } catch (error) {
     this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error}, req);
     if (callback){
