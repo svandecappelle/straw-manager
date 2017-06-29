@@ -74,8 +74,11 @@ Exporter.prototype.open = function (data) {
   var file = this.filename(data.enseigne);
 
   var that = this;
+  if (!fs.existsSync(file)){
+    fs.writeFileSync(file, _.keys(export_scheme).join(";") + '\r\n');
+  }
   var csvStream = fastcsv.format({
-      headers: !fs.existsSync(file),
+      headers: false,
       delimiter: ';'
     })
     .transform(function(data){
