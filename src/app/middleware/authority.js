@@ -70,7 +70,7 @@
         if (!username || !password) {
             return done(new Error('[[error:invalid-user-data]]'));
         }
-        const autorizations = yaml_config.load(path.resolve(__dirname, "../../../authorizations.yml")).users;
+        const autorizations = yaml_config.load(path.resolve(__dirname, "../../../config/authorizations.yml")).users;
 
         var user = _.findWhere(autorizations, {'username': username, 'password': password});
         console.log(user);

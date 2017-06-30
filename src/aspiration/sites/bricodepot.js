@@ -63,7 +63,6 @@ Bricodepot.prototype.aspireOnStore = function(req){
     req.origin = req.url;
     param.origin = req.url;
     param.url = req.url.replace('/saint-etienne/', magasin.name);
-    logger.debug("Bricodepot_MagasinList", magasin.name);
     that.request(param, next);
   });
 };
@@ -85,19 +84,19 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
     }
 
     logger.trace(`Entrer dans le magasin ${MagasinId}`);
-    //ReqObject.xlbSetJar = cookie;
-    logger.debug(url, MagasinId);
+
     that.stores.push({
       id: MagasinId,
       name: MagasinName
     });
   });
   req.origin.stores = this.stores;
-  logger.debug("Bricodepot_MagasinList", this.stores);
   this.aspireOnStore(req.origin);
 };
 
 Bricodepot.prototype.decode = function (html, req) {
+  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
+
   var $ = cheerio.load(html);
   var data = {};
 
@@ -117,8 +116,6 @@ Bricodepot.prototype.decode = function (html, req) {
   var NumLigne = 1;
 
   var ficheNumberOfProducts = $(".ref_val_devis.web").length;
-  logger.debug('URL Fiche', req.origin)
-  logger.debug('ficheNumberOfProducts',ficheNumberOfProducts);
 
   $("table.criteria > tr").each(function() {
 
@@ -139,7 +136,6 @@ Bricodepot.prototype.decode = function (html, req) {
     data.idProduit = $(tds[indexId]).text().split('Réf:')[1].trim(); // Selector Update 02/07/2015
     data.libelles = []
     data.libelles.push($('h1.prodTitle').text().trim())
-    logger.debug('mag :'+data.magasinId+' id produit',data.idProduit);
     data.categories = []
     $('div[class="breadcrumbs web"] a').each(function (p,elm) {
       if(p>0) {
@@ -157,12 +153,6 @@ Bricodepot.prototype.decode = function (html, req) {
       }
     }
     var typeList = temporaryArray.length;
-
-    logger.debug('####################[ TABLE BRUTE ]#####################');
-    logger.debug(temporaryArray)
-    logger.debug("LIST STYLE "+typeList);
-    logger.debug('####################[ TABLE NETTE ]#####################');
-
     data.libelles = temporaryArray.slice(0, typeList-2);
 
     // LIST STYLE AND NUMBER OF PRODUCT PER PAGE
@@ -174,10 +164,6 @@ Bricodepot.prototype.decode = function (html, req) {
       data.libelles = temporaryArray.slice(0, typeList-1);
     }
 
-
-    logger.debug(data.libelles);
-    logger.debug("table length "+data.libelles.length);
-
     // ==============================================
 
     if (data.libelles[1]){
@@ -187,20 +173,13 @@ Bricodepot.prototype.decode = function (html, req) {
       // S'il est présent, on va le supprimer car on va ajouter au libelle général les libellés des différentes lignes du tableau
       if (data.libelles[0].indexOf(tampon) != -1){
         data.libelles[0] = data.libelles[0].replace(tampon, "");
-        logger.debug('INFO', "Lib général est présent, on va le supprimer car on va ajouter les libellés des différentes lignes du tableau");
-        logger.debug("L[0] : "+data.libelles[0]);
       }
     }
     if (data.libelles[1]) {
       // On ajoute le libellé du tableau au libellé principal
       data.libelles[0] += ' - ' + data.libelles[1];
-      logger.debug('INFO', "On ajoute le libellé du tableau au libellé principal");
-      logger.debug("L[0] : "+data.libelles[0])
-
-
       // On supprime le 2ème libellé qui est devenu inutile
       data.libelles[1] = "";
-      logger.debug('INFO', "On supprime le 2ème libellé qui est devenu inutile");
     }
 
     // Gestion des prix
@@ -208,7 +187,6 @@ Bricodepot.prototype.decode = function (html, req) {
       price.children("small").remove();
     */
     var price = $(this).find(".productTablePriceCell table").eq(0).find('td').text().trim();
-    logger.debug('PRIX BRUT',price );
 
     // la zone prix contient les prix TTC et les prix HT
     // S'il y a 2 prix TTC, on considère que le 1er est le prix unitaire et le 2ème le prix de l'article
@@ -222,7 +200,6 @@ Bricodepot.prototype.decode = function (html, req) {
       tampon = tampon.replaceAll('\n', '');
       tampon = tampon.replaceAll('\t', '');
 
-      logger.debug('DETECTED','UNITY PRICES');
       data.prixUnite = tampon.trim().split('soit')[0];
       data.prix = tampon.trim().split('soit')[1];
     } else{
@@ -249,11 +226,6 @@ Bricodepot.prototype.decode = function (html, req) {
     }
 
     NumLigne ++;
-    logger.debug("Product Export from page :"+req.origin);
-    logger.debug('# FICHE ##',"###")
-    logger.debug(data);
-    logger.debug('# FICHE ##',"###")
-    //engine.export_products(produit, obj);
   });
 
   if (_.isEmpty(data)){
@@ -266,8 +238,9 @@ Bricodepot.prototype.decode = function (html, req) {
     };
     return this.emit('not_found', output, { 'message': output.error });
   }
+  logger.debug("Price: ", data.libelles, data.price);
 
-	var output = {
+  var output = {
 		requestID : req.requestID,
     stores: this.stores,
 		data: data
@@ -275,4 +248,4 @@ Bricodepot.prototype.decode = function (html, req) {
   this.emit('product', output, req);
 };
 
-module.exports = Bricodepot
+module.exports = Bricodepot;

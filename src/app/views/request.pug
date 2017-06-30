@@ -19,7 +19,7 @@ block body
             .col-xs-6.col-md-4 Magasins aspirés
             if request.stores && request.aspired_stores
               .col-xs-6.col-md-4
-                span= JSON.stringify(request.aspired_stores.length) + '/' + JSON.stringify(request.stores.length)
+                span= JSON.stringify(request.aspired_stores) + '/' + JSON.stringify(request.stores.length)
                 if request.not_found_in_stores
                   span= '(Not in: ' + JSON.stringify(request.not_found_in_stores.length) + ')'
             else

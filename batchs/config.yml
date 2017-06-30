@@ -23,8 +23,8 @@ default:
     timeout: 5000
     silent: true
     credentials:
-      user: Brico1,
-      password: Brico1
+      user: user1
+      password: pwd
   batchs:
     parallel: 6
     checking-interval: 2000

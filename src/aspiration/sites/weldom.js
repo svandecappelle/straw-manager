@@ -1,42 +1,42 @@
 var Engine = require('../engine/engine'),
-  cheerio = require('cheerio'),
-  async = require('async'),
-  _ = require('underscore')
+    cheerio = require('cheerio'),
+    async = require('async'),
+    _ = require('underscore');
 
 function Weldom (use_proxy) {
-  this.name = 'weldom'
-  this.use_proxy = use_proxy
-  Engine.call(this)
-  this.on('stores', this.parseStores)
-  this.on('patch', this.patch)
-  this.on('home', this.home)
+  this.name = 'Weldom';
+  this.use_proxy = use_proxy;
+  Engine.call(this);
+  this.on('stores', this.parseStores);
+  this.on('patch', this.patch);
+  this.on('home', this.home);
 }
 
-Weldom.prototype = Object.create(Engine.prototype)
+Weldom.prototype = Object.create(Engine.prototype);
 
 Weldom.prototype.call = function (params) {
   if (params.stores) {
-    this.stores = params.stores
+    this.stores = params.stores;
   }
-  this.logger.info('Parameters call engine', params)
+  this.logger.info('Parameters call engine', params);
 
   this.request({
     url: 'https://www.weldom.fr',
     origin: params
-  }, 'home')
+  }, 'home');
 }
 
 Weldom.prototype.constructor = Weldom
 
 Weldom.prototype.home = function (html, req) {
-  this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0)
+  this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
-    req = req.origin
+    req = req.origin;
   }
   if (this.stores !== undefined && this.stores.length > 0) {
-    this.aspireOnStore(req)
+    this.aspireOnStore(req);
   } else {
-    this.getStores(req)
+    this.getStores(req);
   }
 }
 
@@ -45,61 +45,53 @@ Weldom.prototype.getStores = function (params) {
     url: 'https://www.weldom.fr/lege/adresses-magasins',
     origin: params
   },
-    'stores')
+    'stores');
 }
 
 Weldom.prototype.parseStores = function (html, req, response) {
-  var that = this
-  // console.log(html)
-  var $ = cheerio.load(html)
-  that.stores = []
-  this.logger.info('Rentré dans Weldom_MagasinList')
+  this.logger.info('Rentré dans Weldom_MagasinList');
+  var that = this;
+  var $ = cheerio.load(html);
+  that.stores = [];
 
   $('#contenair-mag a').each(function (idx) {
-    var url = $(this).attr('href')
-    var verif = $(this).text().trim()
+    var url = $(this).attr('href');
+    var verif = $(this).text().trim();
     if (verif && verif.length > 0) {
       try {
         url = url.replace("\"https", "http");
-        var ville = url.split('http://www.weldom.fr/')[1].split('/')[0]
-        that.logger.debug('Ville', ville, url)
-        var urlMag = url + 'customdev/index/getWebsiteUrl/?storelocator_id%5Bstorelocator%5D=' + ville + '&url=%2F' + ville + '%2F'
-        var magasin = $(this).text().trim()
-        that.logger.debug(magasin, urlMag)
+        var ville = url.split('http://www.weldom.fr/')[1].split('/')[0];
+        var urlMag = url + 'customdev/index/getWebsiteUrl/?storelocator_id%5Bstorelocator%5D=' + ville + '&url=%2F' + ville + '%2F';
+        var magasin = $(this).text().trim();
         that.stores.push({
           name: magasin,
           url: urlMag,
           id: magasin
-        })
+        });
 
-        that.logger.debug('Weldom_MagasinList', this.stores)
       } catch (e) {
-        that.logger.error('Error on parseStores', e)
+        that.logger.error('Error on parseStores', e);
       }
     }
   })
-  this.aspireOnStore(req.origin)
+  this.aspireOnStore(req.origin);
 }
 
 Weldom.prototype.aspireOnStore = function (req) {
-  var that = this
-  // var MagasinId = response.cookies
-  req.stores = this.stores
+  var that = this;
+  req.stores = this.stores;
   async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
-    var param = _.clone(req)
-    param.magasin = magasin
-    that.logger.debug('Prod Mag Url', magasin.url)
+    var param = _.clone(req);
+    param.magasin = magasin;
     that.request({
       url: magasin.url,
       origin: param,
       callback: next
-    },'patch')
+    }, 'patch');
   })
 }
 
 Weldom.prototype.patch = function (html, req, response) {
-  this.logger.debug('Cookies ===>', response.cookies.shop_id) // _.omit(response, ['body']
-  this.logger.debug('Lien Mag' , req.origin.magasin.url)
   req.origin.magasin.id = response.cookies.shop_id;
   if (req.origin.magasin.id){
     try {
@@ -134,7 +126,6 @@ Weldom.prototype.patch = function (html, req, response) {
     var toReplace = req.origin.url.split(protocol + '://www.weldom.fr/')[1].split('/')[0];
     var prodUrl = req.origin.url.split(toReplace + '/')[1];
     req.url = req.origin.magasin.url.concat(prodUrl);
-    this.logger.debug('Url du Produit', req.url);
     this.request(req.origin, req.callback);
   } else {
     req.origin.magasin.id = '' + response.cookies.shop_id;
@@ -149,11 +140,8 @@ Weldom.prototype.patch = function (html, req, response) {
 }
 
 Weldom.prototype.decode = function (html, req, response) {
-  var $ = cheerio.load(html)
-  // req.magasin.id = response.cookies.shop_id
-  this.logger.info('Id Mag in Decode', response.cookies) // _.omit(response, ['body']
-  this.logger.debug('*********Fiche**************', req)
-  /* ------------------------------------------------------------------------ */
+  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
+  var $ = cheerio.load(html);
   // manage fail
   if ($('.errorPage').length > 0) {
     var output = {
@@ -161,47 +149,48 @@ Weldom.prototype.decode = function (html, req, response) {
       error: 'produit non disponible',
       data: undefined,
       req: req
-    }
-    return this.emit('not_found', output)
+    };
+    return this.emit('not_found', output);
   }
 
-  data = {}
-  data.timestamp = new Date()
-  data.enseigne = req['Enseigne']
-  data.magasin = req.magasin
+  var data = {};
+  data.timestamp = new Date();
+  data.enseigne = req['Enseigne'];
+  data.magasin = req.magasin;
 
-  data.categories = []
+  data.categories = [];
 
   data.libelles = [$('.product-name>h1').text().trim()];
 
   $('.grid-full.breadcrumbs ul li').each(function (i) {
-    data.categories.push($(this).find('a').text().trim())
+    data.categories.push($(this).find('a').text().trim());
   })
-  data.marque = $('[class="odd"] .data.last').text().trim()
-  data.srcImage = $('#image-main').attr('src')
+  data.marque = $('[class="odd"] .data.last').text().trim();
+  data.srcImage = $('#image-main').attr('src');
   // data.idProduit =
   var verif1 = $('.old-price')
   if (verif1 && verif1.length > 0) {
-    data.ancienPrix = $('.old-price .price').text().trim()
+    data.ancienPrix = $('.old-price .price').text().trim();
   }else {
-    data.prix = $('.regular-price .price').text().trim()
+    data.prix = $('.regular-price .price').text().trim();
   }
-  data.promo = data.ancienPrix ? 1 : 0
-  var verif = $('.prome-position')
+  data.promo = data.ancienPrix ? 1 : 0;
+  var verif = $('.prome-position');
   if (verif && verif.length > 0) {
-    data.promoDirecte = $('.prome-position').text().trim()
+    data.promoDirecte = $('.prome-position').text().trim();
   }
-  var ean = html.split('>code barre</th>')[1].split('</td>')[0]
-  data.ean = ean.split('"data">')[1]
-  this.logger.debug(data)
+  var ean = html.split('>code barre</th>')[1].split('</td>')[0];
+  data.ean = ean.split('"data">')[1];
+
+  this.logger.debug("Price: ", data.libelles, data.price);
 
   var output = {
     requestID: req.requestID,
     data: data,
     stores: this.stores
-  }
+  };
 
-  this.emit('product', output)
+  this.emit('product', output);
 }
 
-module.exports = Weldom
+module.exports = Weldom;

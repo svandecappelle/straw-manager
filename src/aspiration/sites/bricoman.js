@@ -5,7 +5,7 @@ var Engine = require('../engine/engine'),
   _ = require('underscore');
 
 function Bricoman(use_proxy){
-  this.name = "bricoman";
+  this.name = "Bricoman";
   this.use_proxy = use_proxy;
   Engine.call(this);
   this.on("stores", this.parseStores);
@@ -68,39 +68,33 @@ Bricoman.prototype.aspireOnStore = function(req){
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
-    logger.debug("Bricoman_MagasinList", magasin.name);
     that.request(param, next);
   });
 };
 
 Bricoman.prototype.parseStores = function (html, req, response) {
   var that = this;
-  logger.debug(response.cookies);
   // console.log(html);
 	var $ = cheerio.load(html);
   that.stores = [];
-	logger.info("Rentré dans Bricoman_MagasinList");
+	logger.debug("Rentré dans Bricoman_MagasinList");
 
 	$("[id='shop_chooser'] option").each(function(idx) {
-		var url = $(this).attr('value')
-		var Magasin =  $(this).text().trim()
-		var MagasinId =  $(this).attr('data-shop-id')
+		var url = $(this).attr('value');
+		var Magasin =  $(this).text().trim();
+		var MagasinId =  $(this).attr('data-shop-id');
 
-		logger.debug(Magasin, url, MagasinId)
     that.stores.push({
       name: Magasin,
       id: MagasinId
     });
 	});
-
-  logger.debug("Bricoman_MagasinList", this.stores);
-
   this.aspireOnStore(req.origin);
 };
 
 Bricoman.prototype.decode = function (html, req) {
+  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
   var $ = cheerio.load(html);
-	logger.debug('*********Fiche**************', req);
 	var ReqObject = req;
 
 	/* ------------------------------------------------------------------------ */
@@ -147,18 +141,16 @@ Bricoman.prototype.decode = function (html, req) {
 	}
 
 	$(".breadcrumbs [class*='category']").each(function (i) {
-		data.categories.push($(this).find("[itemprop='item']").attr('title'))
-		logger.debug('Cat: ', data.categories[i] )
+		data.categories.push($(this).find("[itemprop='item']").attr('title'));
 	})
 
 	data.prix = $(".item-price [itemprop='price']").text().trim().replace(/  /g,"");
 
 	if ($(".item-price .old-price").length > 0) {
-		logger.debug("HAVE OLD PRICE");
-		data.ancienPrix = $(".item-price  p.old-price span.price span").first().text().trim()
+		data.ancienPrix = $(".item-price  p.old-price span.price span").first().text().trim();
 	}
 
-	data.prixUnite = $(".item-price  .unit").first().text().trim()
+	data.prixUnite = $(".item-price  .unit").first().text().trim();
 	//data.categories = obj.tree;
 	data.timestamp = new Date();
 	data.promo = data.ancienPrix ? 1 : 0;
@@ -186,28 +178,27 @@ Bricoman.prototype.decode = function (html, req) {
 	text = text.replace(/\n/g, "").replace(/\t/g, "").trim()
 
 	var round = Math.ceil(text.length / 499);
-	logger.debug(round);
 
 	// we have to split the description into portions of 500 char in order to fit in the table
 	var dep = 0
 	for (var i = 0; i < round-1; i++) {
-		logger.debug("from "+dep+" to "+(dep+499));
+		logger.trace("from "+dep+" to "+(dep+499));
 		var portion = text.substring(dep,(dep+499));
-		logger.debug("Portion "+i+":",portion);
+		logger.trace("Portion "+i+":",portion);
 		data.caracteristique.push(portion);
 		dep=dep+499;
 	}
-	logger.debug("from "+dep+" to "+text.length);
+	logger.trace("from "+dep+" to "+text.length);
 	var portion = text.substring(dep,(text.length));
-	logger.debug("Portion "+i+":",portion);
+	logger.trace("Portion "+i+":",portion);
 	data.caracteristique.push(portion);
 
 
 	if (data.caracteristique.length > 59) {
-		logger.debug("NUMBER OF CARAC +" + data.caracteristique.length, req.lasturl);
+		logger.trace("NUMBER OF CARAC +" + data.caracteristique.length, req.lasturl);
 	}
 
-
+  logger.debug("Price: ", data.libelles, data.price);
 	//process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
 	var output = {
 		requestID : ReqObject.requestID,
@@ -217,4 +208,4 @@ Bricoman.prototype.decode = function (html, req) {
   this.emit('product', output);
 };
 
-module.exports = Bricoman
+module.exports = Bricoman;

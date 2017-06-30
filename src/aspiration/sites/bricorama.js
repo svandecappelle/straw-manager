@@ -4,7 +4,7 @@ var Engine = require('../engine/engine'),
   _ = require('underscore');
 
 function Bricorama(use_proxy){
-  this.name = "bricorama";
+  this.name = "Bricorama";
   this.use_proxy = use_proxy;
   Engine.call(this);
   this.on("stores", this.parseStores);
@@ -53,7 +53,7 @@ Bricorama.prototype.parseStores = function (html, req, response) {
   // console.log(html);
   var $ = cheerio.load(html);
   that.stores = [];
-  this.logger.info("Rentré dans Bricorama_MagasinList");
+  this.logger.debug("Rentré dans Bricorama_MagasinList");
   var jsCont = html.split("BricoramaStoreLocator.vars.map.markers = ")[1].split("});")[0]
   jsCont = jsCont.replace(';', '')
   jsCont = jsCont.substring(0, jsCont.lastIndexOf(',')) + ']'
@@ -81,7 +81,6 @@ Bricorama.prototype.parseStores = function (html, req, response) {
     }
 
   };
-  this.logger.debug("Bricorama_MagasinList");
   this.aspireOnStore(req.origin);
 }
 
@@ -89,7 +88,6 @@ Bricorama.prototype.parseStores = function (html, req, response) {
 Bricorama.prototype.aspireOnStore = function(req){
   var that = this;
   req.stores = this.stores;
-  this.logger.debug("req.stores ===>", req.stores);
   async.eachLimit(this.stores, this.config.parallel, function(magasin, next){
     var param = _.clone(req);
     param.magasin = magasin;
@@ -97,12 +95,14 @@ Bricorama.prototype.aspireOnStore = function(req){
     param.cookies = {
       'smile_retailershop_id': magasin.id
     };
-       that.request(param, next);
+    that.request(param, next);
   });
 };
 
 
 Bricorama.prototype.decode = function (html, req, response) {
+  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
+
   var $ = cheerio.load(html);
 	var ReqObject = req;
 
@@ -146,8 +146,7 @@ Bricorama.prototype.decode = function (html, req, response) {
   //data.prixUnite =
   //data.Promodirecte =
   //data.dispo =
-  this.logger.debug(data)
-
+  this.logger.debug("Price: ", data.libelles, data.price);
   var output = {
     requestID : ReqObject.requestID,
     data			: data,
@@ -157,4 +156,4 @@ Bricorama.prototype.decode = function (html, req, response) {
   this.emit('product', output);
 };
 
-module.exports = Bricorama
+module.exports = Bricorama;

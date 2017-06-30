@@ -43,7 +43,7 @@
           var msg = layout(loggingEvent);
           // msg = uncolorize(msg);
           if (loggingEvent.level.levelStr === 'TRACE'){
-            console.trace(msg);
+            console.timing(msg);
           } else if (loggingEvent.level.levelStr === 'INFO'){
             console.info(msg);
           } else if (loggingEvent.level.levelStr === 'WARN'){

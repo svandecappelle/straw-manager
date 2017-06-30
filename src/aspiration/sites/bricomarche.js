@@ -55,56 +55,44 @@ Bricomarche.prototype.aspireOnStore = function (req) {
     req.origin.stores = this.stores;
   }
 
-  console.log("launch on parallel:", this.config.parallel);
-
   async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
     var param = _.clone(req)
     param.magasin = magasin
     param.cookies = {
       'ID_PDV': magasin.id
     }
-    this.logger.debug('Param In aspireOnStore', param.url)
     that.request(param, next);
 
-  }, function(err){
-    console.log(err);
-    console.log("Done");
   });
 }
 
 Bricomarche.prototype.parseStores = function (html, req, response) {
+  this.logger.debug('Rentré dans Example_MagasinList');
   var that = this
-  // this.logger.info(response.cookies)
-  // console.log(html)
 
   var $ = cheerio.load(html)
   that.stores = []
-  this.logger.debug('Rentré dans Example_MagasinList')
 
   $("[id='select_advmag']").first().find('option').each(function (idx) {
     var urlMag = $(this).attr('value');
     if (urlMag){
-      var Magasin = $(this).text().trim()
+      var Magasin = $(this).text().trim();
 
-      var MagasinId = urlMag.substring(urlMag.lastIndexOf('/') + 1).trim()
-
-      that.logger.debug(Magasin, MagasinId)
+      var MagasinId = urlMag.substring(urlMag.lastIndexOf('/') + 1).trim();
 
       that.stores.push({
         id: MagasinId,
         name: Magasin
-      })
+      });
     }
   })
 
-  this.logger.debug('Example_MagasinList', this.stores)
-
-  this.aspireOnStore(req.origin)
+  this.aspireOnStore(req.origin);
 }
 
 Bricomarche.prototype.decode = function (html, req, response) {
+  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
   var $ = cheerio.load(html)
-  this.logger.debug('*********Fiche**************', response.cookies)
   /* ------------------------------------------------------------------------ */
   // manage fail
   if ($('.label-store-name').length == -1) {
@@ -217,7 +205,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
     data.caracteristique.push(attribut + ' = ' + valeur)
   })
 
-  this.logger.trace('DATA', data)
+  this.logger.debug("Price: ", data.libelles, data.price);
   var output = {
     requestID: req.requestID,
     data: data,
@@ -226,4 +214,4 @@ Bricomarche.prototype.decode = function (html, req, response) {
   this.emit('product', output)
 }
 
-module.exports = Bricomarche
+module.exports = Bricomarche;

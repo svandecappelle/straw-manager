@@ -69,9 +69,6 @@ Castorama.prototype.aspireOnStore = function(html, req, reponse){
     })[0];
     console.log(tree(magasin));
     magasin.idTech = codeMagasin
-    logger.debug('=====> Traitement mag ' + codeMagasin + ' - ' + magasin.name);
-    logger.debug('=====> url = ' + magasin.url);
-    logger.debug("start magasin", magasin.id);
 
     var param = _.clone(req.origin);
     param.magasin = magasin;
@@ -79,7 +76,6 @@ Castorama.prototype.aspireOnStore = function(html, req, reponse){
     param.cookies = {
       's_cdao': codeMagasin
     };
-    logger.debug("Castorama_MagasinList", codeMagasin);
     that.request(param);
   } else {
     that.emit("fatal_error", {message: `magasin ${req.url} not found`, requestID: req.requestID}, req.origin);
@@ -87,21 +83,9 @@ Castorama.prototype.aspireOnStore = function(html, req, reponse){
 };
 
 Castorama.prototype.parseStores = function (json, req, response) {
+  logger.info("Rentré dans Castorama_MagasinList");
   var that = this;
-  logger.debug(response.cookies);
-  // console.log(html);
-	//var $ = cheerio.load(html);
   that.stores = [];
-	logger.info("Rentré dans Castorama_MagasinList");
-
-  logger.debug("Level", "ParseMagasins");
-
-  //var MagToDo = outils.FileToArray(LINK_MAG_FILE)
-
-  //logger.logAttrVal("####","####");
-  //console.log(MagToDo);
-  //logger.logAttrVal("####","####");
-
   var listeMagasins = json["points_of_sale"]["France"];
 
   for (var elm in listeMagasins) {
@@ -112,7 +96,6 @@ Castorama.prototype.parseStores = function (json, req, response) {
     });
   }
 
-  logger.debug("Castorama_MagasinList", this.stores);
   this.aspireStoreDetails(req);
 };
 
@@ -134,7 +117,7 @@ Castorama.prototype.aspireStoreDetails = function (req){
 
 
 Castorama.prototype.decode = function (html, req) {
-  console.log("Decoding query: " + req.url);
+  logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
 
   if (html === ""){
     logger.error("Not any html");
@@ -148,7 +131,6 @@ Castorama.prototype.decode = function (html, req) {
   }
   var $ = cheerio.load(html);
 
-  logger.debug('vumMsg',$('div#vumMsg').text())
   if ($('div#vumMsg').text().length) {
     logger.warn('Produit non disponible','Produit non disponible')
     var output = {
@@ -183,9 +165,6 @@ Castorama.prototype.decode = function (html, req) {
       return;
     }
 
-  } else {
-    logger.debug("succeed from");
-    logger.debug(req.lasturl);
   }
 
   var data = {};
@@ -202,8 +181,7 @@ Castorama.prototype.decode = function (html, req) {
   data.categories = []
    $('div[class="breadcrumbs greenPage"] div a').each(function (i, elm){
       if(i>0){
-        logger.logAttrVal('text',$(this).text())
-        data.categories.push($(this).text())
+        data.categories.push($(this).text());
       }
 
   })
@@ -300,11 +278,8 @@ Castorama.prototype.decode = function (html, req) {
     var Caracteristiques = $("div#tabs_pd_pagetechnicTab div.prodDescMarker").text().trim();
     data.caracteristique = outils.prettify_me(Caracteristiques).split(";");
   }
-  //process.exit(0);
-  //logger.logAttrVal('DATA', data)
-  //engine.export_products(data, obj);
 
-
+  this.logger.debug("Price: ", data.libelles, data.price);
   var output = {
     requestID  :  req.requestID,
     data       :  data,
@@ -314,4 +289,4 @@ Castorama.prototype.decode = function (html, req) {
   this.emit('product', output);
 };
 
-module.exports = Castorama
+module.exports = Castorama;

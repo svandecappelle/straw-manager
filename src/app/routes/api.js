@@ -22,7 +22,7 @@ router.use(bodyParser.json());
 // middleware that is specific to this router
 router.use(function timeLog (req, res, next) {
   if (req.url !== '/status'){
-    logger.info('Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
+    logger.debug('Time: '.yellow, moment().format('L [|] hh:mm:ss').green);
   }
   next();
 });
@@ -47,28 +47,28 @@ router.get('/about', function (req, res) {
 });
 
 router.get('/buffer', function (req, res) {
-  logger.info('buffer requested !'.red);
+  logger.debug('buffer requested !'.red);
   res.status(200).send(buffer.getBuffer())
 });
 
 
 router.get('/pending', function (req, res) {
-  logger.info('pending buffer requested !'.red);
+  logger.debug('pending buffer requested !'.red);
   res.send(buffer.pending());
 });
 
 router.get('/set', function (req, res) {
-  logger.info('aspired buffer requested !'.red);
+  logger.debug('aspired buffer requested !'.red);
   res.send(buffer.aspired());
 });
 
 router.get('/failed', function (req, res) {
-  logger.info('failed buffer requested !'.red);
+  logger.debug('failed buffer requested !'.red);
   res.send(buffer.failed());
 });
 
 router.get('/search', function (req, res) {
-  logger.info(`search into buffer requested ! ${req.query["q"]}`.red);
+  logger.debug(`search into buffer requested ! ${req.query["q"]}`.red);
   res.send(buffer.search(req.query["q"]));
 });
 
@@ -79,10 +79,10 @@ router.get('/request/:id', function (req, res) {
     });
 
     if (elem) {
-      logger.info("".concat(req.params.id).red + " sended");
+      logger.debug(`${req.params.id.red} sended`);
       res.status(200).send(elem);
     } else {
-      logger.warn("".concat(req.params.id).red + " not found");
+      logger.warn(`${req.params.id.red} not found`);
       res.status(404).send({"Error":"the requested ID, doesn't exists"});
     }
 

@@ -41,7 +41,7 @@ var rootPath = nconf.get('CollectOnlineRootPath');
 // middleware that is specific to this router
 if (LOG_ALL_VIEWS_ACCESS){
   router.use(function timeLog (req, res, next) {
-    logger.info(`${req.url} Time: `.yellow, moment().format('L [|] hh:mm:ss').green);
+    logger.trace(`${req.url} Time: `.yellow, moment().format('L [|] hh:mm:ss').green);
     next();
   });
 }
@@ -77,7 +77,7 @@ router.get('/about', function (req, res) {
 });
 
 router.get('/buffer', function (req, res) {
-  logger.info('buffer requested !'.red);
+  logger.debug('buffer requested !'.red);
   var bufferValues = buffer.getBuffer();
 
   middleware.render(req, res, 'buffer.pug', {
@@ -89,7 +89,7 @@ router.get('/buffer', function (req, res) {
 });
 
 router.get('/pending', function (req, res) {
-  logger.info('pending buffer requested !'.red);
+  logger.debug('pending buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.pending(),
     schema: getBufferTableSchema(),
@@ -99,7 +99,7 @@ router.get('/pending', function (req, res) {
 });
 
 router.get('/set', function (req, res) {
-  logger.info('aspired buffer requested !'.red);
+  logger.debug('aspired buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.aspired(),
     schema: getBufferTableSchema(),
@@ -109,7 +109,7 @@ router.get('/set', function (req, res) {
 });
 
 router.get('/failed', function (req, res) {
-  logger.info('failed buffer requested !'.red);
+  logger.debug('failed buffer requested !'.red);
   middleware.render(req, res, 'buffer.pug', {
     buffer: buffer.failed(),
     schema: getBufferTableSchema(),

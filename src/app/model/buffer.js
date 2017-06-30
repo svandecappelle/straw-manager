@@ -1,6 +1,7 @@
 var _ = require('underscore'),
   nconf = require('nconf'),
   events = require('events'),
+  logger = require('log4js').getLogger('Buffer'),
   aspiration = require('./../../aspiration/interface'),
   Exporter = new require('./../middleware/exporter');
 
@@ -37,11 +38,12 @@ var _ = require('underscore'),
   var exporter = new Exporter();
 
   eventEmitter.on('done', function(results){
-    console.log("Aspiration done".cyan.bold, results.requestID);
+    logger.info("Aspiration done".cyan.bold, results.requestID);
     var mem = process.memoryUsage();
-    console.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+    logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
     if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000){
       // 1Go clear memory
+      logger.warn('flush memory to prevent memory leaks');
       Buffer.flush();
     }
     //Buffer.update(results, true);
@@ -57,7 +59,7 @@ var _ = require('underscore'),
   });
 
   eventEmitter.on('product', function(results){
-    console.log("Aspiration of one product".cyan.bold, results.requestID);
+    logger.debug("Aspiration of one product".cyan.bold, results.requestID);
     results.data.idLogique = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idLogique;
     results.data.codeProduit = results.data.idProduit;
     results.data.idProduit = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idProduit;
@@ -67,7 +69,7 @@ var _ = require('underscore'),
   });
 
   eventEmitter.on('not_found', function(results){
-    console.log("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
+    logger.info("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
 
     Buffer.update(results, false);
   });
@@ -76,7 +78,7 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    console.log("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
+    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
@@ -94,7 +96,7 @@ var _ = require('underscore'),
     });
 
     var mem = process.memoryUsage();
-    console.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+    logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
   };
 
   Buffer.pending_length = function(){
@@ -134,7 +136,7 @@ var _ = require('underscore'),
         stores        : request.stores ? request.stores : null,
         status        : 'pending',
         idLogique     : request.idLogique,
-        aspired_stores: [],
+        aspired_stores: 0,
         data          : {
         },
         callback      : callback
@@ -154,7 +156,7 @@ var _ = require('underscore'),
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)});
     if (index > -1 && object.data && !_.isEmpty(object.data)) {
 
-      requestBuffer[index].aspired_stores.push(object.data.magasin);
+      requestBuffer[index].aspired_stores += 1;
 
       if (object.stores && requestBuffer[index].stores === null){
         requestBuffer[index].stores = object.stores;
@@ -188,7 +190,7 @@ var _ = require('underscore'),
       requestBuffer[index].status = 'failed';
       requestBuffer[index].error = object.error;
       requestBuffer[index].responseDate = Date.now();
-      console.log(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['stores_detail', 'stores', 'aspired_stores']));
+      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['stores_detail', 'stores', 'aspired_stores']));
     }
   };
 

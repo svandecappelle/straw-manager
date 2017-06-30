@@ -75,7 +75,7 @@ Exporter.prototype.open = function (data) {
 
   var that = this;
   if (!fs.existsSync(file)){
-    fs.writeFileSync(file, _.keys(export_scheme).join(";") + '\r\n');
+    fs.appendFileSync(file, _.keys(export_scheme).join(";") + '\r\n');
   }
   var csvStream = fastcsv.format({
       headers: false,
@@ -116,6 +116,7 @@ Exporter.prototype.open = function (data) {
       logger.info("Closing export file");
       csvStream.end();
       writableStream.close();
+      fs.appendFileSync(file, '\r\n');
     }
   };
 };

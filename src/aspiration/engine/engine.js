@@ -9,12 +9,12 @@ var events = require('events'),
   yaml_config = require('node-yaml-config');
 
 function config_name(name){
-  return path.resolve(__dirname, "./../../aspiration/config/".concat(name).concat(".").concat("yml"));
+  return path.resolve(__dirname, "./../../../config/".concat(name).concat(".").concat("yml"));
 }
 
 function Engine () {
   events.EventEmitter.call(this);
-  this.config = yaml_config.load(config_name("global"));
+  this.config = yaml_config.load(config_name("sites/global"));
 
   this.cookies = {};
   this.aspiredDatas = 0;
@@ -48,9 +48,9 @@ Engine.prototype.__proto__ = events.EventEmitter.prototype;
 
 Engine.prototype.export = function (output) {
   this.aspiredDatas += 1;
-  console.log(this.stores.length, " / ", this.aspiredDatas);
+  this.logger.debug(this.stores.length, " / ", this.aspiredDatas);
   if (this.stores.length <= this.aspiredDatas){
-    console.log("Done all datas aspiration".green);
+    this.logger.info(`Done all datas aspiration ${output.requestID}`.green);
     this.emit('done', output);
   }
 
@@ -68,7 +68,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
   try {
     var that = this;
     // console.log(that);
-    this.logger.debug("Using proxy check: ", req, this.use_proxy);
+    this.logger.debug("Using proxy check: ", req.url, this.use_proxy);
     var options = {
       timeout: 50000,
       read_timeout: 60000,
@@ -83,7 +83,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
       options.cookies = merge(req.cookies, that.cookies);
     }
 
-    this.logger.debug("using opts : ", options);
+    this.logger.trace("using opts : ", options);
     var needle_call = needle.get;
     if (req.opts && req.opts.method === 'POST'){
         needle_call = needle.post;
@@ -98,34 +98,64 @@ Engine.prototype.request = function (req, viewtype, callback) {
           that.logger.debug(req.url, cookies, that.cookies, req.cookies);
         }
       }
-
-      that.onResult(error, response, body, viewtype, req);
-      if (callback){
-        callback();
-      }
-    };
-
-    if (req.opts) {
-      options = _.extends(options, req.opts);
-    }
-
-    needle_call(req.url, req.opts && req.opts.method === 'POST' ? options.data : options, req.opts && req.opts.method === 'POST' ? _.omit(options, 'data') : http_response_cb, http_response_cb)
-    .on('error', function(err){
-      that.logger.error("Error on calling request engine", err);
-      if (req.current_try >= that.config.maxtry){
-        that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
+      if (that.config.wait){
+        that.logger.debug(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
+        setTimeout(function(){
+          that.onResult(error, response, body, viewtype, req);
+          if (callback){
+            callback();
+          }
+        }, that.config.wait);
+      } else {
+        that.onResult(error, response, body, viewtype, req);
         if (callback){
           callback();
         }
       }
+    };
+
+    if (req.opts) {
+      options = _.extend(options, req.opts);
+    }
+
+    this.logger.trace("needle_call: ", options, req);
+
+    var call;
+    if (options.method === 'POST'){
+      call = needle_call(req.url,  _.omit(options, 'data'), http_response_cb);
+    } else {
+      call = needle_call(req.url, options, http_response_cb);
+    }
+
+    call.on('error', function(err){
+      that.logger.error("Error on calling request engine", err);
+      if (req.current_try >= that.config.maxtry){
+        if (callback){
+          if (that.config.wait){
+            that.logger.info(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
+            that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
+            setTimeout(callback, that.config.wait);
+          } else {
+            that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
+            callback();
+          }
+        }
+      }
     }).on('redirect', function(url) {
-      console.log(url.red);
+      that.logger.debug(`redirect url: ${url.red}`);
     });
 
+    this.logger.trace("needle_called: ", needle_call);
   } catch (error) {
+    console.error(error);
     this.emit("fatal_error", {'message': 'Engine cannot be called successfully', origin_error: error, stack: error.stack}, req);
     if (callback){
-      callback();
+      if (that.config.wait){
+        that.logger.info(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
+        setTimeout(callback, that.config.wait);
+      } else {
+        callback();
+      }
     }
   }
 };
@@ -136,7 +166,7 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
       req.current_try = 1;
     }
     req.current_try += 1;
-    console.log(`\r\nRetry ${req.current_try} / ${this.config.maxtry}`);
+    this.logger.info(`\r\nRetry ${req.current_try} / ${this.config.maxtry}`);
     if (error.code === 'ETIMEDOUT'){
 
       if (req.current_try > this.config.maxtry){
@@ -155,7 +185,7 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
       } else {
         this.logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
         this.proxy = undefined;
-        return this.request(req, viewtype);
+        this.request(req, viewtype);
       }
 
     }
@@ -163,11 +193,11 @@ Engine.prototype.onResult = function (error, response, body, viewtype, req) {
     req.current_try = 1;
     var duration = Date.now() - req.requestDate;
     req.duration = duration;
-    console.log("\rRequest take: ".concat(req.url).concat(" ---> " + duration).concat(" ms").red);
+    this.logger.debug("\rRequest take: ".concat(req.url).concat(" ---> " + duration).concat(" ms").red);
     // console.log(req);
     if ( !viewtype ){
-      try{
-          this.decode(body, req, response);
+      try {
+        this.decode(body, req, response);
       } catch(error){
         this.emit("fatal_error", {error: error, requestID: req.requestID}, req)
       }
@@ -186,8 +216,9 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
   var proxyFile = nconf.get("proxies");
   if (!proxyFile){
       this.logger.warn("Proxu files not defined use the default.");
-      proxyFile = "proxyRU.txt";
+      proxyFile = "../proxyRU.txt";
   }
+  proxyFile = path.resolve(__dirname, "../../../config/" + proxyFile);
   var data = fs.readFileSync(proxyFile, 'utf8');
   var lines = data.split('\n');
   var proxy = lines[Math.floor(Math.random() * lines.length)];
@@ -199,7 +230,7 @@ Engine.prototype.proxy_connect = function (req, viewtype) {
   // proxy = '5.135.195.166:3128'
   this.proxy = proxy.trim();
   // this.proxy = 'http://91.242.217.148:8085'
-  console.log(`Using proxy ${req.requestID} `.cyan + proxy.yellow.bold);
+  this.logger.info(`Using proxy `.cyan + proxy.yellow.bold);
   return {
     'proxy': `http://${this.proxy}`,
     'parse_cookies': true,

@@ -17,7 +17,7 @@ var testing = false;
 nconf.argv()
    .env()
    .file({
-     file: path.resolve(__dirname, '../config.yml' ),
+     file: path.resolve(__dirname, '../config/config.yml' ),
      format: require('nconf-yaml')
    });
 
@@ -53,21 +53,24 @@ process.on('uncaughtException', function (err) {
         });
       } else {
 
-        var logOptions = yaml_config.load(path.resolve(__dirname, '../logger.yml'))
+        var logOptions = yaml_config.load(path.resolve(__dirname, '../config/logger.yml'))
 
 
         // scribe logger
         if (nconf.get('scribe_logger:use')) {
           if (nconf.get('scribe_logger:version') === 3){
             const Scribe = require('scribe-js');
-            const console = Scribe.create(yaml_config.load(path.resolve(__dirname, './config/scribe-log.yml')));
+            const console = Scribe.create(yaml_config.load(path.resolve(__dirname, '../config/scribe-log.yml')));
             const scribeLogger = new Scribe.Middleware.ExpressRequestLogger(console);
             const viewer = new Scribe.Router.Viewer(console);
 
             logOptions.appenders.push({
-              type: path.resolve(__dirname, './logger/log4js-scribe3-js'),
-              timezoneOffset: 'UTC+01:00',
-              level: 'INFO'
+              type: 'logLevelFilter',
+              level: 'INFO',
+              appender: {
+                type: path.resolve(__dirname, './logger/log4js-scribe3-js'),
+                timezoneOffset: 'UTC+01:00',
+              }
             });
             // express logger
             // app.use(scribeLogger.getMiddleware());

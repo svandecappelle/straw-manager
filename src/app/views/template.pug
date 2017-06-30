@@ -62,9 +62,9 @@ html(lang="en")
           ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
             li.mdl-menu__item
               if session
-                a(href="/logout") Logout
+                a(href="/logout", style='width: 100%;display: block;height: 100%;') Logout
               else
-                a(href="/login") Login
+                a(href="/login", style='width: 100%;display: block;') Login
       .mdl-layout__drawer
         span.mdl-layout-title
         nav.mdl-navigation
