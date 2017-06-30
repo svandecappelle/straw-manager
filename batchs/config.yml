@@ -30,16 +30,18 @@ default:
     checking-interval: 2000
     max-checking: 9999
     input-file: batch.json
-    pre-processing:
-      cwd: 'ls'
-      arguements:
-        - value: -la
-        - value: /usr
+#    pre-processing:
+#      cwd: 'ls'
+#      arguements:
+#        - value: -la
+#        - value: /usr
     post-processing:
-      cwd: 'ls'
+      cwd: '/home/collect/CsvToXls/install/jdk1.8.0/bin/java'
       arguements:
-        - value: -la
-        - value: /usr
+        - value: -Dcsvtoxls-config.properties=/home/collect/CsvToXls/apps/CsvToXls.properties
+        - value: -Duser.timezone=Europe/Paris
+        - value: -jar
+        - value: /home/collect/CsvToXls/apps/CsvToXls-1.0-SNAPSHOT-standalone.jar
 database:
     type          : oracle
     user          : LNK_BRICODEPOT

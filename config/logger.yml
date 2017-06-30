@@ -4,46 +4,63 @@ default:
       level: INFO
       appender:
         type: console
-    - type: file
-      filename: logs/output.log
-      maxLogSize: 300000
-      backups: 3
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/Bricoman.log
-      maxLogSize: 300000
-      backups: 3
-      category: Bricoman
+      appender:
+        type: file
+        filename: logs/output.log
+        maxLogSize: 300000
+        backups: 3
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/BricoDepot.log
-      maxLogSize: 300000
-      backups: 3
-      category: BricoDepot
+      appender:
+        type: file
+        filename: logs/sites/Bricoman.log
+        maxLogSize: 300000
+        backups: 3
+        category: Bricoman
+        level: DEBUG
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/LeroyMerlin.log
-      maxLogSize: 300000
-      backups: 3
-      category: LeroyMerlin
+      appender:
+        type: file
+        filename: logs/sites/BricoDepot.log
+        maxLogSize: 300000
+        backups: 3
+        category: BricoDepot
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/Bricomarche.log
-      maxLogSize: 300000
-      backups: 3
-      category: Bricomarche
+      appender:
+        type: file
+        filename: logs/sites/LeroyMerlin.log
+        maxLogSize: 300000
+        backups: 3
+        category: LeroyMerlin
+        level: DEBUG
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/Bricorama.log
-      maxLogSize: 300000
-      backups: 3
-      category: Bricorama
+      appender:
+        type: file
+        filename: logs/sites/Bricomarche.log
+        maxLogSize: 300000
+        backups: 3
+        category: Bricomarche
+        level: DEBUG
+    - type: logLevelFilter
       level: DEBUG
-    - type: file
-      filename: logs/sites/Weldom.log
-      maxLogSize: 300000
-      backups: 3
-      category: Weldom
+      appender:
+        type: file
+        filename: logs/sites/Bricorama.log
+        maxLogSize: 300000
+        backups: 3
+        category: Bricorama
+    - type: logLevelFilter
       level: DEBUG
+      appender:
+        type: file
+        filename: logs/sites/Weldom.log
+        maxLogSize: 300000
+        backups: 3
+        category: Weldom
   levels:
     [all]: INFO
