@@ -4,7 +4,8 @@ var express = require('express'),
   bodyParser = require('body-parser'),
   chalk = require('chalk'),
   moment = require('moment'),
-  nconf = require('nconf');
+  proxyUpdater = require('../../proxy-update'),
+  nconf = require('nconf'),
   ora = require('ora'),
   logger = require("log4js").getLogger('app/routes/api');
 
@@ -30,6 +31,12 @@ router.use(function timeLog (req, res, next) {
 // define the home page route
 router.get('/', function (req, res) {
   res.send('collectOnline API home page')
+});
+
+// define the home page route
+router.get('/proxies-update', function (req, res) {
+  proxyUpdater.update();
+  res.send({message: 'done'});
 });
 
 router.get('/status', function(req, res){

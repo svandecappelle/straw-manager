@@ -60,10 +60,13 @@ html(lang="en")
           button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon
             i.material-icons more_vert
           ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
-            li.mdl-menu__item
-              if session
+            if session
+              li.mdl-menu__item
+                a(href="/api/proxies-update", style='width: 100%;display: block;height: 100%;', target="_blank") Update proxies
+              li.mdl-menu__item
                 a(href="/logout", style='width: 100%;display: block;height: 100%;') Logout
-              else
+            else
+              li.mdl-menu__item
                 a(href="/login", style='width: 100%;display: block;') Login
       .mdl-layout__drawer
         span.mdl-layout-title
