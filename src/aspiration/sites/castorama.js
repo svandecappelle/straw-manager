@@ -279,7 +279,7 @@ Castorama.prototype.decode = function (html, req) {
     data.caracteristique = outils.prettify_me(Caracteristiques).split(";");
   }
 
-  this.logger.debug("Price: ", data.libelles, data.price);
+  this.logger.debug("Price: ", data.libelles, data.prix);
   var output = {
     requestID  :  req.requestID,
     data       :  data,

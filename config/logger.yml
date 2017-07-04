@@ -9,58 +9,55 @@ default:
       appender:
         type: file
         filename: logs/output.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
     - type: logLevelFilter
       level: DEBUG
+      category: Bricoman
       appender:
         type: file
         filename: logs/sites/Bricoman.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: Bricoman
-        level: DEBUG
     - type: logLevelFilter
       level: DEBUG
+      category: BricoDepot
       appender:
         type: file
         filename: logs/sites/BricoDepot.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: BricoDepot
     - type: logLevelFilter
       level: DEBUG
+      category: LeroyMerlin
       appender:
         type: file
         filename: logs/sites/LeroyMerlin.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: LeroyMerlin
-        level: DEBUG
     - type: logLevelFilter
       level: DEBUG
+      category: Bricomarche
       appender:
         type: file
         filename: logs/sites/Bricomarche.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: Bricomarche
-        level: DEBUG
     - type: logLevelFilter
       level: DEBUG
+      category: Bricorama
       appender:
         type: file
         filename: logs/sites/Bricorama.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: Bricorama
     - type: logLevelFilter
       level: DEBUG
+      category: Weldom
       appender:
         type: file
         filename: logs/sites/Weldom.log
-        maxLogSize: 300000
+        maxLogSize: 300000000
         backups: 3
-        category: Weldom
   levels:
     [all]: INFO

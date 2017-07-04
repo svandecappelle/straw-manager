@@ -24,12 +24,14 @@
         passport.authenticate('local', function (err, userData, info) {
             var duration;
             if (err) {
-                return next(err);
+                return res.status(403).render('middleware/403', {
+                  message: err.message
+                });
             }
 
             if (!userData) {
               logger.warn("login attempt fails: ", info);
-              return res.status(403).json({
+              return res.status(403).render('middleware/403', {
                 status: 403,
                 message: 'login attempt fails'
               });
@@ -80,6 +82,6 @@
           }, '[[success:authentication-successful]]');
         }
 
-        return done(new Error('[[error:invalid-password]]'));
+        return done(new Error('error:invalid-password'));
     };
 }(exports));

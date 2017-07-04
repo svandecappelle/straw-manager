@@ -16,6 +16,7 @@ html(lang="en")
       link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
       link(rel="stylesheet", type="text/css", href="/public/assets/datatables/media/css/dataTables.material.min.css")
       link(rel="stylesheet", type="text/css", href="/public/assets/material-design-lite/material.min.css")
+      link(href="/public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
       script(src="/public/assets/jquery/dist/jquery.min.js")
       script(src="/public/assets/bootstrap/dist/js/bootstrap.min.js")
       script(src="/public/assets/datatables/media/js/jquery.dataTables.min.js")
@@ -49,14 +50,15 @@ html(lang="en")
         .mdl-layout__header-row
           span.mdl-layout-title Collect online
           .mdl-layout-spacer
-          .mdl-textfield.mdl-js-textfield.mdl-textfield--expandable.mdl-textfield--floating-label
-            label.mdl-button.mdl-js-button.mdl-button--icon(for="search")
-              i.material-icons search
-            .mdl-textfield__expandable-holder
-              input.mdl-textfield__input#search(type="text")
-          label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 200px;")
-            input#auto-refresh.mdl-switch__input(type="checkbox")
-            span.mdl-switch__label auto-refresh
+          if session
+            .mdl-textfield.mdl-js-textfield.mdl-textfield--expandable.mdl-textfield--floating-label
+              label.mdl-button.mdl-js-button.mdl-button--icon(for="search")
+                i.material-icons search
+              .mdl-textfield__expandable-holder
+                input.mdl-textfield__input#search(type="text")
+            label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 200px;")
+              input#auto-refresh.mdl-switch__input(type="checkbox")
+              span.mdl-switch__label auto-refresh
           button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon
             i.material-icons more_vert
           ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
@@ -68,13 +70,14 @@ html(lang="en")
             else
               li.mdl-menu__item
                 a(href="/login", style='width: 100%;display: block;') Login
-      .mdl-layout__drawer
-        span.mdl-layout-title
-        nav.mdl-navigation
-          a.mdl-navigation__link#root-collect-online(href=rootPath) Home
+      if session
+        .mdl-layout__drawer
+          span.mdl-layout-title
+          nav.mdl-navigation
+            a.mdl-navigation__link#root-collect-online(href=rootPath) Home
       main.mdl-layout__content
         block body
-    
+
     script
       :coffee-script
         $ -> 

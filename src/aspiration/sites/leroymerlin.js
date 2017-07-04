@@ -119,7 +119,7 @@ LeroyMerlin.prototype.decode = function (html, req) {
   data.promo = data.ancienPrix? 1 : 0 ;
   data.ean = html.split('product_ean :')[1].split(',')[0].replace(/'/g, '');
 
-  this.logger.debug("Price: ", data.libelles, data.price);
+  this.logger.debug("Price: ", data.libelles, data.prix);
 
   var output = {
     requestID : req.requestID,

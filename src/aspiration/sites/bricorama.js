@@ -146,7 +146,7 @@ Bricorama.prototype.decode = function (html, req, response) {
   //data.prixUnite =
   //data.Promodirecte =
   //data.dispo =
-  this.logger.debug("Price: ", data.libelles, data.price);
+  this.logger.debug("Price: ", data.libelles, data.prix);
   var output = {
     requestID : ReqObject.requestID,
     data			: data,

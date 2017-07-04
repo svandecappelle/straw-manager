@@ -95,7 +95,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
   var $ = cheerio.load(html)
   /* ------------------------------------------------------------------------ */
   // manage fail
-  if ($('.label-store-name').length == -1) {
+  if ($('.label-store-name').length == 0) {
     var output = {
       requestID: req.requestID,
       error: 'Impossible de rentrer dans le magasin',
@@ -205,7 +205,7 @@ Bricomarche.prototype.decode = function (html, req, response) {
     data.caracteristique.push(attribut + ' = ' + valeur)
   })
 
-  this.logger.debug("Price: ", data.libelles, data.price);
+  this.logger.debug("Price: ", data.libelles, data.prix);
   var output = {
     requestID: req.requestID,
     data: data,

@@ -140,7 +140,7 @@ Weldom.prototype.patch = function (html, req, response) {
 }
 
 Weldom.prototype.decode = function (html, req, response) {
-  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
+  this.logger.info('Product decode', req.origin ? req.origin : 'origin: ' + req.url + ' ----> now: ' + req.url, req.magasin.name);
   var $ = cheerio.load(html);
   // manage fail
   if ($('.errorPage').length > 0) {
@@ -182,7 +182,7 @@ Weldom.prototype.decode = function (html, req, response) {
   var ean = html.split('>code barre</th>')[1].split('</td>')[0];
   data.ean = ean.split('"data">')[1];
 
-  this.logger.debug("Price: ", data.libelles, data.price);
+  this.logger.debug("Price: ", data.libelles, data.prix);
 
   var output = {
     requestID: req.requestID,

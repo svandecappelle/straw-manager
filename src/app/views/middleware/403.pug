@@ -1,0 +1,7 @@
+extends ../template
+
+block body
+  .alert.alert-danger(style='margin:auto;margin-top:6pt;width:50%;') Error caught
+    pre.well
+      if message
+        p= JSON.stringify(message, null, 4)

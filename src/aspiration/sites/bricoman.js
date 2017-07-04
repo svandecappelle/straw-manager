@@ -105,7 +105,7 @@ Bricoman.prototype.decode = function (html, req) {
 			error      :	"produit non disponible",
 			data       :  undefined
 		};
-    return this.emit('fatal_error', { 'message': output.error }, output);
+    return this.emit('not_found', output, { 'message': output.error });
 	}
 
   /* ------------------------------------------------------------------------ */
@@ -198,7 +198,7 @@ Bricoman.prototype.decode = function (html, req) {
 		logger.trace("NUMBER OF CARAC +" + data.caracteristique.length, req.lasturl);
 	}
 
-  logger.debug("Price: ", data.libelles, data.price);
+  logger.debug("Price: ", data.libelles, data.prix);
 	//process.send({requestID:ReqObject.requestID,data:undefined}) // fail status test
 	var output = {
 		requestID : ReqObject.requestID,

@@ -1,23 +1,34 @@
-section.sidebar.show
-  .search
-    .col-lg-8.col-md-8
-      .input-group
-        h1 Connection
-  .panel.panel-default.login-screen
-    form.form-horizontal(method='post', action='/login?redirect=' + urlfrom)
-      .form-group
-        label.col-sm-2.control-label(for="username") username
-        .col-sm-10
-          input.form-control(type="text", id="username", name="username", placeholder="username")
-      .form-group
-        label.col-sm-2.control-label(for="password") password
-        .col-sm-10
-          input.form-control(type="password", id="password", name="password", placeholder="password")
-      .form-group
-        .col-sm-offset-2.col-sm-10
-            .checkbox
-            label
-              input(type="checkbox", name="remember")
-              span Remember me
-      .form-group(style='margin-right: 0px')
-        input.btn.btn-success.btn-lg.pull-right(id="login", style="margin-bottom: 15px;", type="submit", value="connect")
+extends ../template
+
+block body
+  style.
+    body {
+      background: url('/public/background.jpg')
+    }
+    .demo-card-wide.mdl-card {
+      background-color: rgba(255, 255, 255, 1);
+      width: 512px;
+      margin: auto;
+      border-radius: 5px;
+    }
+    .demo-card-wide > .mdl-card__title {
+      height: 176px;
+      background: url('welcome_card.jpg') center / cover;
+    }
+    .demo-card-wide > .mdl-card__menu {
+      color: #fff;
+    }
+
+  .centered(style='margin: auto; width: 50%; margin-top: 6%;')
+    .demo-card-wide.mdl-card.mdl-shadow--2dp
+      i.material-icons(style='text-align: center;font-size:5em;margin-top:0.25em;margin-bottom:0.25em;') account_circle
+      .mdl-card__actions.mdl-card--border
+        form(method='post', action='/login?redirect=' + urlfrom, style='text-align: center;')
+          .mdl-textfield.mdl-js-textfield
+            input.mdl-textfield__input(type="text", id="username", name="username", placeholder="username")
+            label.mdl-textfield__label(for='username') Username
+          .mdl-textfield.mdl-js-textfield
+            input.mdl-textfield__input(type="password", id="password", name="password", placeholder="password")
+            label.mdl-textfield__label(for='password') Password
+          .mdl-grid
+            button.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect(style='margin: auto;') login

@@ -238,7 +238,7 @@ Bricodepot.prototype.decode = function (html, req) {
     };
     return this.emit('not_found', output, { 'message': output.error });
   }
-  logger.debug("Price: ", data.libelles, data.price);
+  logger.debug("Price: ", data.libelles, data.prix);
 
   var output = {
 		requestID : req.requestID,

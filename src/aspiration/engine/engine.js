@@ -80,7 +80,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
     }
 
     if (req.cookies){
-      options.cookies = merge(req.cookies, that.cookies);
+      options.cookies = merge(that.cookies, req.cookies);
     }
 
     this.logger.trace("using opts : ", options);
