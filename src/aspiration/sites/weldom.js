@@ -140,7 +140,7 @@ Weldom.prototype.patch = function (html, req, response) {
 }
 
 Weldom.prototype.decode = function (html, req, response) {
-  this.logger.info('Product decode', req.origin ? req.origin : 'origin: ' + req.url + ' ----> now: ' + req.url, req.magasin.name);
+  this.logger.info('Product decode', req.origin ? 'origin: ' + req.origin + ' ----> now: ' + req.url : req.url, req.magasin.name);
   var $ = cheerio.load(html);
   // manage fail
   if ($('.errorPage').length > 0) {

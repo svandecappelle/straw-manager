@@ -62,7 +62,9 @@ Bricodepot.prototype.aspireOnStore = function(req){
     };
     req.origin = req.url;
     param.origin = req.url;
-    param.url = req.url.replace('/saint-etienne/', magasin.name);
+    var toReplace = param.url.split('http://www.bricodepot.fr/')[1].split('/')[0]
+    param.url = req.url.replace("/".concat(toReplace).concat('/'), magasin.url);
+    logger.debug("Bricodepot_MagasinList", magasin.name);
     that.request(param, next);
   });
 };
@@ -73,10 +75,10 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
   that.stores = [];
 
   var $ = cheerio.load(html);
-  $("#myStoreM").first().find("option").each(function(idx) {
-    var MagasinName = $(this).data('url').replace(/\n/g,' ').replace(/\t/g,'').trim();
-    var url = $(this).attr('data-url');
-    var MagasinId = $(this).attr('value');
+  $('.bd-DropDown-dropdownList li').each(function(idx) {
+    var MagasinName = $(this).find('a').text().trim();
+    var url = $(this).find('a').attr('href');
+    var MagasinId = $(this).attr('data-value');
 
     if (MagasinId.length < 1) {
       console.log("NOT A MAG");
@@ -84,23 +86,24 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
     }
 
     logger.trace(`Entrer dans le magasin ${MagasinId}`);
-
+    //ReqObject.xlbSetJar = cookie;
+    logger.debug(url, MagasinId);
     that.stores.push({
       id: MagasinId,
-      name: MagasinName
+      name: MagasinName,
+      url: url
     });
   });
   req.origin.stores = this.stores;
+  logger.debug("Bricodepot_MagasinList", this.stores);
   this.aspireOnStore(req.origin);
 };
 
 Bricodepot.prototype.decode = function (html, req) {
-  this.logger.info('Product decode', req.origin ? req.origin : req.url, req.magasin.name);
-
   var $ = cheerio.load(html);
   var data = {};
 
-  if (($('span.inStock span').text().trim() == "0 pièce")||($('span.inStock span').length == 0) ){
+  if (($('span.inStock span').text().trim() == "0 pièce")||($('.bd-ProductCard-stock-label.bd-ProductCard-stock-label--reappro').length > 0) ){
 
     var output = {
       requestID  :  req.requestID,
@@ -112,121 +115,56 @@ Bricodepot.prototype.decode = function (html, req) {
     return this.emit('not_found', output, { 'message': output.error });
   }
 
-  var tampon = '';
-  var NumLigne = 1;
+  data.url = req.url;
+  data.magasin = req.magasin;
+  data.timestamp = new Date()
+  data.enseigne = req['Enseigne'];
+  //Id Produit temporaire
+  data.idProduit = $('.bd-ProductCard-ref [itemprop="mpn"]').text().trim()
+  data.libelles =[]
+  data.libelles.push($('.bd-ProductCard-title').text().trim().split(' Ref.:')[0])
+  data.caracteristique=[]
+  var carac = $('.r-Grid.bd-ProductDetails-table .r-Grid-cell.r-all--1of1').html()
+  var text = htmlToText.fromString(carac, { wordwrap: false });
+  //console.log(text);
+  text = text.replace(/\n/g, " ").replace(/\r/g, " ").trim()
+  //data.carac = $("#descriptionlongue").text().replace(/\n/g, " ").replace(/\r/g, " ").trim();
 
-  var ficheNumberOfProducts = $(".ref_val_devis.web").length;
+  round = Math.ceil(text.length / 499);
+  // we have to split the description into portions of 500 char in order to fit in the table
+  var dep = 0
+  for (var i = 0; i < round-1; i++) {
+    console.log("from "+dep+" to "+(dep+499));
+    var portion = text.substring(dep,(dep+499));
+    data.caracteristique.push(portion);
+    dep=dep+499;
+  }
+  data.caracteristique.push($('.r-Grid.bd-ProductDetails-table .r-Grid-cell.r-all--1of1').text().trim().replace(/\t/g, "").replace(/\n/g,""))
+  $('.bd-ProductDetails-list li').each(function(i){
+    data.caracteristique.push($(this).text().trim().replace(/\t/g, "").replace(/\n/g,""))
+  })
+  data.marque = $('.r-Grid-cell.r-all--1of2.r-maxM--1of3.bd-ProductCard-brand').text().trim()
+  var verif2 = $('.bd-ProductView-item.jsbd-ProductView-item.jsbd-ProductView-item--typeImage.jsbd-gtm-zoomProduct')
+  if (verif2 && verif2.length > 0){
 
-  $("table.criteria > tr").each(function() {
+    data.srcImage = $('.bd-ProductView-item.jsbd-ProductView-item.jsbd-ProductView-item--typeImage.jsbd-gtm-zoomProduct').attr("data-src")
+  }else{
+    data.srcImage = $('.bd-KitchenSlide.jsbd-ProductView-item.jsbd-ProductView-item--typeImage.jsbd-gtm-zoomProduct img').attr('src')
+  }
+  data.prix = $('.bd-Price-current').text().trim()
 
-    //var produit = engine.clone(obj.exportData);
-    var tds = $(this).children("td");
-    var indexId = 0
-    data.promo = 0;
-    data.timestamp = new Date();
-    data.enseigne = req['Enseigne'];
-    data.magasin = req.magasin;
-    data.url = req.url;
-    data.dispo = data.prix ? 1 : 0;
+  verif1 = $('.bd-Price-ecopart.bd-Price-minor')
+  if( verif1 && verif1.length > 0){
+    data.prixUnite = $('.bd-Price-ecopart.bd-Price-minor').text().trim()
+  }
+  var verif = $('.bd-ProductView-status img')
+  if (verif && verif.length > 0){
+    data.ancienPrix = $('.bd-Price-old').text().trim()
+    data.promoDirecte = $('.bd-ProductView-status').text().trim()
+  }
+  data.promo = data.ancienPrix || data.promoDirecte ? 1 : 0
 
-    data.srcImage = $("#productZoom img").attr('src')  // 23/01/2017 udpdate //// produit.srcImage = $('[itemprop="image"]').attr('src') // update 24/06/2016
-    if($("table.criteria").html().indexOf("/docroot/images/tempImg/exclu-web-small.png")>0){
-      indexId++
-    }
-    data.idProduit = $(tds[indexId]).text().split('Réf:')[1].trim(); // Selector Update 02/07/2015
-    data.libelles = []
-    data.libelles.push($('h1.prodTitle').text().trim())
-    data.categories = []
-    $('div[class="breadcrumbs web"] a').each(function (p,elm) {
-      if(p>0) {
-        data.categories.push($(this).text())
-      }
-    });
-    var temporaryArray = data.libelles;
-
-    for (var k = 1; k < tds.length - 2; k++) {
-      if (tds[k].children[0]) {
-        if (!$(tds[k]).hasClass("redlight"))
-          // produit.libelles.push($(tds[k]).text().replace(/\t/g, "").replace(/\n/g,"").replace(/\r/g, "").trim());
-          temporaryArray.push($(tds[k]).text().replace(/\t/g, "").replace(/\n/g,"").replace(/\r/g, "").trim());
-
-      }
-    }
-    var typeList = temporaryArray.length;
-    data.libelles = temporaryArray.slice(0, typeList-2);
-
-    // LIST STYLE AND NUMBER OF PRODUCT PER PAGE
-    // if there is many prod and the list style is 3 ==> we have to make [0] and [1] else we keep the default
-    // if the list style is 2 we take [0] ==> override default (wich give an empty libelle)
-    if(typeList < 3)
-      data.libelles = temporaryArray.slice(0, typeList-1);
-    else if (( typeList == 3) && (ficheNumberOfProducts > 1)) {
-      data.libelles = temporaryArray.slice(0, typeList-1);
-    }
-
-    // ==============================================
-
-    if (data.libelles[1]){
-      // On regarde si le libellé du produit (dans le tableau) n'est pas présent dans le libellé général du produit
-      tampon = data.libelles[1].latinise();
-      tampon = tampon.toUpperCase();
-      // S'il est présent, on va le supprimer car on va ajouter au libelle général les libellés des différentes lignes du tableau
-      if (data.libelles[0].indexOf(tampon) != -1){
-        data.libelles[0] = data.libelles[0].replace(tampon, "");
-      }
-    }
-    if (data.libelles[1]) {
-      // On ajoute le libellé du tableau au libellé principal
-      data.libelles[0] += ' - ' + data.libelles[1];
-      // On supprime le 2ème libellé qui est devenu inutile
-      data.libelles[1] = "";
-    }
-
-    // Gestion des prix
-    /*
-      price.children("small").remove();
-    */
-    var price = $(this).find(".productTablePriceCell table").eq(0).find('td').text().trim();
-
-    // la zone prix contient les prix TTC et les prix HT
-    // S'il y a 2 prix TTC, on considère que le 1er est le prix unitaire et le 2ème le prix de l'article
-    // S'il n'y a qu'un seul prix, on considère qu'il n'y a que le prix de l'article
-    data.prix = price;
-    tampon = data.prix.replaceAll('\r', '');
-    tampon = tampon.replaceAll('\t', '', tampon);
-    if (tampon.trim().indexOf('soit') != -1){
-      // On a 2 prix
-      tampon = tampon.replaceAll('\r', '');
-      tampon = tampon.replaceAll('\n', '');
-      tampon = tampon.replaceAll('\t', '');
-
-      data.prixUnite = tampon.trim().split('soit')[0];
-      data.prix = tampon.trim().split('soit')[1];
-    } else{
-      //produit.prix = tampon.trim().split('\n')[0];
-      data.prix = htmlToText.fromString($(this).find(".productTablePriceCell table").eq(0).find('td'), { wordwrap: false });
-    }
-
-
-    var oldprice = $(this).find(".productTablePriceCell table").eq(1).find('.oldPrice.clearfix');
-    if (oldprice.length > 0){
-      data.ancienPrix = oldprice.text().trim();
-      data.promo = 1;
-    }
-
-    // On récupère les caractéristique sur la première ligne du tableau
-    if (NumLigne === 1){
-      //console.log($("div.prodDescr div.prodInfo").text().trim());
-      data.caracteristique = [];
-      tampon = $("div.prodDescr div.prodInfo").text().trim();
-      tampon = tampon.replaceAll('\r', '');
-      tampon = tampon.replaceAll('\n', '');
-      tampon = tampon.replaceAll('\t', '');
-      if (tampon.length > 0) data.caracteristique.push(tampon);
-    }
-
-    NumLigne ++;
-  });
+  data.ean = undefined
 
   if (_.isEmpty(data)){
     logger.warn("Empty data on product page: ", req.url);
@@ -238,9 +176,8 @@ Bricodepot.prototype.decode = function (html, req) {
     };
     return this.emit('not_found', output, { 'message': output.error });
   }
-  logger.debug("Price: ", data.libelles, data.prix);
 
-  var output = {
+	var output = {
 		requestID : req.requestID,
     stores: this.stores,
 		data: data
@@ -248,4 +185,4 @@ Bricodepot.prototype.decode = function (html, req) {
   this.emit('product', output, req);
 };
 
-module.exports = Bricodepot;
+module.exports = Bricodepot

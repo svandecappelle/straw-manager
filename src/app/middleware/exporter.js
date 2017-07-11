@@ -48,23 +48,29 @@ Exporter.prototype.listen = function () {
     }
   });
 
-  _.each(that.data, (rows_data, enseigne) => {
-    if (rows_data !== undefined && rows_data.length > 0 && enseigne){
-      if (!that.file_descriptors[enseigne] || !that.file_descriptors[enseigne].isOpen){
-        logger.info("########################### Open FILE ############################", _.first(rows_data).enseigne);
-        that.open(_.first(rows_data));
-      }
-
-      _.each(rows_data, (row) => {
-        if (!row.isExported && that.file_descriptors[enseigne]){
-          logger.debug("########################### Exporting ############################", row);
-          that.file_descriptors[enseigne].stream.write(row);
-          row.isExported = true;
+  try {
+    _.each(that.data, (rows_data, enseigne) => {
+      if (rows_data !== undefined && rows_data.length > 0 && enseigne){
+        if (!that.file_descriptors[enseigne] || !that.file_descriptors[enseigne].isOpen){
+          logger.info("########################### Open FILE ############################", _.first(rows_data).enseigne);
+          that.open(_.first(rows_data));
         }
-      });
-    }
-  });
 
+        _.each(rows_data, (row) => {
+          if (!row.isExported && that.file_descriptors[enseigne]){
+            logger.debug("########################### Exporting ############################", row);
+
+              that.file_descriptors[enseigne].stream.write(row);
+              row.isExported = true;
+
+          }
+        });
+      }
+    });
+  } catch (err) {
+    logger.warn("Writting on file after close", err);
+  }
+  
   setTimeout(function(){
     that.listen();
   }, TIME_TO_CLOSE_FILE);

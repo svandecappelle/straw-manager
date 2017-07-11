@@ -31,7 +31,7 @@ var _ = require('underscore'),
 
 (function (Buffer) {
   "use strict";
-  const SHOPS_PROPERTIES = ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'magasin'];
+  const SHOPS_PROPERTIES = ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'magasin', 'url'];
   var requestBuffer = [];
   var auto_increment = -1
   var eventEmitter = new events.EventEmitter();
