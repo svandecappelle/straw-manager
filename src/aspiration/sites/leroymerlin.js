@@ -50,7 +50,7 @@ LeroyMerlin.prototype.getStores = function(params){
 };
 
 LeroyMerlin.prototype.parseStores = function (html, req, response) {
-  logger.info("Rentré dans LeroyMerlin_MagasinList");
+  this.logger.info("Rentré dans LeroyMerlin_MagasinList");
   var that = this;
   var $ = cheerio.load(html);
   that.stores = [];
