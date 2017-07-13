@@ -252,7 +252,7 @@ Mrbricolage.prototype.decode = function (html, req, response) {
     }
     var portion = text.substring(dep, (text.length));
     data.caracteristique.push(portion);
-    this.logger.info('DATA === ', data);
+    this.logger.trace('DATA === ', data);
 
     var output = {
       requestID: req.requestID,

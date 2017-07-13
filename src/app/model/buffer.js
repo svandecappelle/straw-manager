@@ -90,10 +90,22 @@ var _ = require('underscore'),
     }
   });
 
-  Buffer.flush = function(){
-    requestBuffer = _.filter(requestBuffer, function(elem){
-        return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
-    });
+  Buffer.flush = function(type){
+    if (!type){
+      requestBuffer = _.filter(requestBuffer, function(elem){
+          return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
+      });
+
+    } else if (type !== 'all'){
+      logger.info(`flush memory on '${type}'`);
+      requestBuffer = _.filter(requestBuffer, function(elem){
+        return elem.status !== 'partial_'.concat(type) && elem.status !== type;
+      });
+
+    } else {
+      logger.info(`flush all memory`);
+      requestBuffer = [];
+    }
 
     var mem = process.memoryUsage();
     logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
@@ -212,8 +224,8 @@ var _ = require('underscore'),
     }
   };
 
-  Buffer.drop = function drop(object) {
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)})
+  Buffer.drop = function drop(id) {
+    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(id)})
     if (  index > -1 ) {
       requestBuffer.splice(index, 1)
       return true

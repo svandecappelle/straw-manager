@@ -69,6 +69,35 @@ router.get('/', function (req, res) {
   });
 });
 
+router.get('/purge', function (req, res) {
+  if (req.session && req.session.passport && req.session.passport.user) {
+    var flyshType = req.query.type;
+    buffer.flush(flyshType);
+    res.redirect("/");
+  } else {
+    res.status(401).json({
+      status: 401,
+      error: 'Not authorized'
+    });
+  }
+});
+
+router.get('/drop/:id', function (req, res) {
+ logger.info("".concat(req.params.id).red + " to delete !");
+  var elem = buffer.drop(req.params.id);
+
+  if (elem) {
+    logger.info("".concat(req.params.id).red + " deleted");
+    res.status(200).send({
+      "deleted"       :req.params.id,
+      "bufferLength"  :buffer.getBuffer().length
+    });
+  } else {
+    logger.warn("".concat(req.params.id).red + " not found");
+    res.status(404).send({"Error":"a valid ID must be choosen"})
+  }
+});
+
 // define the about route
 router.get('/about', function (req, res) {
   middleware.render(req, res, 'about.pug', {

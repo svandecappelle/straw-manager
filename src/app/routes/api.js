@@ -29,6 +29,23 @@ router.use(function timeLog (req, res, next) {
 });
 
 // define the home page route
+router.get('/purge', function (req, res) {
+  if (req.session && req.session.passport && req.session.passport.user) {
+    var flyshType = req.query.type;
+    buffer.flush(flyshType);
+    res.json({
+      status: 200,
+      message: 'done'
+    });
+  } else {
+    res.status(401).json({
+      status: 401,
+      error: 'Not authorized'
+    })
+  }
+});
+
+// define the home page route
 router.get('/', function (req, res) {
   res.send('collectOnline API home page')
 });
