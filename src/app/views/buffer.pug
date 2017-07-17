@@ -65,6 +65,14 @@ block body
             },
             {
               "render": (data, type, row ) ->
+                if (data)
+                  return data;
+                return "-";
+              ,
+              "targets": [4]
+            }
+            {
+              "render": (data, type, row ) ->
                 if (row.responseDate == 0)
                   return 'null';
                 time_in_minutes = ((row.responseDate - row.requestDate)  / 1000 / 60)
@@ -97,7 +105,7 @@ block body
         auto_refresh = $("#auto-refresh").is(':checked')
         $('#buffer tbody').on 'click', 'tr', ->
           data = table.row( this ).data()
-          window.open("/request/" + data.requestID, "_blank")
+          window.open("request/" + data.requestID, "_blank")
 
         $('#auto-refresh').change -> 
           auto_refresh = $("#auto-refresh").is(':checked')

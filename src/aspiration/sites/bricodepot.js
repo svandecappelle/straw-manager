@@ -63,7 +63,7 @@ Bricodepot.prototype.aspireOnStore = function(req){
     req.origin = req.url;
     param.origin = req.url;
     var toReplace = param.url.split('http://www.bricodepot.fr/')[1].split('/')[0]
-    param.url = req.url.replace("/".concat(toReplace).concat('/'), magasin.url);
+    param.url = req.url.replace("/".concat(toReplace).concat('/'), magasin.url.replace("http://www.bricodepot.fr", ""));
     logger.debug("Bricodepot_MagasinList", magasin.name);
     that.request(param, next);
   });
