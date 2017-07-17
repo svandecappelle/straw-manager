@@ -73,7 +73,7 @@ Engine.prototype.request = function (req, viewtype, callback) {
       timeout: 50000,
       read_timeout: 60000,
       open_timeout: 60000,
-      follow_max: 3
+      follow_max: 10
     };
     if (this.use_proxy && !this.isProxyConnected()){
       options = this.proxy_connect(req, viewtype);

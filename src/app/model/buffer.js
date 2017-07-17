@@ -64,7 +64,9 @@ var _ = require('underscore'),
     results.data.codeProduit = results.data.idProduit;
     results.data.idProduit = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idProduit;
 
-    exporter.export(results.data);
+    if (nconf.get("aspiration:export")){
+      exporter.export(results.data);
+    }
     Buffer.update(results, false);
   });
 

@@ -8,6 +8,7 @@ proxies: ../proxyRU.txt
 max-memory: 2000
 aspiration:
   interactive: false
+  export: true
 tests:
   default: local
   environments:
