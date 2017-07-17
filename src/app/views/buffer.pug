@@ -59,7 +59,7 @@ block body
               "render": (data, type, row ) ->
                 if (!data)
                   return "-";
-                return new Date(data).toISOString().slice(0, 19).replace('T', ' ');
+                return moment(data).format('Do MMMM YYYY HH:mm:ss');
               ,
               "targets": [1, 2]
             },
@@ -73,13 +73,15 @@ block body
             }
             {
               "render": (data, type, row ) ->
-                if (row.responseDate == 0)
-                  return 'null';
-                time_in_minutes = ((row.responseDate - row.requestDate)  / 1000 / 60)
-                if (time_in_minutes < 0.01)
-                  time_in_secs = time_in_minutes * 60
-                  return Math.round(time_in_secs * 100) / 100 + ' secs';
-                return Math.round(time_in_minutes * 100) / 100 + ' mins';
+                responseDate = row.responseDate;
+                if (!row.responseDate)
+                  responseDate = moment();
+                return moment.duration(moment(row.requestDate).diff(moment(responseDate))).format("h [h] mm [min] ss [secs]");
+                #time_in_minutes = ((row.responseDate - row.requestDate)  / 1000 / 60)
+                #if (time_in_minutes < 0.01)
+                #  time_in_secs = time_in_minutes * 60
+                #  return moment.duration(Math.round(time_in_secs * 100) / 100).format("d[d] h:mm:ss");;
+                #return Math.round(time_in_minutes * 100) / 100 + ' mins';
               ,
               "targets": [3]
             },

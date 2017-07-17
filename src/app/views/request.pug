@@ -31,7 +31,7 @@ block body
         li.list-group-item.row.active
           .col-xs-6.col-md-4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-xs-6.col-md-4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
-          .col-xs-6.col-md-4= "Temps passé: " + ((request.responseDate - request.requestDate) / 1000 / 60) + ' mins'
+          .col-xs-6.col-md-4.time-elapsed= "Temps passé: "
     .col-xs-12.col-md-12.request
       if request.error
         .row
@@ -76,12 +76,25 @@ block body
                 .message= store_detail
             else
               .message no detail mag
+    script#request-var(type='application/json')= JSON.stringify(request)
     script.
       var refresh_time = #{refresh_time}
     script
       :coffee-script
         rootPath = $("#root-collect-online").attr("href")
+        request = JSON.parse(document.getElementById('request-var').innerHTML
+          .replace(/&quot;/g, '"')
+          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, '<')
+          .replace(/&amp;/g, '&'));
+
+        if (!request.responseDate)
+          request.responseDate = moment();
+        $('.time-elapsed').text(moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
         decode = (request) ->
+          if (!request.responseDate)
+            request.responseDate = moment();
+          $('.time-elapsed').text(moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
           $("#request-" + request.requestID + " span.badge").text(request.status)
           $("#datas").empty()
           if request.error

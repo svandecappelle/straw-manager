@@ -1,5 +1,5 @@
 default:
   export: true
-  maxtry: 2
+  maxtry: 6
   use_proxy: true
   parallel: 25

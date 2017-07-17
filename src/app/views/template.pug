@@ -11,6 +11,8 @@ html(lang="en")
       script(src=rootPath + "public/assets/datatables/media/js/jquery.dataTables.min.js")
       script(src=rootPath + "public/assets/datatables/media/js/dataTables.material.min.js")
       script(src=rootPath + "public/assets/material-design-lite/material.min.js")
+      script(src=rootPath + "public/assets/moment/min/moment-with-locales.min.js")
+      script(src=rootPath + "public/assets/moment-duration-format/lib/moment-duration-format.js")
       
     else
       link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
@@ -22,6 +24,8 @@ html(lang="en")
       script(src="/public/assets/datatables/media/js/jquery.dataTables.min.js")
       script(src="/public/assets/datatables/media/js/dataTables.material.min.js")
       script(src="/public/assets/material-design-lite/material.min.js")
+      script(src="/public/assets/moment/min/moment-with-locales.min.js")
+      script(src="/public/assets/moment-duration-format/lib/moment-duration-format.js")
       
     style.
       .mdl-switch__track{
@@ -56,9 +60,10 @@ html(lang="en")
                 i.material-icons search
               .mdl-textfield__expandable-holder
                 input.mdl-textfield__input#search(type="text")
-            label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 200px;")
+            label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 100px;")
               input#auto-refresh.mdl-switch__input(type="checkbox")
-              span.mdl-switch__label auto-refresh
+              span.mdl-switch__label(style="text-align: center")
+                i.material-icons autorenew
           button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon
             i.material-icons more_vert
           ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
@@ -81,6 +86,7 @@ html(lang="en")
     script
       :coffee-script
         $ -> 
+          moment.locale('fr'); 
           rootPath = $("#root-collect-online").attr("href")
           $("#search").on 'change', ->
             window.location.replace(rootPath + 'search?q=' + $("#search").val())
