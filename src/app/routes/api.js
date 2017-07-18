@@ -12,7 +12,7 @@ var express = require('express'),
 var GREEN = chalk.bold.green;
 var RED = chalk.bold.red;
 var YELLOW = chalk.bold.yellow;
-
+logger.setLevel(nconf.get("logLevel"));
 
 router.use(bodyParser.urlencoded({
   extended: true

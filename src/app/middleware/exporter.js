@@ -1,5 +1,6 @@
 var fs = require('fs'),
   path = require('path'),
+  nconf = require('nconf'),
   logger = require('log4js').getLogger('Exporter'),
   events = require('events'),
   fastcsv = require('fast-csv'),
@@ -7,6 +8,7 @@ var fs = require('fs'),
   camelize = require("underscore.string/camelize"),
   moment = require('moment');
 
+logger.setLevel(nconf.get("logLevel"));
 const TIME_TO_CLOSE_FILE = 3000;
 
 var export_scheme = {
@@ -70,7 +72,7 @@ Exporter.prototype.listen = function () {
   } catch (err) {
     logger.warn("Writting on file after close", err);
   }
-  
+
   setTimeout(function(){
     that.listen();
   }, TIME_TO_CLOSE_FILE);

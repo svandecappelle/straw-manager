@@ -20,6 +20,7 @@ function Engine () {
   this.aspiredDatas = 0;
   if (this.name){
     this.logger = require('log4js').getLogger(this.name);
+    this.logger.setLevel(nconf.get("logLevel"));
     var config_path = config_name("sites/" + this.name);
     if (fs.existsSync(config_path)){
       this.config = _.extend(this.config, yaml_config.load(config_path));

@@ -8,6 +8,8 @@
       yaml_config = require('node-yaml-config'),
       _ = require("underscore");
 
+    logger.setLevel(nconf.get("logLevel"));
+
     var LOGIN_DURATION = 60 * 24;
     var LONG_LOGIN_DURATION = LOGIN_DURATION * 14;
 

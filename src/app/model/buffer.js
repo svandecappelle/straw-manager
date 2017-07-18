@@ -5,6 +5,7 @@ var _ = require('underscore'),
   aspiration = require('./../../aspiration/interface'),
   Exporter = new require('./../middleware/exporter');
 
+logger.setLevel(nconf.get("logLevel"));
 
 /**************************************************************************
 *                     SINGLETON CLASS DEFINITION                          *

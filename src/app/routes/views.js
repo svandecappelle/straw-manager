@@ -7,6 +7,8 @@ var express = require('express'),
   nconf = require('nconf'),
   logger = require("log4js").getLogger('app/routes/views'),
   middleware = require("../middleware");
+
+logger.setLevel(nconf.get("logLevel"));
 const LOG_ALL_VIEWS_ACCESS = false;
 router.use(bodyParser.urlencoded({
   extended: true
