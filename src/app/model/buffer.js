@@ -48,9 +48,10 @@ var _ = require('underscore'),
     //Buffer.update(results, true);
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(results.requestID)})
     if (requestBuffer[index].callback){
-      if (requestBuffer[index].status !== 'partial_pending') {
+
+      if (requestBuffer[index].status !== 'timeout' && requestBuffer[index].status !== 'error' && requestBuffer[index].status !== 'partial_pending') {
         requestBuffer[index].status = 'set';
-      } else {
+      } else if (requestBuffer[index].status !== 'timeout' && requestBuffer[index].status !== 'error'){
         requestBuffer[index].status = 'partial_done';
       }
       requestBuffer[index].callback(results);
@@ -75,6 +76,22 @@ var _ = require('underscore'),
     Buffer.update(results, false);
   });
 
+  eventEmitter.on('timeout', function(error, req){
+    if (req.origin){
+      req = req.origin;
+    }
+    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
+    Buffer.update(req);
+
+    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
+    if (index > -1){
+      requestBuffer[index].error = error;
+      requestBuffer[index].status = 'timeout';
+      if (requestBuffer[index].callback){
+        requestBuffer[index].callback(requestBuffer[index]);
+      }
+    }
+  });
   eventEmitter.on('error', function(error, req){
     if (req.origin){
       req = req.origin;
@@ -121,7 +138,7 @@ var _ = require('underscore'),
   };
 
   Buffer.failed = function(){
-    return _.where(requestBuffer, {status: 'failed'});
+    return _.union(_.where(requestBuffer, {status: 'failed'}), _.where(requestBuffer, {status: 'timeout'}));
   };
 
   Buffer.aspired = function(){

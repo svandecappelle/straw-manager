@@ -44,15 +44,17 @@ process.on('uncaughtException', function (err) {
 
       if (opts.silent){
         log4js.configure({
-            appenders : [
-                {type: 'console'}
-            ],
-            levels: {
-               '[all]': 'ERROR'
+            appenders : {
+                console: {
+                  type: 'console'
+                }
+            },
+            categories: {
+               default: 'ERROR',
+               appenders: ['console']
             }
         });
       } else {
-
         var logOptions = yaml_config.load(path.resolve(__dirname, '../config/logger.yml'));
 
         // scribe logger
@@ -63,14 +65,14 @@ process.on('uncaughtException', function (err) {
             const scribeLogger = new Scribe.Middleware.ExpressRequestLogger(console);
             const viewer = new Scribe.Router.Viewer(console);
 
-            logOptions.appenders.push({
+            logOptions.appenders['scribe'] = {
               type: 'logLevelFilter',
               level: 'INFO',
               appender: {
                 type: path.resolve(__dirname, './logger/log4js-scribe3-js'),
                 timezoneOffset: 'UTC+01:00',
               }
-            });
+            };
             // express logger
             // app.use(scribeLogger.getMiddleware());
             // viewer
@@ -80,15 +82,21 @@ process.on('uncaughtException', function (err) {
             app.use('/logs', scribe.webPanel());
             app.use(scribe.express.logger());
 
-            logOptions.appenders.push({
+            logOptions.appenders['scribe'] = {
               type: 'log4js-scribe-js',
               timezoneOffset: 'UTC+01:00',
               level: 'INFO'
-            });
+            };
           }
         }
 
-        log4js.configure(logOptions);
+        console.log("configuring");
+        try {
+          log4js.configure(logOptions);
+        } catch(err) {
+          console.log(err);
+        }
+        console.log("configured");
       }
 
       if ( !opts || opts.run_server ) {

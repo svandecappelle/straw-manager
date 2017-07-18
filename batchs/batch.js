@@ -42,7 +42,7 @@ argv.option({
 });
 var args = argv.run();
 const configuration = yaml_config.load(config_file("config"));
-log4js.configure(configuration.logger);
+log4js.configure(yaml_config.load(config_file("logger")));
 
 var input_file = path.resolve(__dirname, './'.concat(configuration["input-file"]));
 if (args.options.file){

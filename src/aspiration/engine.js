@@ -2,19 +2,21 @@
 /*jslint node: true */
 var _ = require('underscore'),
   async = require('async'),
+  nconf = require('nconf'),
   path = require('path');
 
 engine = require("./engine/engine");
 
 var site_engines = {};
 
-const timeout_aspiration = 3600 * 1000;
-
 (function (Engine) {
     "use strict";
 
     Engine.start = function (opts, eventEmitter) {
       try {
+        console.log(nconf.get("aspiration:timeout"));
+        var timeout_aspiration = nconf.get("aspiration:timeout") * 60 * 1000;
+
         var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
 
         var enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1);
@@ -44,20 +46,26 @@ const timeout_aspiration = 3600 * 1000;
         }, opts);
 
         // todo
-        /*var call_process = async.timeout(function aspiration(callback) {*/
+        var call_process = async.timeout(function aspiration(callback) {
           enseigne_lancher.call(params);
-/*
+
           enseigne_lancher.on('done', function(data){
+            callback();
+          });
+
+          enseigne_lancher.on('fatal_error', function(data){
             callback();
           });
         }, timeout_aspiration);
 
         call_process(err => {
-          if (err.message === 'Callback function "aspiration" timed out.') {
-            eventEmitter.emit('error', {err: `Aspiration take to much time on one product > ${timeout_aspiration / 1000}sec: ${err.code}`}, params);
+          if (err && err.message === 'Callback function "aspiration" timed out.') {
+            eventEmitter.emit('timeout', {err: `Aspiration take to much time on one product > ${timeout_aspiration / 1000}sec: ${err.code}`}, params);
+          } else {
+            console.log(err);
           }
         });
-*/
+
       } catch(error) {
         eventEmitter.emit('error', {error: error}, opts);
       }

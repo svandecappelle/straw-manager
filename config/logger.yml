@@ -1,63 +1,86 @@
 default:
   appenders:
-    - type: logLevelFilter
+    console:
+      type: console
       level: INFO
-      appender:
-        type: console
-    - type: logLevelFilter
-      level: DEBUG
-      appender:
-        type: file
-        filename: logs/output.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: Bricoman
-      appender:
-        type: file
-        filename: logs/sites/Bricoman.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: BricoDepot
-      appender:
-        type: file
-        filename: logs/sites/BricoDepot.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: LeroyMerlin
-      appender:
-        type: file
-        filename: logs/sites/LeroyMerlin.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: Bricomarche
-      appender:
-        type: file
-        filename: logs/sites/Bricomarche.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: Bricorama
-      appender:
-        type: file
-        filename: logs/sites/Bricorama.log
-        maxLogSize: 300000000
-        backups: 3
-    - type: logLevelFilter
-      level: DEBUG
-      category: Weldom
-      appender:
-        type: file
-        filename: logs/sites/Weldom.log
-        maxLogSize: 300000000
-        backups: 3
-  levels:
-    [all]: INFO
+    file:
+      type: file
+      filename: logs/output.log
+      maxLogSize: 300000000
+      backups: 3
+    bricodepot:
+      type: file
+      filename: logs/sites/bricodepot.log
+      maxLogSize: 100000000
+      backups: 3
+    bricoman:
+      type: file
+      filename: logs/sites/bricodepot.log
+      maxLogSize: 100000000
+      backups: 3
+    bricomarche:
+      type: file
+      filename: logs/sites/bricomarche.log
+      maxLogSize: 100000000
+      backups: 3
+    bricorama:
+      type: file
+      filename: logs/sites/bricorama.log
+      maxLogSize: 100000000
+      backups: 3
+    castorama:
+      type: file
+      filename: logs/sites/castorama.log
+      maxLogSize: 100000000
+      backups: 3
+    leroymerlin:
+      type: file
+      filename: logs/sites/leroymerlin.log
+      maxLogSize: 100000000
+      backups: 3
+    weldom:
+      type: file
+      filename: logs/sites/weldom.log
+      maxLogSize: 100000000
+      backups: 3
+  categories:
+    default:
+      level: INFO
+      appenders:
+        - console
+        - file
+    BricoDepot:
+      level: INFO
+      appenders:
+        - console
+        - bricodepot
+    Bricoman:
+      level: INFO
+      appenders:
+        - console
+        - bricoman
+    Bricomarche:
+      level: INFO
+      appenders:
+        - console
+        - bricomarche
+    Bricorama:
+      level: INFO
+      appenders:
+        - console
+        - bricorama
+    Castorama:
+      level: INFO
+      appenders:
+        - console
+        - castorama
+    LeroyMerlin:
+      level: INFO
+      appenders:
+        - console
+        - leroymerlin
+    Weldom:
+      level: INFO
+      appenders:
+        - console
+        - weldom

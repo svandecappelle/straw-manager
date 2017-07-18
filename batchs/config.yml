@@ -1,19 +1,4 @@
 default:
-  logger:
-    appenders:
-      - type: file
-        filename: logs/batchs.log
-        maxLogSize: 300000
-        backups: 3
-        level: INFO
-      - out:
-        type: console
-        layout:
-          type: basic
-    categories:
-      default:
-        appenders: ['out']
-        level: error
   server:
     port: 65000
     hostname: localhost
