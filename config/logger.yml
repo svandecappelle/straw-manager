@@ -6,8 +6,8 @@ default:
     file:
       type: file
       filename: logs/output.log
-      maxLogSize: 300000000
-      backups: 3
+      maxLogSize: 100000000
+      backups: 10
     bricodepot:
       type: file
       filename: logs/sites/bricodepot.log
@@ -36,6 +36,11 @@ default:
     leroymerlin:
       type: file
       filename: logs/sites/leroymerlin.log
+      maxLogSize: 100000000
+      backups: 3
+    mrbricolage:
+      type: file
+      filename: logs/sites/mrbricolage.log
       maxLogSize: 100000000
       backups: 3
     weldom:
@@ -79,6 +84,11 @@ default:
       appenders:
         - console
         - leroymerlin
+    MrBricolage:
+      level: INFO
+      appenders:
+        - console
+        - mrbricolage
     Weldom:
       level: INFO
       appenders:

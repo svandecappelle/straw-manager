@@ -5,7 +5,7 @@ var Engine = require('../engine/engine'),
   _ = require('underscore');
 
 function Mrbricolage (use_proxy) {
-  this.name = 'mrbricolage';
+  this.name = 'MrBricolage';
   this.use_proxy = use_proxy;
   Engine.call(this);
   this.on('stores', this.parseStores);
@@ -150,7 +150,7 @@ Mrbricolage.prototype.aspireOnStore = function (req) {
 Mrbricolage.prototype.patch = function (html, req, response) {
   this.logger.trace('In Patch req' , req.origin.url);
   if (response.statusCode == 503) {
-    this.logger.error('url non conforme' , req.origin.url);
+    this.logger.warn('url non conforme' , req.origin.url);
     this.emit('not_found', {
       requestID: req.origin.requestID,
       error: 'magasin non disponible',
@@ -179,7 +179,7 @@ Mrbricolage.prototype.decode = function (html, req, response) {
   var verif = html.indexOf('/?magasin=');
   this.logger.trace('MAGASIN', req.magasin);
   if (response.statusCode == 404) {
-    this.logger.error('Page introuvable in Decode' , req.magasin);
+    this.logger.warn('Page introuvable in Decode' , req.magasin);
     return this.emit('not_found', {
       requestID: req.requestID,
       error: 'Page introuvable',
@@ -187,7 +187,7 @@ Mrbricolage.prototype.decode = function (html, req, response) {
       req: req
     }, req);
   } else if (verif < 0) {
-    this.logger.error('Magasin non disponible in Decode' , req.magasin);
+    this.logger.warn('Magasin non disponible in Decode' , req.magasin);
     return this.emit('not_found', {
       requestID: req.requestID,
       error: 'magasin non disponible',

@@ -20,7 +20,7 @@ Bricomarche.prototype.call = function (params) {
   this.logger.info('Parameters call engine', params)
 
   this.request({
-    url: 'https://www.bricomarche.com',
+    url: 'http://www.bricomarche.com',
     origin: params
   }, 'home')
 }
@@ -40,9 +40,15 @@ Bricomarche.prototype.home = function (html, req) {
 }
 
 Bricomarche.prototype.getStores = function (params) {
+  var options = {
+    rejectUnauthorized : false
+  }
+  //params.opts = options;
+
   this.request({
-    url: 'http://magasins.bricomarche.com/',
-    origin: params
+    url: 'https://magasins.bricomarche.com/fr',
+    origin: params,
+    opts: options
   },
     'stores')
 }
@@ -73,18 +79,16 @@ Bricomarche.prototype.parseStores = function (html, req, response) {
   var $ = cheerio.load(html)
   that.stores = []
 
-  $("[id='select_advmag']").first().find('option').each(function (idx) {
-    var urlMag = $(this).attr('value');
-    if (urlMag){
-      var Magasin = $(this).text().trim();
+  $("#List_Store #Holder .ItemMagasin .Button.ButtonPrimary").each(function (idx) {
+      var Magasin = $(this).attr('title');
 
-      var MagasinId = urlMag.substring(urlMag.lastIndexOf('/') + 1).trim();
+      var MagasinId =  $(this).attr('id');
 
       that.stores.push({
         id: MagasinId,
         name: Magasin
       });
-    }
+
   })
 
   this.aspireOnStore(req.origin);

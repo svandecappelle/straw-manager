@@ -9,7 +9,7 @@ var events = require('events'),
   yaml_config = require('node-yaml-config');
 
 function config_name(name){
-  return path.resolve(__dirname, "./../../../config/".concat(name).concat(".").concat("yml"));
+  return path.resolve(__dirname, "./../../../config/".concat(name.toLowerCase()).concat(".").concat("yml"));
 }
 
 function Engine () {
