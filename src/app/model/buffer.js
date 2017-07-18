@@ -34,7 +34,7 @@ logger.setLevel(nconf.get("logLevel"));
   "use strict";
   const SHOPS_PROPERTIES = ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'magasin', 'url'];
   var requestBuffer = [];
-  var auto_increment = -1
+  var auto_increment = -1;
   var eventEmitter = new events.EventEmitter();
   var exporter = new Exporter();
 

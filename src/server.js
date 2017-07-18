@@ -52,9 +52,8 @@ process.on('uncaughtException', function (err) {
             }
         });
       } else {
-
-        var logOptions = yaml_config.load(path.resolve(__dirname, '../config/logger.yml'))
-
+        
+        var logOptions = yaml_config.load(path.resolve(__dirname, '../config/logger.yml'));
 
         // scribe logger
         if (nconf.get('scribe_logger:use')) {

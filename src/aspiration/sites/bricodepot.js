@@ -3,7 +3,6 @@ var Engine = require('../engine/engine'),
   htmlToText = require('html-to-text'),
   cheerio = require('cheerio'),
   log4js = require("log4js"),
-  logger = log4js.getLogger('BricoDepot'),
   _ = require('underscore');
 
 function Bricodepot(use_proxy){
@@ -21,7 +20,7 @@ Bricodepot.prototype.call = function (params) {
   if (params.stores){
     this.stores = params.stores;
   }
-  logger.info("Parameters call engine", params);
+  this.logger.info("Parameters call engine", params);
 
   this.request({
     url: "http://www.bricodepot.fr",
@@ -32,7 +31,7 @@ Bricodepot.prototype.call = function (params) {
 Bricodepot.prototype.constructor = Bricodepot;
 
 Bricodepot.prototype.home = function (html, req) {
-  logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+  this.logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
   if (req.origin) {
     req = req.origin
   }
@@ -64,13 +63,13 @@ Bricodepot.prototype.aspireOnStore = function(req){
     param.origin = req.url;
     var toReplace = param.url.split('http://www.bricodepot.fr/')[1].split('/')[0]
     param.url = req.url.replace("/".concat(toReplace).concat('/'), magasin.url.replace("http://www.bricodepot.fr", ""));
-    logger.debug("Bricodepot_MagasinList", magasin.name);
+    that.logger.debug("Bricodepot_MagasinList", magasin.name);
     that.request(param, next);
   });
 };
 
 Bricodepot.prototype.parseStores = function (html, req, response) {
-	logger.debug("Rentré dans Bricodepot_MagasinList");
+	this.logger.debug("Rentré dans Bricodepot_MagasinList");
   var that = this;
   that.stores = [];
 
@@ -85,9 +84,9 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
       return;
     }
 
-    logger.trace(`Entrer dans le magasin ${MagasinId}`);
+    that.logger.trace(`Entrer dans le magasin ${MagasinId}`);
     //ReqObject.xlbSetJar = cookie;
-    logger.debug(url, MagasinId);
+    that.logger.debug(url, MagasinId);
     that.stores.push({
       id: MagasinId,
       name: MagasinName,
@@ -95,7 +94,7 @@ Bricodepot.prototype.parseStores = function (html, req, response) {
     });
   });
   req.origin.stores = this.stores;
-  logger.debug("Bricodepot_MagasinList", this.stores);
+  this.logger.debug("Bricodepot_MagasinList", this.stores);
   this.aspireOnStore(req.origin);
 };
 
@@ -167,7 +166,7 @@ Bricodepot.prototype.decode = function (html, req) {
   data.ean = undefined
 
   if (_.isEmpty(data)){
-    logger.warn("Empty data on product page: ", req.url);
+    this.logger.warn("Empty data on product page: ", req.url);
     var output = {
       requestID  :  req.requestID,
       error      :	"produit non disponible",
