@@ -8,7 +8,6 @@ var fs = require('fs'),
   camelize = require("underscore.string/camelize"),
   moment = require('moment');
 
-logger.setLevel(nconf.get("logLevel"));
 const TIME_TO_CLOSE_FILE = 3000;
 
 var export_scheme = {

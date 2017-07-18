@@ -8,8 +8,6 @@
     path = require('path'),
     express = require('express');
 
-  logger.setLevel(nconf.get('logLevel'));
-
   ImportServer.load = function(app, opts, callback) {
 
     var api = require(path.join(__dirname, './src/app/routes/api')),

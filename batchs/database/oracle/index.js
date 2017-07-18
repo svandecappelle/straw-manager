@@ -6,8 +6,6 @@ var oracledb = require('oracledb'),
   events = require('events'),
   logger = require('log4js').getLogger("Oracle");
 
-logger.setLevel(nconf.get('logLevel'));
-
 (function (Oracle) {
   Oracle.pool = null;
   oracledb.fetchAsString = [ oracledb.CLOB ];

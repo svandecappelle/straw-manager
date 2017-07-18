@@ -18,7 +18,6 @@ var expect = chai.expect; // we are using the "expect" style of Chai
 var $test_port = 15555;
 var $url_api = 'http://localhost:' + $test_port;
 
-logger.setLevel("INFO");
 
 String.prototype.replaceAll = function(find, replace) {
 	return this.replace(new RegExp(find, 'g'), replace);

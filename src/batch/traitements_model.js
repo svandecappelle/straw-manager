@@ -3,7 +3,6 @@ var nconf = require("nconf"),
   request = require('request');
 const DEFAULT_TEST_TIMEOUT = nconf.get("tests:timeout") !== undefined ? nconf.get("tests:timeout") : 45000;
 
-logger.setLevel(nconf.get("logLevel"));
 
 var TestTraitement = function (opts, callback_test) {
   this.maxtry = opts['max-checking'] ? opts['max-checking'] :10;

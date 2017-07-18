@@ -8,8 +8,6 @@
         logger = require('log4js').getLogger("authenticate"),
         authority = require('./../middleware/authority');
 
-    logger.setLevel(nconf.get("logLevel"));
-
     Authenticator.initialize = function (app) {
       app.use(passport.initialize());
       app.use(passport.session());
