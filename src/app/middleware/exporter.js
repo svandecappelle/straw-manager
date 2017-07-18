@@ -130,7 +130,11 @@ Exporter.prototype.open = function (data) {
 };
 
 Exporter.prototype.filename = function(enseigne){
-  return path.join(__dirname, `../../../export/${enseigne}-${moment().locale('fr').format('DD-MM-YYYY')}.csv`);
+  if (nconf.get("export_folder")){
+    return path.join(__dirname, `../../../../${nconf.get("export-folder")}/${enseigne}-${moment().locale('fr').format('DD-MM-YYYY')}.csv`);
+  } else {
+    return path.join(__dirname, `../../../export/${enseigne}-${moment().locale('fr').format('DD-MM-YYYY')}.csv`);
+  }
 }
 
 Exporter.prototype.export = function (data) {
