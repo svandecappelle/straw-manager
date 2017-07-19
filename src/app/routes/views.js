@@ -37,7 +37,7 @@ function getBufferTableSchema(){
   return schema;
 }
 
-var rootPath = nconf.get('CollectOnlineRootPath');
+var rootPath = nconf.get('aspiration:rootPath');
 
 // middleware that is specific to this router
 if (LOG_ALL_VIEWS_ACCESS){

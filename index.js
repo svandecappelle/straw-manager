@@ -14,10 +14,6 @@
       views = require(path.join(__dirname,'./src/app/routes/views')),
       authentication = require(path.join(__dirname,"./src/app/routes/authentication"));
 
-    nconf.overrides({
-      'CollectOnlineRootPath': opts.rootPath
-    });
-
     logger.info("Aspiration server loading", nconf.get('aspiration'));
     app.use(opts.rootPath + '/api', api);
 
