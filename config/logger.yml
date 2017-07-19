@@ -8,6 +8,15 @@ default:
       filename: logs/output.log
       maxLogSize: 100000000
       backups: 10
+    error-file:
+      type: file
+      filename: logs/error.log
+      maxLogSize: 100000000
+      backups: 10
+    just-errors:
+      type: logLevelFilter
+      appender: error-file
+      level: ERROR
     bricodepot:
       type: file
       filename: logs/sites/bricodepot.log
@@ -54,6 +63,7 @@ default:
       appenders:
         - console
         - file
+        - just-errors
     BricoDepot:
       level: INFO
       appenders:

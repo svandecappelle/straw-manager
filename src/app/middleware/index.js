@@ -5,7 +5,7 @@
       nconf = require('nconf');
 
     Middleware.render = function (req, res, view, obj){
-      var rootPath = nconf.get("CollectOnlineRootPath");
+      var rootPath = nconf.get("aspiration:rootPath");
       if (rootPath === undefined){
         rootPath = '';
       }
