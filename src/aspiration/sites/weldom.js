@@ -42,7 +42,7 @@ Weldom.prototype.home = function (html, req) {
 
 Weldom.prototype.getStores = function (params) {
   this.request({
-    url: 'https://www.weldom.fr/lege/adresses-magasins',
+    url: 'https://www.weldom.fr/weldom/adresses-magasins',
     origin: params
   },
     'stores');
@@ -62,12 +62,13 @@ Weldom.prototype.parseStores = function (html, req, response) {
       try {
         url = url.replace("\"https", "http");
         var ville = url.split('http://www.weldom.fr/')[1].split('/')[0];
-        var urlMag = url + 'customdev/index/getWebsiteUrl/?storelocator_id%5Bstorelocator%5D=' + ville + '&url=%2F' + ville + '%2F';
+        var urlMag = 'https://www.weldom.fr/weldom/shop?shop=' + ville + '&url=adresses-magasins';
         var magasin = $(this).text().trim();
         that.stores.push({
           name: magasin,
           url: urlMag,
-          id: magasin
+          id: magasin,
+          info: ''
         });
 
       } catch (e) {
@@ -83,10 +84,15 @@ Weldom.prototype.aspireOnStore = function (req) {
   req.stores = this.stores;
   async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
     var param = _.clone(req);
+    var options = {
+      'parse_cookies': true,
+      'follow_set_cookies': true
+    }
     param.magasin = magasin;
     that.request({
       url: magasin.url,
       origin: param,
+      opts: options,
       callback: next
     }, 'patch');
   })
@@ -94,9 +100,14 @@ Weldom.prototype.aspireOnStore = function (req) {
 
 Weldom.prototype.patch = function (html, req, response) {
   req.origin.magasin.id = '';
+  req.origin.magasin.info = '';
+  this.logger.trace('response.cookies : ', response.cookies);
   if (response.cookies) {
-    if (response.cookies.shop_id) {
-      req.origin.magasin.id = response.cookies.shop_id;
+    if (response.cookies.smile_retailershop_id) {
+      req.origin.magasin.id = response.cookies.smile_retailershop_id;
+    }
+    if (response.cookies.smile_retailershop_info) {
+      req.origin.magasin.info = response.cookies.smile_retailershop_info;
     }
   }
   if ((req.origin.magasin.id) && (req.origin.magasin.id != '')){
@@ -134,6 +145,10 @@ Weldom.prototype.patch = function (html, req, response) {
     var toReplace = req.origin.url.split(protocol + '://www.weldom.fr/')[1].split('/')[0];
     var prodUrl = req.origin.url.split(toReplace + '/')[1];
     req.url = req.origin.magasin.url.concat(prodUrl);
+    req.origin.cookies = {
+      'smile_retailershop_id': req.origin.magasin.id,
+      'smile_retailershop_info': req.origin.magasin.info
+    };
     this.request(req.origin, req.callback);
   } else {
     req.origin.magasin.id = "-1";
@@ -161,6 +176,17 @@ Weldom.prototype.decode = function (html, req, response) {
       req: req
     };
     return this.emit('not_found', output);
+  }
+  // manage page not found
+  if (response.statusCode == 404) {
+    this.logger.warn('Page introuvable', req.url, req.magasin);
+    var output = {
+      requestID  : req.requestID,
+      error      : "Page introuvable",
+      data       : undefined,
+      req        : req
+    };
+    return this.emit('not_found', output, { 'message': output.error });
   }
 
   var data = {};
