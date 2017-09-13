@@ -6,7 +6,7 @@ var Engine = require('../engine/engine'),
   _ = require('underscore');
 
 function Bricodepot(use_proxy){
-  this.name = "Bricodepot";
+  this.name = "BricoDepot";
   this.use_proxy = use_proxy;
   Engine.call(this);
   this.on("stores", this.parseStores);
