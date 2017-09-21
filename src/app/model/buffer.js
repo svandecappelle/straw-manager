@@ -102,6 +102,7 @@ var _ = require('underscore'),
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
     if (index > -1){
       requestBuffer[index].error = error;
+      requestBuffer[index].status = "failed";
       if (requestBuffer[index].callback){
         requestBuffer[index].callback(requestBuffer[index]);
       }

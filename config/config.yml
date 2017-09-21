@@ -9,7 +9,7 @@ max-memory: 2000
 aspiration:
   interactive: false
   export: true
-  timeout: 1
+  timeout: 10
 tests:
   default: local
   environments:
