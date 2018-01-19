@@ -30,7 +30,7 @@ var _ = require('underscore'),
 
 (function (Buffer) {
   "use strict";
-  const SHOPS_PROPERTIES = ['prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'magasin', 'url'];
+  const SHOPS_PROPERTIES = ['magasin', 'prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'url'];
   var requestBuffer = [];
   var auto_increment = -1;
   var eventEmitter = new events.EventEmitter();
@@ -54,16 +54,15 @@ var _ = require('underscore'),
       } else if (requestBuffer[index].status !== 'timeout' && requestBuffer[index].status !== 'error'){
         requestBuffer[index].status = 'partial_done';
       }
-      requestBuffer[index].callback(results);
+      if (requestBuffer[index].callback) {
+        requestBuffer[index].callback(results);        
+      }
     }
   });
 
   eventEmitter.on('product', function(results){
     logger.debug("Aspiration of one product".cyan.bold, results.requestID);
-    results.data.idLogique = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idLogique;
-    results.data.codeProduit = results.data.idProduit;
-    results.data.idProduit = _.findWhere(requestBuffer, {requestID : Number.parseInt(results.requestID)}).idProduit;
-
+    
     if (nconf.get("aspiration:export")){
       exporter.export(results.data);
     }
@@ -80,7 +79,7 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
+    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
@@ -96,7 +95,7 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_stores", "stores", "stores_detail"]));
+    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
@@ -164,10 +163,10 @@ var _ = require('underscore'),
         MagasinId     : request.MagasinId,
         idProduit     : request.idProduit,
         url           : request.url,
-        stores        : request.stores ? request.stores : null,
+        pages        : request.pages ? request.pages : null,
         status        : 'pending',
         idLogique     : request.idLogique,
-        aspired_stores: 0,
+        aspired_pages: 0,
         data          : {
         },
         callback      : callback
@@ -187,10 +186,10 @@ var _ = require('underscore'),
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)});
     if (index > -1 && object.data && !_.isEmpty(object.data)) {
 
-      requestBuffer[index].aspired_stores += 1;
+      requestBuffer[index].aspired_pages += 1;
 
-      if (object.stores && requestBuffer[index].stores === null){
-        requestBuffer[index].stores = object.stores;
+      if (object.pages && requestBuffer[index].pages === null){
+        requestBuffer[index].pages = object.pages;
       }
 
       requestBuffer[index].responseDate = Date.now();
@@ -198,13 +197,22 @@ var _ = require('underscore'),
       if (object.data.magasin){
         requestBuffer[index].data = _.extend(requestBuffer[index].data, _.omit(object.data, SHOPS_PROPERTIES));
 
-        if (!requestBuffer[index].stores_detail){
-          requestBuffer[index].stores_detail = {};
+        if (!requestBuffer[index].pages_detail){
+          requestBuffer[index].pages_detail = {};
         }
 
-        requestBuffer[index].stores_detail[object.data.magasin.id] = _.pick(object.data, SHOPS_PROPERTIES);
-        _.sortBy(requestBuffer[index].stores_detail, function(value){
+        requestBuffer[index].pages_detail[object.data.magasin.id] = _.pick(object.data, SHOPS_PROPERTIES);
+        _.sortBy(requestBuffer[index].pages_detail, function(value){
           return value.magasin.id;
+        });
+      } else if (object.data.page){
+        if (!requestBuffer[index].pages_detail){
+          requestBuffer[index].pages_detail = {};
+        }
+
+        requestBuffer[index].pages_detail[object.data.page.id] = object.data.page;
+        _.sortBy(requestBuffer[index].pages_detail, function(value){
+          return value.id;
         });
       } else {
         requestBuffer[index].data = object.data;
@@ -213,15 +221,15 @@ var _ = require('underscore'),
       if (requestBuffer[index].status === 'pending'){
         requestBuffer[index].status = 'partial_pending';
       }
-      if (!requestBuffer[index].not_found_in_stores){
-        requestBuffer[index].not_found_in_stores = [];
+      if (!requestBuffer[index].not_found_in_pages){
+        requestBuffer[index].not_found_in_pages = [];
       }
-      requestBuffer[index].not_found_in_stores.push(object.req.magasin);
+      requestBuffer[index].not_found_in_pages.push(object.req.magasin);
     } else if (index > -1){
       requestBuffer[index].status = 'failed';
       requestBuffer[index].error = object.error;
       requestBuffer[index].responseDate = Date.now();
-      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['stores_detail', 'stores', 'aspired_stores']));
+      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['pages_detail', 'pages', 'aspired_pages']));
     }
   };
 
@@ -236,7 +244,7 @@ var _ = require('underscore'),
   };
 
   Buffer.validQuery = function validQuery(query) {
-    if (query && query.Enseigne && query.idProduit && query.url) {
+    if (query && query.Enseigne && query.url) {
       return true
     } else {
       return false

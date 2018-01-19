@@ -9,13 +9,13 @@ class Bricorama extends Engine {
     super();
     this.name = "Bricorama";
     this.use_proxy = use_proxy;
-    this.on("stores", this.parseStores);
+    this.on("pages", this.parsepages);
     this.on("home", this.home);
   };
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     this.logger.info("Parameters call engine", params);
 
@@ -26,31 +26,31 @@ class Bricorama extends Engine {
   };
 
   home(html, req) {
-    this.logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    this.logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   };
 
-  getStores (params) {
+  getpages (params) {
     this.request({
       url: "http://www.bricorama.fr/",
       origin: params
     },
-      "stores");
+      "pages");
   };
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     var that = this;
     //logger.info(response.cookies);
     // console.log(html);
     var $ = cheerio.load(html);
-    that.stores = [];
+    that.pages = [];
     this.logger.debug("Rentré dans Bricorama_MagasinList");
     var jsCont = html.split("BricoramaStoreLocator.vars.map.markers = ")[1].split("});")[0]
     jsCont = jsCont.replace(';', '')
@@ -72,7 +72,7 @@ class Bricorama extends Engine {
         this.logger.debug('Pas de vente en ligne', MagasinId)
       }
       if (!dont) {
-        that.stores.push({
+        that.pages.push({
           name: Magasin,
           id: MagasinId
         });
@@ -85,8 +85,8 @@ class Bricorama extends Engine {
 
   aspireOnStore (req) {
     var that = this;
-    req.stores = this.stores;
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    req.pages = this.pages;
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req);
       param.magasin = magasin;
 
@@ -148,7 +148,7 @@ class Bricorama extends Engine {
     var output = {
       requestID: ReqObject.requestID,
       data: data,
-      stores: this.stores
+      pages: this.pages
     };
 
     this.emit('product', output);

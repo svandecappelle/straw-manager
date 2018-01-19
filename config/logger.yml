@@ -2,7 +2,7 @@ default:
   appenders:
     console:
       type: console
-      level: INFO
+      level: DEBUG
     file:
       type: file
       filename: logs/output.log

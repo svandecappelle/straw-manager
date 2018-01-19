@@ -6,8 +6,16 @@ block body
       h1 Request is invalid
   else
     .page-header.request-view(id="request-" + request.requestID, data-id=request.requestID)
-      h1 Request: #{request.requestID}
-        span.badge #{request.status}
+      h1(style='font-family: inherit; font-weight: 500; font-size: 36px; margin: 0px;') Request: #{request.requestID}
+        if request.status === 'failed'
+          span.mdl-chip.mdl-color--red(style='vertical-align: middle; margin-left: 10px;')
+        else if request.status === 'pending'
+          span.mdl-chip.mdl-color--amber-800(style='vertical-align: middle; margin-left: 10px;')
+        else if request.status === 'set'
+          span.mdl-chip.mdl-color--green-A400(style='vertical-align: middle; margin-left: 10px;')          
+
+            span.mdl-chip__text #{request.status}
+
         if request.status !== "pending" && request.status !== "partial_pending" 
           a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "drop/" + request.requestID)
             i.material-icons delete
@@ -15,20 +23,20 @@ block body
       .col-xs-12.col-md-12.request
         a(href=request.url)= request.data.libelles.join("\t")
     ul.list-group(style="top:0px;position:sticky;z-index:1")
-      li.list-group-item.row.active
+      li.list-group-item.row.active.mdl-color--blue-grey-400
         .col-xs-12.col-md-12.request
           a(href=request.url)= request.url
           .row
             .col-xs-6.col-md-4 Magasins aspirés
-            if request.stores && request.aspired_stores
+            if request.pages && request.aspired_pages
               .col-xs-6.col-md-4
-                span= JSON.stringify(request.aspired_stores) + '/' + JSON.stringify(request.stores.length)
-                if request.not_found_in_stores
-                  span= '(Not in: ' + JSON.stringify(request.not_found_in_stores.length) + ')'
+                span= JSON.stringify(request.aspired_pages) + '/' + JSON.stringify(request.pages.length)
+                if request.not_found_in_pages
+                  span= '(Not in: ' + JSON.stringify(request.not_found_in_pages.length) + ')'
             else
               .col-xs-6.col-md-4 all
           
-        li.list-group-item.row.active
+        li.list-group-item.row.active.mdl-color--blue-grey-400
           .col-xs-6.col-md-4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-xs-6.col-md-4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-xs-6.col-md-4.time-elapsed= "Temps passé: "
@@ -39,8 +47,8 @@ block body
             .alert.alert-danger Error caught
               pre.well
                 if request.error.req
-                  =request.error.req.stores = 'hidden'
-                  =request.error.req.aspired_stores = 'hidden'
+                  =request.error.req.pages = 'hidden'
+                  =request.error.req.aspired_pages = 'hidden'
                   =request.error.req.data = 'hidden'
                 p= JSON.stringify(request.error, null, 4)
       .row
@@ -49,29 +57,33 @@ block body
             li.list-group-item.row
               .col-xs-6.col-md-4= index
               .col-xs-6.col-md-4= val
-      
-      if request.stores_detail
+      if request.pages_detail
         .row
           ul.list-group
             li.list-group-item.row
-              .col-xs-6.col-md-4 Aspired stores:
-              .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.stores_detail).length)
-        ul.list-group#stores-datas
+              .col-xs-6.col-md-4 Aspired pages:
+              .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.pages_detail).length)
+        ul.list-group#pages-datas
           li.list-group-item.row.active(style='position: sticky; top: 110px;z-index: 1;')
-            .col-xs-6.col-md-4.text-center Magasin
-            .col-xs-6.col-md-4.text-center Prix
-            .col-xs-6.col-md-4.text-center Promo
-          if request.stores_detail
-            each store_detail, storeid in request.stores_detail
+            - rows = request.pages_detail
+            - columns = []
+            each row in rows
+              each values, keys in row
+                .col-xs-6.col-md-4.text-center= keys
+                - columns = keys
+              - break
+          if request.pages_detail
+            each store_detail, storeid in request.pages_detail
               if store_detail
                 li.list-group-item.row
-                  .col-xs-6.col-md-4
-                    if store_detail.magasin
-                      a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
-                    else
-                      #{storeid}
-                  .col-xs-6.col-md-4= store_detail.prix
-                  .col-xs-6.col-md-4= store_detail.promo
+                  each values, keys in store_detail
+                    .col-xs-6.col-md-4
+                      if keys == "magasin"
+                        a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
+                      else if keys == "title"
+                        a(href=store_detail.id)= store_detail.title
+                      else
+                        span= values
               else
                 .message= store_detail
             else

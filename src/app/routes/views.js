@@ -26,10 +26,10 @@ function getBufferTableSchema() {
     'idProduit',
     'libelles',
     'url',
-    'stores',
+    'pages',
     'status',
-    'aspired_stores',
-    'not_found_in_stores'
+    'aspired_pages',
+    'not_found_in_pages'
   ];
   var schema = [];
   for (column of columns) {
@@ -159,20 +159,37 @@ router.get('/search', function (req, res) {
   });
 });
 
-router.get('/aspire', function (req, res) {
+router.get('/view/:view', function (req, res) {
   logger.info('aspire view requested !'.red);
-  middleware.render(req, res, 'aspire.pug', {
+
+  let allowedViews = [
+    "aspire",
+    "site"
+  ];
+
+  if (!_.contains(allowedViews, req.params.view)){
+    return res.status(403).send("<h1>Not allowed</h1>");
+  }
+
+  middleware.render(req, res, req.params.view + '.pug', {
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
   });
 });
 
 var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']\r')
 
-router.post('/aspire', function (req, res) {
-  logger.info('aspire view requested !'.red);
+router.post('/view/:view', function (req, res) {
+  logger.info(req.params.view + ' view requested !'.red);
+  let allowedViews = [
+    "aspire",
+    "site"
+  ];
+
+  if (!_.contains(allowedViews, req.params.view)){
+    return res.status(403).send("Not allowed");
+  }
 
   // res.redirect(307, "../api/update");
-
   var tempo = req.body
   logger.info('server received :'.red, tempo);
   if (buffer.validQuery(tempo)) {

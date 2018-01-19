@@ -10,23 +10,6 @@ var fs = require('fs'),
 
 const TIME_TO_CLOSE_FILE = 3000;
 
-var export_scheme = {
-  enseigne: "",
-  magasin: "",
-  id_produit: "",
-  id_logique: "",
-  url: "",
-  src_image: "",
-  libelles: "",
-  categories: "",
-  dispo: "",
-  prix: "",
-  prix_normalise: "",
-  timestamp: "",
-  promo: "",
-  caracteristique: "",
-}
-
 function Exporter() {
 
   events.EventEmitter.call(this);
@@ -44,6 +27,7 @@ Exporter.prototype.listen = function () {
   _.each(that.file_descriptors, (fd, enseigne) => {
     if (fd.isOpen) {
       if (_.isEmpty(_.where(that.data[enseigne], {isExported: false}))) {
+        logger.debug("########################### Flushing write ############################");
         fd.close();
       }
     }
@@ -53,17 +37,16 @@ Exporter.prototype.listen = function () {
     _.each(that.data, (rows_data, enseigne) => {
       if (rows_data !== undefined && rows_data.length > 0 && enseigne){
         if (!that.file_descriptors[enseigne] || !that.file_descriptors[enseigne].isOpen){
-          logger.info("########################### Open FILE ############################", _.first(rows_data).enseigne);
+          logger.debug("########################### Open FILE ############################", _.first(rows_data).enseigne);
           that.open(_.first(rows_data));
         }
 
         _.each(rows_data, (row) => {
           if (!row.isExported && that.file_descriptors[enseigne]){
             logger.debug("########################### Exporting ############################", row);
+            that.file_descriptors[enseigne].stream.write(row);
 
-              that.file_descriptors[enseigne].stream.write(row);
-              row.isExported = true;
-
+            row.isExported = true;
           }
         });
       }
@@ -82,7 +65,7 @@ Exporter.prototype.open = function (data) {
 
   var that = this;
   if (!fs.existsSync(file)){
-    fs.appendFileSync(file, _.keys(export_scheme).join(";") + '\r\n');
+    fs.appendFileSync(file, _.keys(data).join(";") + '\r\n');
   }
   var csvStream = fastcsv.format({
       headers: false,
@@ -90,15 +73,17 @@ Exporter.prototype.open = function (data) {
     })
     .transform(function(data){
       var output = {};
-      _.each(export_scheme, function(value, key){
+      _.each(_.keys(data), function(key){
         if (data[camelize(key)]){
           output[key] = data[camelize(key)];
-        } else {
-          output[key] = value;
         }
       });
-      output.magasin = data.magasin.id;
-      output.timestamp = output.timestamp.getTime();
+      if (data.magasin) {
+        output.magasin = data.magasin.id;
+      }
+      if (output.timestamp){
+        output.timestamp = output.timestamp.getTime();
+      }
       return output;
     }),
     writableStream = fs.createWriteStream(file, {

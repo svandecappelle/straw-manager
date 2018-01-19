@@ -11,13 +11,13 @@ class Bricodepot extends Engine {
     super();
     this.name = "BricoDepot";
     this.use_proxy = use_proxy;
-    this.on("stores", this.parseStores);
+    this.on("pages", this.parsepages);
     this.on("home", this.home);
   }
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     this.logger.info("Parameters call engine", params);
 
@@ -28,29 +28,29 @@ class Bricodepot extends Engine {
   };
 
   home(html, req) {
-    this.logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    this.logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   };
 
-  getStores(params) {
+  getpages(params) {
     this.request({
       url: "http://www.bricodepot.fr",
       origin: params
     },
-      "stores");
+      "pages");
   };
 
   aspireOnStore(req) {
     var that = this;
-    req.stores = this.stores;
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    req.pages = this.pages;
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req);
       param.magasin = magasin;
       param.cookies = {
@@ -65,10 +65,10 @@ class Bricodepot extends Engine {
     });
   };
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     this.logger.debug("Rentré dans Bricodepot_MagasinList");
     var that = this;
-    that.stores = [];
+    that.pages = [];
 
     var $ = cheerio.load(html);
     $('.bd-DropDown-dropdownList li').each(function (idx) {
@@ -84,14 +84,14 @@ class Bricodepot extends Engine {
       that.logger.trace(`Entrer dans le magasin ${MagasinId}`);
       //ReqObject.xlbSetJar = cookie;
       that.logger.debug(url, MagasinId);
-      that.stores.push({
+      that.pages.push({
         id: MagasinId,
         name: MagasinName,
         url: url
       });
     });
-    req.origin.stores = this.stores;
-    this.logger.debug("Bricodepot_MagasinList", this.stores);
+    req.origin.pages = this.pages;
+    this.logger.debug("Bricodepot_MagasinList", this.pages);
     this.aspireOnStore(req.origin);
   };
 
@@ -175,7 +175,7 @@ class Bricodepot extends Engine {
 
     var output = {
       requestID: req.requestID,
-      stores: this.stores,
+      pages: this.pages,
       data: data
     };
     this.emit('product', output, req);

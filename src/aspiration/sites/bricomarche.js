@@ -9,13 +9,13 @@ class Bricomarche extends Engine {
     super();
     this.name = 'Bricomarche'
     this.use_proxy = use_proxy
-    this.on('stores', this.parseStores)
+    this.on('pages', this.parsepages)
     this.on('home', this.home)
   }
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores
+    if (params.pages) {
+      this.pages = params.pages
     }
     this.logger.info('Parameters call engine', params)
 
@@ -26,18 +26,18 @@ class Bricomarche extends Engine {
   }
 
   home(html, req) {
-    this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0)
+    this.logger.debug('Home view: ', this.pages !== undefined && this.pages.length > 0)
     if (req.origin) {
       req = req.origin
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req)
     } else {
-      this.getStores(req)
+      this.getpages(req)
     }
   }
 
-  getStores(params) {
+  getpages(params) {
     var options = {
       rejectUnauthorized: false
     }
@@ -48,18 +48,18 @@ class Bricomarche extends Engine {
       origin: params,
       opts: options
     },
-      'stores')
+      'pages')
   }
 
   aspireOnStore(req) {
     var that = this
-    req.stores = this.stores;
+    req.pages = this.pages;
 
     if (req.origin) {
-      req.origin.stores = this.stores;
+      req.origin.pages = this.pages;
     }
 
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req)
       param.magasin = magasin
       param.cookies = {
@@ -70,19 +70,19 @@ class Bricomarche extends Engine {
     });
   }
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     this.logger.debug('Rentré dans Example_MagasinList');
     var that = this
 
     var $ = cheerio.load(html)
-    that.stores = []
+    that.pages = []
 
     $("#List_Store #Holder .ItemMagasin .Button.ButtonPrimary").each(function (idx) {
       var Magasin = $(this).attr('title');
 
       var MagasinId = $(this).attr('id');
 
-      that.stores.push({
+      that.pages.push({
         id: MagasinId,
         name: Magasin
       });
@@ -211,7 +211,7 @@ class Bricomarche extends Engine {
     var output = {
       requestID: req.requestID,
       data: data,
-      stores: this.stores
+      pages: this.pages
     }
     this.emit('product', output)
   }

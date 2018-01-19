@@ -8,15 +8,15 @@ class Example extends Engine {
     super();
     this.name = "Example";
     this.use_proxy = use_proxy;
-    this.on("stores", this.parseStores);
+    this.on("pages", this.parsepages);
     this.on("home", this.home);
 
   };
 
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     logger.info("Parameters call engine", params);
 
@@ -27,29 +27,29 @@ class Example extends Engine {
   };
 
   home(html, req) {
-    logger.info("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    logger.info("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   };
 
-  getStores(params) {
+  getpages(params) {
     this.request({
       url: "https://www.Example.fr/nos-magasins.html",
       origin: params
     },
-      "stores");
+      "pages");
   };
 
   aspireOnStore(req) {
     var that = this;
-    req.stores = this.stores;
-    _.each(this.stores, function (id) {
+    req.pages = this.pages;
+    _.each(this.pages, function (id) {
       var param = _.clone(req);
       param.MagasinId = id;
       param.cookies = {
@@ -60,12 +60,12 @@ class Example extends Engine {
     });
   };
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     var that = this;
     logger.info(response.cookies);
     // console.log(html);
     var $ = cheerio.load(html);
-    that.stores = [];
+    that.pages = [];
     logger.info("Rentré dans Example_MagasinList");
 
     $("[id='shop_chooser'] option").each(function (idx) {
@@ -74,10 +74,10 @@ class Example extends Engine {
       var MagasinId = $(this).attr('data-shop-id')
 
       logger.debug(Magasin, url, MagasinId)
-      that.stores.push(MagasinId);
+      that.pages.push(MagasinId);
     });
 
-    logger.debug("Example_MagasinList", this.stores);
+    logger.debug("Example_MagasinList", this.pages);
 
     this.aspireOnStore(req.origin);
   };

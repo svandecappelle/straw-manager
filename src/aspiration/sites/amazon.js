@@ -21,8 +21,8 @@ class Amazon extends Engine {
 
   call(params) {
     console.log("entrée dans Call")
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     logger.info("Parameters call engine", params);
 
@@ -33,21 +33,21 @@ class Amazon extends Engine {
   };
 
   home(html, req) {
-    logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin
     }
-    this.getStores(html, req);
+    this.getpages(html, req);
   };
 
-  getStores = function (html, params) {
-    this.stores = []
-    console.log('entrée dans GetStores')
-    this.stores.push({
+  getpages = function (html, params) {
+    this.pages = []
+    console.log('entrée dans Getpages')
+    this.pages.push({
       name: 'Amazon',
       id: 0
     })
-    params.magasin = this.stores
+    params.magasin = this.pages
     var $ = cheerio.load(html);
     if ($("title").text() == "Amazon CAPTCHA") {
       this.RETRY_CAPTCHA(html, params)
@@ -169,7 +169,7 @@ class Amazon extends Engine {
       var data = {};
       data.timestamp = new Date();
       data.enseigne = obj2['Enseigne'];
-      data.magasin = this.stores[0]
+      data.magasin = this.pages[0]
       data.magasinId = 0
 
       // Manage Tree
@@ -225,7 +225,7 @@ class Amazon extends Engine {
       var output = {
         requestID: obj2.requestID,
         data: data,
-        stores: this.stores
+        pages: this.pages
       };
       console.log('output =' + output)
       this.emit('product', output);

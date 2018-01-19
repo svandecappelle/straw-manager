@@ -10,15 +10,15 @@ class Mrbricolage extends Engine {
     super();
     this.name = 'MrBricolage';
     this.use_proxy = use_proxy;
-    this.on('stores', this.parseStores);
+    this.on('pages', this.parsepages);
     this.on('patch', this.patch);
     this.on('home', this.home);
-    this.on('setStores', this.setStores);
+    this.on('setpages', this.setpages);
   }
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     this.logger.trace('Parameters call engine', params);
 
@@ -29,27 +29,27 @@ class Mrbricolage extends Engine {
   }
 
   home(html, req) {
-    this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0);
+    this.logger.debug('Home view: ', this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin;
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.stores = [];
-      this.getStores(req);
+      this.pages = [];
+      this.getpages(req);
     }
   }
 
-  getStores(params) {
-    this.logger.trace('Params in getStores', params);
+  getpages(params) {
+    this.logger.trace('Params in getpages', params);
     this.request({
       url: 'https://magasin.mr-bricolage.fr/fr',
       origin: params
-    }, 'stores');
+    }, 'pages');
   }
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     this.goToAspireOnStore = false;
     var that = this;
     var $ = cheerio.load(html);
@@ -67,7 +67,7 @@ class Mrbricolage extends Engine {
       that.request({
         url: url,
         origin: param
-      }, 'setStores');
+      }, 'setpages');
     });
 
     var pagination = $('.lf-geo-divisions__results__content__locations .lf-pagination__list [rel="next"]');
@@ -77,7 +77,7 @@ class Mrbricolage extends Engine {
       that.request({
         url: next,
         origin: req.origin
-      }, 'stores');
+      }, 'pages');
     } else {
       // Pour éviter le lancement d'AspireOnStore avant d'avoir pushé l'intégralité des mags
       setTimeout(function () {
@@ -87,14 +87,14 @@ class Mrbricolage extends Engine {
         that.request({
           url: 'https://magasin.mr-bricolage.fr/',
           origin: launch.origin
-        }, 'setStores');
+        }, 'setpages');
       }, 1500);
     }
   }
 
-  setStores(html, req, response) {
+  setpages(html, req, response) {
     var $ = cheerio.load(html);
-    this.logger.trace('REQ in setStores', req);
+    this.logger.trace('REQ in setpages', req);
 
     if (req.origin.goToAspireOnStore) {
       this.aspireOnStore(req.origin);
@@ -103,16 +103,16 @@ class Mrbricolage extends Engine {
         var idMag = html.split('customId')[1].split(',')[0];
         idMag = idMag.replace(/"/g, '').replace(/:/g, '').trim();
         var magasin = $('.lf-location__store__header__title').text().trim();
-        if (this.stores.indexOf(idMag) == -1) {
-          this.stores.push({
+        if (this.pages.indexOf(idMag) == -1) {
+          this.pages.push({
             name: magasin,
             id: idMag
           });
           this.logger.trace('IDMAG', idMag);
-          this.logger.trace(' Push === Store Length', this.stores.length);
+          this.logger.trace(' Push === Store Length', this.pages.length);
         }
       } catch (e) {
-        this.logger.error('setStores', e);
+        this.logger.error('setpages', e);
       }
     }
   }
@@ -120,9 +120,9 @@ class Mrbricolage extends Engine {
   aspireOnStore(req) {
     var that = this;
 
-    req.stores = this.stores;
-    that.logger.trace('Store length', that.stores.length);
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    req.pages = this.pages;
+    that.logger.trace('Store length', that.pages.length);
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req);
       param.magasin = magasin;
       that.logger.trace('MAGASIN', magasin);
@@ -256,7 +256,7 @@ class Mrbricolage extends Engine {
       var output = {
         requestID: req.requestID,
         data: data,
-        stores: this.stores
+        pages: this.pages
       };
 
       this.emit('product', output);

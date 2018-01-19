@@ -14,8 +14,9 @@ function config_name(name){
 
 class Engine extends events.EventEmitter{
 
-  constructor(){
+  constructor(name){
     super();
+    this.name = name;
 
     // events.EventEmitter.call(this);
     this.config = yaml_config.load(config_name("sites/global"));
@@ -51,12 +52,13 @@ class Engine extends events.EventEmitter{
 
   export (output) {
     this.aspiredDatas += 1;
-    this.logger.debug(this.stores.length, " / ", this.aspiredDatas);
-    if (this.stores.length <= this.aspiredDatas){
-      this.logger.info(`Done all datas aspiration ${output.requestID}`.green);
-      this.emit('done', output);
+    if (this.pages){
+      this.logger.debug(this.pages.length, " / ", this.aspiredDatas);
+      if (this.pages.length <= this.aspiredDatas){
+        this.logger.info(`Done all datas aspiration ${output.requestID}`.green);
+        this.emit('done', output);
+      }
     }
-
   };
 
   parse_cookies (req, cookies) {
@@ -76,7 +78,7 @@ class Engine extends events.EventEmitter{
         timeout: 50000,
         read_timeout: 60000,
         open_timeout: 60000,
-        follow_max: 10
+        follow_max: 20
       };
       if (this.use_proxy && !this.isProxyConnected()){
         options = this.proxy_connect(req, viewtype);
@@ -173,7 +175,7 @@ class Engine extends events.EventEmitter{
       if (error.code === 'ETIMEDOUT'){
 
         if (req.current_try > this.config.maxtry){
-          this.logger.info(`Maximum number of tries [${req.current_try} / ${this.config.maxtry}]. Request marked as failed`, _.omit(req, ["stores", "aspired_stores"]));
+          this.logger.info(`Maximum number of tries [${req.current_try} / ${this.config.maxtry}]. Request marked as failed`, _.omit(req, ["pages", "aspired_pages"]));
           this.emit("fatal_error", {message: `maximum number of connection try: ${this.config.maxtry}`, origin_error: error}, req);
         } else {
           this.logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
@@ -183,7 +185,7 @@ class Engine extends events.EventEmitter{
 
       } else {
         if (req.current_try > this.config.maxtry){
-          this.logger.info(`Maximum number of tries [${req.current_try}]. Request marked as failed`, _.omit(req, ["stores", "aspired_stores"]));
+          this.logger.info(`Maximum number of tries [${req.current_try}]. Request marked as failed`, _.omit(req, ["pages", "aspired_pages"]));
           this.emit("fatal_error", {message: `maximum number of connection try: ${this.config.maxtry}`, origin_error: error}, req);
         } else {
           this.logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
@@ -243,7 +245,7 @@ class Engine extends events.EventEmitter{
 
   aspireOnStore () {
 
-    _.each(this.stores, function(){
+    _.each(this.pages, function(){
       this.request(params);
     });
 

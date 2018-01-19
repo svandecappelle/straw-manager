@@ -12,14 +12,14 @@ class Castorama extends Engine {
     super();
     this.name = "Castorama";
     this.use_proxy = use_proxy;
-    this.on("stores", this.parseStores);
+    this.on("pages", this.parsepages);
     this.on("home", this.home);
     this.on("store-detail", this.aspireOnStore)
   };
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
 
     logger.info("Parameters call engine", params);
@@ -31,23 +31,23 @@ class Castorama extends Engine {
   };
 
   home(html, req) {
-    logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   };
 
-  getStores(params) {
+  getpages(params) {
     this.request({
       url: "magasins.castorama.fr/point_of_sales.json",
       origin: params
     },
-      "stores");
+      "pages");
   };
 
   aspireOnStore(html, req, reponse) {
@@ -62,7 +62,7 @@ class Castorama extends Engine {
     }
 
     if (codeMagasin) {
-      var magasin = _.filter(this.stores, function (store) {
+      var magasin = _.filter(this.pages, function (store) {
         return req.url.indexOf(store.url) !== -1;
       })[0];
       console.log(tree(magasin));
@@ -70,7 +70,7 @@ class Castorama extends Engine {
 
       var param = _.clone(req.origin);
       param.magasin = magasin;
-      param.stores = this.stores;
+      param.pages = this.pages;
       param.cookies = {
         's_cdao': codeMagasin
       };
@@ -80,14 +80,14 @@ class Castorama extends Engine {
     }
   };
 
-  parseStores(json, req, response) {
+  parsepages(json, req, response) {
     logger.info("Rentré dans Castorama_MagasinList");
     var that = this;
-    that.stores = [];
+    that.pages = [];
     var listeMagasins = json["points_of_sale"]["France"];
 
     for (var elm in listeMagasins) {
-      this.stores.push({
+      this.pages.push({
         id: elm,
         name: listeMagasins[elm].name,
         url: listeMagasins[elm].url
@@ -99,7 +99,7 @@ class Castorama extends Engine {
 
   aspireStoreDetails(req) {
     var that = this;
-    async.eachLimit(this.stores, this.config.parallel, function (store, next) {
+    async.eachLimit(this.pages, this.config.parallel, function (store, next) {
       that.request({
         url: "magasins.castorama.fr/" + store.url,
         origin: req.origin
@@ -281,7 +281,7 @@ class Castorama extends Engine {
     var output = {
       requestID: req.requestID,
       data: data,
-      stores: this.stores
+      pages: this.pages
     };
 
     this.emit('product', output);

@@ -50,7 +50,7 @@ html(lang="en")
 
   body
     .mdl-layout.mdl-js-layout
-      header.mdl-layout__header
+      header.mdl-layout__header.mdl-color--blue-grey-900
         .mdl-layout__header-row
           span.mdl-layout-title Collect online
           .mdl-layout-spacer
@@ -80,7 +80,8 @@ html(lang="en")
           span.mdl-layout-title
           nav.mdl-navigation
             a.mdl-navigation__link#root-collect-online(href=rootPath) Home
-            a.mdl-navigation__link#root-collect-online(href=rootPath + "aspire") Aspire a product
+            a.mdl-navigation__link#root-collect-online(href=rootPath + "view/aspire") Aspire a product
+            a.mdl-navigation__link#root-collect-online(href=rootPath + "view/site") Aspire a site
       main.mdl-layout__content
         block body
 

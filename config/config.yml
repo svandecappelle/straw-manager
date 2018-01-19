@@ -1,6 +1,6 @@
 port: 65000
 hostname: localhost
-logLevel: INFO
+logLevel: DEBUG
 scribe_logger:
   use: false
   version: 3

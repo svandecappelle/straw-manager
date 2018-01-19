@@ -11,7 +11,7 @@ class Bricoman extends Engine{
 
 		this.name = "Bricoman";
 		this.use_proxy = use_proxy;
-		this.on("stores", this.parseStores);
+		this.on("pages", this.parsepages);
 		this.on("home", this.home);
 	}
 	
@@ -20,8 +20,8 @@ class Bricoman extends Engine{
 	// Bricoman.prototype = Object.create(Engine.prototype);
 	
 	call (params) {
-		if (params.stores){
-			this.stores = params.stores;
+		if (params.pages){
+			this.pages = params.pages;
 		}
 		logger.info("Parameters call engine", params);
 		//this.home(null, params);
@@ -44,28 +44,28 @@ class Bricoman extends Engine{
 	// constructor = Bricoman;
 	
 	home (html, req) {
-		logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+		logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
 		if (req.origin) {
 			req = req.origin
 		}
-		if ( this.stores !== undefined && this.stores.length > 0 ) {
+		if ( this.pages !== undefined && this.pages.length > 0 ) {
 			this.aspireOnStore(req);
 		} else {
-			this.getStores(req);
+			this.getpages(req);
 		}
 	}
 	
-	getStores (params) {
+	getpages (params) {
 		this.request({
 			url: "https://www.bricoman.fr/nos-magasins.html",
 			origin: params
 		},
-		"stores");
+		"pages");
 	};
 	
 	aspireOnStore (req) {
-		req.stores = this.stores;
-		async.eachLimit(this.stores, this.config.parallel, (magasin, next) => {
+		req.pages = this.pages;
+		async.eachLimit(this.pages, this.config.parallel, (magasin, next) => {
 			var param = _.clone(req);
 			param.magasin = magasin;
 			param.cookies = {
@@ -75,11 +75,11 @@ class Bricoman extends Engine{
 		});
 	};
 	
-	parseStores (html, req, response) {
+	parsepages (html, req, response) {
 		var that = this;
 		// console.log(html);
 		var $ = cheerio.load(html);
-		that.stores = [];
+		that.pages = [];
 		logger.debug("Rentré dans Bricoman_MagasinList");
 	
 		$("[id='shop_chooser'] option").each(function(idx) {
@@ -87,7 +87,7 @@ class Bricoman extends Engine{
 			var Magasin =  $(this).text().trim();
 			var MagasinId =  $(this).attr('data-shop-id');
 	
-			that.stores.push({
+			that.pages.push({
 				name: Magasin,
 				id: MagasinId
 			});
@@ -206,7 +206,7 @@ class Bricoman extends Engine{
 		var output = {
 			requestID : ReqObject.requestID,
 			data			: data,
-			stores: this.stores
+			pages: this.pages
 		};
 		this.emit('product', output);
 	};

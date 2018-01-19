@@ -10,13 +10,13 @@ class LeroyMerlin extends Engine {
     super();
     this.name = "LeroyMerlin";
     this.use_proxy = use_proxy;
-    this.on("stores", this.parseStores);
+    this.on("pages", this.parsepages);
     this.on("home", this.home);
   };
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     logger.info("Parameters call engine", params);
 
@@ -27,36 +27,36 @@ class LeroyMerlin extends Engine {
   };
 
   home(html, req) {
-    logger.debug("Home view: ", this.stores !== undefined && this.stores.length > 0);
+    logger.debug("Home view: ", this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin;
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   };
 
-  getStores(params) {
+  getpages(params) {
     this.request({
       url: "https://www.leroymerlin.fr/v3/p/magasins-l1308220543",
       origin: params
     },
-      "stores");
+      "pages");
   };
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     this.logger.info("Rentré dans LeroyMerlin_MagasinList");
     var that = this;
     var $ = cheerio.load(html);
-    that.stores = [];
+    that.pages = [];
 
     $(".notvisible a").each(function (idx) {
       var url = $(this).attr('href');
       var Magasin = $(this).text().trim();
       var MagasinId = $(this).attr('data-storeid');
-      that.stores.push({
+      that.pages.push({
         name: Magasin,
         id: MagasinId
       });
@@ -66,8 +66,8 @@ class LeroyMerlin extends Engine {
 
   aspireOnStore(req) {
     var that = this;
-    req.stores = this.stores;
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    req.pages = this.pages;
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req);
       param.magasin = magasin;
       param.cookies = {
@@ -121,7 +121,7 @@ class LeroyMerlin extends Engine {
     var output = {
       requestID: req.requestID,
       data: data,
-      stores: this.stores
+      pages: this.pages
     };
 
     this.emit('product', output);

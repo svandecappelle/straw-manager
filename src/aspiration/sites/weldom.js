@@ -9,14 +9,14 @@ class Weldom extends Engine {
     super();
     this.name = 'Weldom';
     this.use_proxy = use_proxy;
-    this.on('stores', this.parseStores);
+    this.on('pages', this.parsepages);
     this.on('patch', this.patch);
     this.on('home', this.home);
   }
 
   call(params) {
-    if (params.stores) {
-      this.stores = params.stores;
+    if (params.pages) {
+      this.pages = params.pages;
     }
     this.logger.info('Parameters call engine', params);
 
@@ -27,31 +27,31 @@ class Weldom extends Engine {
   }
 
   home(html, req) {
-    this.logger.debug('Home view: ', this.stores !== undefined && this.stores.length > 0);
+    this.logger.debug('Home view: ', this.pages !== undefined && this.pages.length > 0);
     if (req.origin) {
       req = req.origin;
     }
-    if (this.stores !== undefined && this.stores.length > 0) {
+    if (this.pages !== undefined && this.pages.length > 0) {
       this.aspireOnStore(req);
     } else {
-      this.getStores(req);
+      this.getpages(req);
     }
   }
 
-  getStores(params) {
+  getpages(params) {
     this.request({
       url: 'https://www.weldom.fr/weldom/adresses-magasins',
       origin: params
     },
-      'stores');
+      'pages');
   }
 
-  parseStores(html, req, response) {
+  parsepages(html, req, response) {
     this.logger.info('Rentré dans Weldom_MagasinList');
     var that = this;
     var $ = cheerio.load(html);
     that.i = 0;
-    that.stores = [];
+    that.pages = [];
 
     $('#contenair-mag a').each(function (idx) {
       var url = $(this).attr('href');
@@ -62,7 +62,7 @@ class Weldom extends Engine {
           var ville = url.split('http://www.weldom.fr/')[1].split('/')[0];
           var urlMag = 'https://www.weldom.fr/weldom/shop?shop=' + ville + '&url=adresses-magasins';
           var magasin = $(this).text().trim();
-          that.stores.push({
+          that.pages.push({
             name: magasin,
             url: urlMag,
             id: magasin,
@@ -70,7 +70,7 @@ class Weldom extends Engine {
           });
 
         } catch (e) {
-          that.logger.error('Error on parseStores', e);
+          that.logger.error('Error on parsepages', e);
         }
       }
     })
@@ -79,8 +79,8 @@ class Weldom extends Engine {
 
   aspireOnStore(req) {
     var that = this;
-    req.stores = this.stores;
-    async.eachLimit(this.stores, this.config.parallel, function (magasin, next) {
+    req.pages = this.pages;
+    async.eachLimit(this.pages, this.config.parallel, function (magasin, next) {
       var param = _.clone(req);
       var options = {
         'parse_cookies': true,
@@ -234,7 +234,7 @@ class Weldom extends Engine {
       var output = {
         requestID: req.requestID,
         data: data,
-        stores: this.stores
+        pages: this.pages
       };
 
       this.emit('product', output);
