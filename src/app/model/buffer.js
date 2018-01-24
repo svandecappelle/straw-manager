@@ -169,7 +169,6 @@ if (!('toJSON' in Error.prototype)){
 
   Buffer.add = function add(request, callback){
     auto_increment++;
-    logger.info(request);
     
     let newRq;
     if (request) {

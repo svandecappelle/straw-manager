@@ -1,22 +1,32 @@
 extends ../template
 
 block body
+  style.
+    body {
+      background-color: #616161;
+    }
   .row
     form.col.s12.m6.offset-s3.offset-m3(method='post', action='/login?redirect=' + urlfrom)
       .card
         .card-content
           .card-title
-            i.material-icons account_circle
-            span Login
+            .row
+              .col.s6.offset-s3.text-center
+                i.material-icons account_circle
+            .row
+              .col.s6.offset-s3.text-center
+                span Login
           .row
             form.col.s12(method='post', style='text-align: center;')
               .grid
-                .input-field.col.s8
-                  input(type="text", id="username", name="username")
-                  label(for='username') Username
+                .col.s6.offset-s3.text-center
+                  .input-field
+                    input(type="text", id="username", name="username")
+                    label(for='username') Username
               .grid
-                .input-field.col.s8
-                  input(type="password", id="password", name="password")
-                  label(for="password") Password
+                .col.s6.offset-s3.text-center
+                  .input-field
+                    input(type="password", id="password", name="password")
+                    label(for="password") Password
         .card-action
           button.btn(href="#") Login

@@ -8,6 +8,45 @@ block append body
   if !request
     .page-header
       h1 Request is invalid
+      .row#pending-message
+        .col.s12.text-center
+          h4 you will be redirected to index in 5s.
+          .preloader-wrapper.big.active
+            .spinner-layer.spinner-blue
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-red
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-yellow
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-green
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+      script
+        :coffee-script
+          $ ->
+            setTimeout( ->
+              rootPath = $("#root-straw-manager").attr("href")
+              window.location.href = rootPath
+            , 5000)
   else
     if request.data.libelles
       .col.s12.request
@@ -25,10 +64,10 @@ block append body
         .collapsible-body.col.s12.request
           a.blue-text(href=request.url)= request.url
           .row
-            .col-s6.m4 Page gardées
+            .col-s6.m4 Kept pages
             if request.pages && request.aspired_pages
               .col-s6.m4
-                span= JSON.stringify(request.aspired_pages) + ' pages / ' + JSON.stringify(request.pages.length) + ' sources'
+                span= JSON.stringify(request.aspired_pages) + ' pages / ' + JSON.stringify(request.pages.length + 1) + ' sources'
                 if request.not_found_in_pages
                   span= '(Not in: ' + JSON.stringify(request.not_found_in_pages.length) + ')'
             else
@@ -36,9 +75,9 @@ block append body
       li
         .collapsible-header Details
         .collapsible-body
-          .col-s6.m4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
-          .col-s6.m4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
-          .col-s6.m4.time-elapsed= "Temps passé: "
+          .col-s6.m4= "Run at: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-s6.m4= "Done at: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-s6.m4.time-elapsed= "Elapsed time: "
     .col.s12
       .row
         .col.s12
@@ -48,7 +87,7 @@ block append body
                 div.collapsible-header.red Error caught
                 div.collapsible-body
                   pre
-                    p= JSON.stringify(JSON.parse(request.error), null, 4).replace(new RegExp(/\\n/, 'g'), "\n")
+                    p= request.error.toString().replace(new RegExp(/\\n/, 'g'), "\n")
       .row
         ul.list-group#datas
           each val, index in request.data
@@ -128,7 +167,7 @@ block append body
               that.search( this.value ).draw()
           )
         )
-        rootPath = $("#root-collect-online").attr("href")
+        rootPath = $("#root-straw-manager").attr("href")
         request = JSON.parse(document.getElementById('request-var').innerHTML
           .replace(/&quot;/g, '"')
           .replace(/&gt;/g, '>')
@@ -137,11 +176,11 @@ block append body
 
         if (!request.responseDate)
           request.responseDate = moment();
-        $('.time-elapsed').text(moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
+        $('.time-elapsed').text("Elapsed time: " + moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
         decode = (request) ->
           if (!request.responseDate)
             request.responseDate = moment();
-          $('.time-elapsed').text(moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
+          $('.time-elapsed').text("Elapsed time: " + moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
           $("#request-" + request.requestID + " span.badge").text(request.status)
           $("#datas").empty()
           if request.error && $(".error").length == 0

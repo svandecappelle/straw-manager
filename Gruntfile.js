@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         files: [
           // includes files within path and its sub-directories
           {expand: true, src: ['config/**', 'src/**', 'batchs/**', 'public'], dest: 'build/'},
-          {expand: true, src: ['*.js', '*.json', '*.txt', '*.md', '*.sh', "*.yml", 'CollectOnline', 'LICENCE', '.bowerrc'], dest: 'build'},
+          {expand: true, src: ['*.js', '*.json', '*.txt', '*.md', '*.sh', "*.yml", 'straw-manager', 'LICENCE', '.bowerrc'], dest: 'build'},
         ],
       },
     },

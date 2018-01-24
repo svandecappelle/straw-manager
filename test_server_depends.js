@@ -106,14 +106,14 @@ if (process.argv[2] === "dev"){
         */
 
         // ROUTES
-        var collectOnline = require("./index");
-        collectOnline.load(app, {
-            rootPath: '/CollectOnline',
+        var strawManager = require("./index");
+        strawManager.load(app, {
+            rootPath: '/straw-manager',
             create_authority: true
         }, function(viewsPath){
           // TODO load views
 
-          logger.info(`Application dependent CollectOnline loaded views path: ${viewsPath}`);
+          logger.info(`Application dependent straw-manager loaded views path: ${viewsPath}`);
 
         });
 

@@ -12,7 +12,7 @@ $url_api = 'http://localhost:' + $test_port;
 require('request-persistent')(request);
 var jar = request.jar();
 
-process.title = "Testing CollectOnline API";
+process.title = "Testing straw-manager API";
 
 var $case_tests = require("./cases/defaults.json");
 var apiServer = require("./../src/server");
@@ -66,7 +66,7 @@ function parseCookies (request) {
 function connect(){
   if (environmentParameters.use_auth) {
     describe('Connection test:', function() {
-      it('Connection to CollectOnline should work', function(done) {
+      it('Connection to straw-manager should work', function(done) {
         request.post( {
           url: `http://${environmentParameters.hostname}:${$test_port}/login`,
           jar: jar,

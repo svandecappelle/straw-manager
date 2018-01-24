@@ -126,14 +126,14 @@ html(lang="en")
             a.button-nav.btn-medium(data-activates="slide-out", href="#")
               i.material-icons menu
           li
-            a.brand-logo(style='padding-left: 5px; padding-right: 5px;') Collect online
+            a.brand-logo(style='padding-left: 5px; padding-right: 5px;') straw-manager
         if session
           ul.right.hide-on-med-and-down
             li
-              #auto-refresh.switch(style='padding-left: 5px; padding-right: 5px;')
+              .switch(style='padding-left: 5px; padding-right: 5px;')
                 label.grey-text.text-lighten-5
                   span Off
-                  input(type="checkbox")
+                  input#auto-refresh(type="checkbox")
                   span.lever
                   span On
             li
@@ -172,9 +172,20 @@ html(lang="en")
     if session
       ul#slide-out.side-nav
         li
-          a#root-collect-online(href=rootPath) Home
+          .user-view
+            .background
+              img(src="/public/img/coke_straw-test.jpg", width="100%")
+            a.col.offset-s2(href="#!user", style="position: relative; left: 135px;")
+              img.circle(src="/public/img/account.jpg", width="100%")
+            a(href="#!name", style="position: relative; right: 0px;")
+              span.white-text.name= session.username
+            a(href="#!email", style="position: relative; right: 0px;")
+              span.white-text.email= session.useremail
+          </div>
         li
-          a#root-collect-online(href=rootPath + "view/site") Aspire a site
+          a#root-straw-manager(href=rootPath) Home
+        li
+          a#root-straw-manager(href=rootPath + "view/site") Hoover a site
     main
       block body
 
@@ -185,9 +196,11 @@ html(lang="en")
             $(this).pushpin()
           $(".button-nav").sideNav();
           moment.locale('fr'); 
-          rootPath = $("#root-collect-online").attr("href")
+          rootPath = $("#root-straw-manager").attr("href")
           $("#search").on 'change', ->
             window.location.replace(rootPath + 'search?q=' + $("#search").val())
+          $('#auto-refresh').click ->
+            $(this).toggleClass("active")
           $("#search").on 'keypress', (e) ->
             if e.keyCode == 13
               e.preventDefault()

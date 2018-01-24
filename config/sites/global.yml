@@ -1,7 +1,8 @@
 default:
   export: true
-  #maxtry: 6
+  maxtry: 2
+  # wait: 0
   use_proxy: false
-  parallel: 50
+  parallel: 2
   keep_errors_only: true
   recursive: true

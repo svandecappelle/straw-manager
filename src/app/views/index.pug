@@ -87,7 +87,7 @@ block body
     var refresh_time = #{refresh_time}
   script
     :coffee-script
-      rootPath = $("#root-collect-online").attr("href")
+      rootPath = $("#root-straw-manager").attr("href")
       decode = (response) -> 
         $("#buffer .chip").text(response.bufferLength)
         $("#pending .chip").text(response.pending)

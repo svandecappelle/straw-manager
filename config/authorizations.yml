@@ -2,3 +2,5 @@ default:
   users:
     - username: user1
       password: pwd
+    - username: svandecappelle
+      password: toto

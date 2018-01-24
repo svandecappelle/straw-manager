@@ -47,7 +47,7 @@ router.get('/purge', function (req, res) {
 
 // define the home page route
 router.get('/', function (req, res) {
-  res.send('collectOnline API home page')
+  res.send('straw-manager API home page')
 });
 
 // define the home page route

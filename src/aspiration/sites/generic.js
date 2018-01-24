@@ -25,10 +25,12 @@ class Generic extends Engine {
       this.other_loop = [];
       this.loopCounter = 0;
       this.from = {};
-      this.pages.push(params.url);
     }
 
     this.logger.info("Parameters call engine", params);
+    if (this.params["change-wait"] === "on" && this.params.wait && this.params.wait > -1) {
+      this.config.wait = this.params.wait;
+    }
 
     this.request({
       url: params.url,
@@ -42,7 +44,8 @@ class Generic extends Engine {
       req = req.origin
     }
     if (this.params['only-one-page'] === "on") {
-      return this.decode(html, req, response);
+      this.decode(html, req, response);
+      return this.emit('done', req);
     } else {
       this.fetchPages(html, req);
       this.decode(html, req, response);
@@ -67,7 +70,7 @@ class Generic extends Engine {
       this.done = this.pages;
       // all pages in page retrieved
       if ( !_.isEmpty(this.other_loop) ){
-        this.logger.info(`${this.loopCounter} - Add ${this.other_loop.length} requests found`);
+        this.logger.info(`${this.loopCounter} - Add ${_.unique(_.difference(this.other_loop, this.done)).length} requests found`);
 
         this.pages = _.union(this.pages, this.other_loop);
         this.other_loop = [];
@@ -143,13 +146,7 @@ class Generic extends Engine {
     let valid = !_.contains(ignore, path.extname(href));
 
     if (this.params['regxp-validation']) {
-      this.logger.info(this.params['regxp-validation']);
       valid = valid && href.match(this.params['regxp-validation']) != null;
-      if (valid){
-        this.logger.info("Text regxp href: " + href + " ---> " + href.match(this.params['regxp-validation']));
-      } else {
-        this.logger.info("Filtered href: " + href);
-      }
       return valid;
     }
 

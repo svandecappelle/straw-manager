@@ -10,7 +10,7 @@ var colors = require('colors'),
     async = require('async');
 
 const binLocation = '/src/server.js',
-    applicationId = "CollectOnline";
+    applicationId = "straw-manager";
 
 
 var Application = function(){

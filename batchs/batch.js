@@ -26,7 +26,7 @@ String.prototype.replaceAll = function(find, replace) {
 require('request-persistent')(request);
 var jar = request.jar();
 
-process.title = "Testing CollectOnline API";
+process.title = "Testing straw-manager API";
 
 
 function config_file(name){
@@ -104,11 +104,11 @@ function connect(){
       json: true
     }, (error, response, body) => {
       if (!error && response) {
-        logger.info("Connected to CollectOnline server".green);
+        logger.info("Connected to straw-manager server".green);
         run();
       } else {
         logger.error(error);
-        logger.error("Cannot connect to CollectOnline server".red);
+        logger.error("Cannot connect to straw-manager server".red);
         process.exit(1);
       }
     });

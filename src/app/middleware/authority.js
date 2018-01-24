@@ -75,7 +75,7 @@
         const autorizations = yaml_config.load(path.resolve(__dirname, "../../../config/authorizations.yml")).users;
 
         var user = _.findWhere(autorizations, {'username': username, 'password': password});
-        console.log(user);
+        
         if (user){
           return done(null, {
               uid: username

@@ -114,7 +114,7 @@ block body
         auto_refresh = $("#auto-refresh").is(':checked')
         $('#buffer tbody').on 'click', 'tr', ->
           data = table.row( this ).data()
-          window.open("request/" + data.requestID, "_blank")
+          window.open("request/" + data.requestID, "_self")
 
         $('#auto-refresh').change -> 
           auto_refresh = $("#auto-refresh").is(':checked')

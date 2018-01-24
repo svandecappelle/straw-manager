@@ -28,10 +28,10 @@ process.on('uncaughtException', function (err) {
 (function (ApplicationRoot) {
     "use strict";
 
-    if (process.title === "Testing CollectOnline API"){
+    if (process.title === "Testing straw-manager API"){
       testing = true;
     } else {
-      process.title = "Opti-CollectOnline";
+      process.title = "straw-manager";
     }
 
     console.log(process.title.red.bold);

@@ -138,7 +138,7 @@ class Engine extends events.EventEmitter{
         that.logger.error("Error on calling request engine", err);
         if (req.current_try >= that.config.maxtry){
           if (callback){
-            if (that.config.wait){
+            if (that.config.wait || that.params.wait){
               that.logger.info(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
               that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
               setTimeout(callback, that.config.wait);
