@@ -1,3 +1,0 @@
-default:
-  wait: 3000
-  parallel: 5

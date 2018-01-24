@@ -1,93 +1,189 @@
 doctype html
 html(lang="en")
   head
-    if rootPath
-      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/bootstrap/dist/css/bootstrap.min.css")
-      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/datatables/media/css/dataTables.material.min.css")
-      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/material-design-lite/material.min.css")
-      link(href=rootPath + "public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
-      script(src=rootPath + "public/assets/jquery/dist/jquery.min.js")
-      script(src=rootPath + "public/assets/bootstrap/dist/js/bootstrap.min.js")
-      script(src=rootPath + "public/assets/datatables/media/js/jquery.dataTables.min.js")
-      script(src=rootPath + "public/assets/datatables/media/js/dataTables.material.min.js")
-      script(src=rootPath + "public/assets/material-design-lite/material.min.js")
-      script(src=rootPath + "public/assets/moment/min/moment-with-locales.min.js")
-      script(src=rootPath + "public/assets/moment-duration-format/lib/moment-duration-format.js")
-      
-    else
-      link(rel="stylesheet", type="text/css", href="/public/assets/bootstrap/dist/css/bootstrap.min.css")
-      link(rel="stylesheet", type="text/css", href="/public/assets/datatables/media/css/dataTables.material.min.css")
-      link(rel="stylesheet", type="text/css", href="/public/assets/material-design-lite/material.min.css")
-      link(href="/public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
-      script(src="/public/assets/jquery/dist/jquery.min.js")
-      script(src="/public/assets/bootstrap/dist/js/bootstrap.min.js")
-      script(src="/public/assets/datatables/media/js/jquery.dataTables.min.js")
-      script(src="/public/assets/datatables/media/js/dataTables.material.min.js")
-      script(src="/public/assets/material-design-lite/material.min.js")
-      script(src="/public/assets/moment/min/moment-with-locales.min.js")
-      script(src="/public/assets/moment-duration-format/lib/moment-duration-format.js")
-      
     style.
-      .mdl-switch__track{
-        background-color: rgba(255, 255, 255, 0.26);
+      .mdl-button--raised.mdl-button--colored {
+          background: #3f51b5;
+          color: #fff;
       }
-      .mdl-textfield__input{
-        border-bottom-color: rgba(255, 255, 255, 0.26);
+      .mdl-button.mdl-button--colored {
+          color: #3f51b5;
       }
-      .mdl-switch.is-checked .mdl-switch__track {
-        background: rgba(255, 255, 255, 0.5);
+      .mdl-button--raised {
+          background: rgba(158,158,158,.2);
+          box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
       }
-      .mdl-switch.is-checked .mdl-switch__thumb {
-        background: #09c1ff;
+      .mdl-button.mdl-button--disabled.mdl-button--disabled, .mdl-button[disabled][disabled] {
+          color: rgba(0,0,0,.26);
+          cursor: default;
+          background-color: transparent;
       }
-      .mdl-data-table td{
-        text-align: left;
+      .mdl-button--raised.mdl-button--colored {
+          background: #3f51b5;
+              background-color: rgb(63, 81, 181);
+          color: #fff;
       }
-      main .active a{
-        color: #95f223;
-        font-weight: bold;
+      button[disabled], html input[disabled] {
+          cursor: default;
+      }
+      .mdl-button {
+          background: 0 0;
+          border: none;
+          border-radius: 2px;
+          color: #000;
+          position: relative;
+          height: 36px;
+          margin: 0;
+          min-width: 64px;
+          padding: 0 16px;
+          display: inline-block;
+          font-family: "Roboto","Helvetica","Arial",sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0;
+          overflow: hidden;
+          will-change: box-shadow;
+          transition: box-shadow .2s cubic-bezier(.4,0,1,1),background-color .2s cubic-bezier(.4,0,.2,1),color .2s cubic-bezier(.4,0,.2,1);
+          outline: none;
+          cursor: pointer;
+          text-decoration: none;
+          text-align: center;
+          line-height: 36px;
+          vertical-align: middle;
+      }
+      .mdl-data-table {
+          position: relative;
+          border: 1px solid rgba(0,0,0,.12);
+          border-collapse: collapse;
+          white-space: nowrap;
+          font-size: 13px;
+          background-color: #fff;
+      }
+      table.dataTable thead > tr > th.sorting_asc, table.dataTable thead > tr > th.sorting_desc, table.dataTable thead > tr > th.sorting, table.dataTable thead > tr > td.sorting_asc, table.dataTable thead > tr > td.sorting_desc, table.dataTable thead > tr > td.sorting {
+          padding-right: 30px;
+      }
+      table.dataTable thead .sorting, table.dataTable thead .sorting_asc, table.dataTable thead .sorting_desc, table.dataTable thead .sorting_asc_disabled, table.dataTable thead .sorting_desc_disabled {
+          cursor: pointer;
+          position: relative;
+      }
+      .mdl-data-table td:first-of-type, .mdl-data-table th:first-of-type {
+          padding-left: 24px;
+      }
+      .mdl-data-table th {
+          vertical-align: bottom;
+          text-overflow: ellipsis;
+          font-weight: 700;
+          line-height: 24px;
+          letter-spacing: 0;
+          font-size: 12px;
+          color: rgba(0,0,0,.54);
+          padding-bottom: 8px;
+      }
+      .mdl-data-table td, .mdl-data-table th {
+          position: relative;
+          height: 48px;
+          box-sizing: border-box;
+      }
+      #buffer_length {
+        float: right;
+      }
+      #buffer_length .form-control.input-sm{
+        display: inline-block;
+        width: 70px;
+      }
+      .text-center{
+        text-align: center;
       }
 
+    if rootPath
+      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/datatables/media/css/dataTables.material.min.css")
+      link(rel="stylesheet", type="text/css", href=rootPath + "public/assets/materialize/dist/css/materialize.min.css")
+      link(href=rootPath + "public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
+      script(src=rootPath + "public/assets/jquery/dist/jquery.min.js")
+      script(src=rootPath + "public/assets/datatables/media/js/jquery.dataTables.min.js")
+      script(src=rootPath + "public/assets/datatables/media/js/dataTables.material.min.js")
+      script(src=rootPath + "public/assets/materialize/dist/js/materialize.min.js")
+      script(src=rootPath + "public/assets/moment/min/moment-with-locales.min.js")
+      script(src=rootPath + "public/assets/moment-duration-format/lib/moment-duration-format.js")
+
+    else
+      link(rel="stylesheet", type="text/css", href="/public/assets/datatables/media/css/dataTables.material.min.css")
+      link(rel="stylesheet", type="text/css", href="/public/assets/materialize/dist/css/materialize.min.css")
+      link(href="/public/assets/material-design-icons/iconfont/material-icons.css", rel="stylesheet")
+      script(src="/public/assets/jquery/dist/jquery.min.js")
+      script(src="/public/assets/datatables/media/js/jquery.dataTables.min.js")
+      script(src="/public/assets/datatables/media/js/dataTables.material.min.js")
+      script(src="/public/assets/materialize/dist/js/materialize.min.js")
+      script(src="/public/assets/moment/min/moment-with-locales.min.js")
+      script(src="/public/assets/moment-duration-format/lib/moment-duration-format.js")
+
   body
-    .mdl-layout.mdl-js-layout
-      header.mdl-layout__header.mdl-color--blue-grey-900
-        .mdl-layout__header-row
-          span.mdl-layout-title Collect online
-          .mdl-layout-spacer
-          if session
-            .mdl-textfield.mdl-js-textfield.mdl-textfield--expandable.mdl-textfield--floating-label
-              label.mdl-button.mdl-js-button.mdl-button--icon(for="search")
-                i.material-icons search
-              .mdl-textfield__expandable-holder
-                input.mdl-textfield__input#search(type="text")
-            label.mdl-switch.mdl-js-switch.mdl-js-ripple-effect(for="auto-refresh", style="padding-right: 40px; width: 100px;")
-              input#auto-refresh.mdl-switch__input(type="checkbox")
-              span.mdl-switch__label(style="text-align: center")
-                i.material-icons autorenew
-          button#demo-menu-lower-right.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon
-            i.material-icons more_vert
-          ul.mdl-menu.mdl-js-menu.mdl-js-ripple-effect.mdl-menu--bottom-right(for="demo-menu-lower-right")
-            if session
-              li.mdl-menu__item
-                a(href="/api/proxies-update", style='width: 100%;display: block;height: 100%;', target="_blank") Update proxies
-              li.mdl-menu__item
-                a(href="/logout", style='width: 100%;display: block;height: 100%;') Logout
-            else
-              li.mdl-menu__item
-                a(href="/login", style='width: 100%;display: block;') Login
-      if session
-        .mdl-layout__drawer
-          span.mdl-layout-title
-          nav.mdl-navigation
-            a.mdl-navigation__link#root-collect-online(href=rootPath) Home
-            a.mdl-navigation__link#root-collect-online(href=rootPath + "view/aspire") Aspire a product
-            a.mdl-navigation__link#root-collect-online(href=rootPath + "view/site") Aspire a site
-      main.mdl-layout__content
-        block body
+    nav.nav-extended.grey.darken-3
+      .nav-wrapper
+        ul.left.hide-on-med-and-down
+          li
+            a.button-nav.btn-medium(data-activates="slide-out", href="#")
+              i.material-icons menu
+          li
+            a.brand-logo(style='padding-left: 5px; padding-right: 5px;') Collect online
+        if session
+          ul.right.hide-on-med-and-down
+            li
+              #auto-refresh.switch(style='padding-left: 5px; padding-right: 5px;')
+                label.grey-text.text-lighten-5
+                  span Off
+                  input(type="checkbox")
+                  span.lever
+                  span On
+            li
+              a.dropdown-button.btn-medium.waves-effect.waves-light(data-activates='opts-menu')
+                i.material-icons more_vert
+              ul.dropdown-content#opts-menu
+                if session
+                  li
+                    a(href="/api/proxies-update", style='width: 100%;display: block;height: 100%;', target="_blank") Update proxies
+                  li
+                    a(href="/logout", style='width: 100%;display: block;height: 100%;') Logout
+                else
+                  li
+                    a(href="/login", style='width: 100%;display: block;') Login
+      if request
+        .nav-content.white.grey-text.text-darken-1.request-view(id="request-" + request.requestID, data-id=request.requestID)
+          h1(style="display: inline-block;margin-right: 20px;") Request: #{request.requestID}
+          span Status:
+          if request.status === 'failed'
+            span.chip.red.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+          else if request.status === 'pending'
+            span.chip.amber.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+          else if request.status === 'set'
+            span.chip.green.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+          if request.status !== "pending" && request.status !== "partial_pending" 
+            a.red-text.text-darken-1(href=rootPath + "drop/" + request.requestID, style="display: inline-block;")
+              i.material-icons delete
+      else
+        .nav-content.white
+            form
+              .col.s12(style="padding-left: 10px; padding-right: 10px;")
+                i.material-icons(style='color: black; position: absolute;') search
+                .input-field
+                  input#search(type="search", required)
+                  i.material-icons close
+    if session
+      ul#slide-out.side-nav
+        li
+          a#root-collect-online(href=rootPath) Home
+        li
+          a#root-collect-online(href=rootPath + "view/site") Aspire a site
+    main
+      block body
 
     script
       :coffee-script
-        $ -> 
+        $ ->
+          $('.pushpin').each ->
+            $(this).pushpin()
+          $(".button-nav").sideNav();
           moment.locale('fr'); 
           rootPath = $("#root-collect-online").attr("href")
           $("#search").on 'change', ->

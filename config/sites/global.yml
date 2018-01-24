@@ -1,5 +1,7 @@
 default:
   export: true
-  maxtry: 6
-  use_proxy: true
-  parallel: 25
+  #maxtry: 6
+  use_proxy: false
+  parallel: 50
+  keep_errors_only: true
+  recursive: true

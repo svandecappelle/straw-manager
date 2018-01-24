@@ -1,72 +1,128 @@
 extends template
 block body
-  .container-fluid(style="margin-top: 20px;")
+  .row(style="margin-top: 20px;")
     ul.list-group
       li.list-group-item.text-center#buffer
         .row
-          .col-md-4.text-center
-            a.mdl-badge.btn.btn-info(href=rootPath + "buffer", data-badge=bufferLength, style="width:100%") Buffer length
-          .col-md-1.pull-right
-            a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "purge?type=all")
+          .col.s3.text-center
+            a.btn.blue(href=rootPath + "buffer", style="width:100%") All requests
+          .col.s1.text-center
+            span.chip= bufferLength
+          .col.s1.offset-s7.pull-right
+            a(href=rootPath + "purge?type=all")
               i.material-icons delete
       li.list-group-item.text-center#pending
         .row
-          .col-md-4
-            a.mdl-badge.btn.btn-warning(href=rootPath + "pending", data-badge=pending, style="width:100%") pending requests
-          .col-md-7
-            .progress(style="margin-top: 5px")
-              .progress-bar.progress-bar-warning.progress-bar-striped.active(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + 100 - (pending * 100 / bufferLength) + "%;")
-                span #{100 - (pending  * 100 / bufferLength)} %
-          .col-md-1
-            a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "purge?type=pending")
+          .col.s3
+            a.btn.orange(href=rootPath + "pending", style="width:100%") pending requests
+          .col.s1.text-center
+            .chip= pending
+          .col.s7
+            .progress.orange.lighten-5(style="margin-top: 16px")
+              .determinate.orange(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + 100 - (pending * 100 / bufferLength) + "%;")
+              span #{100 - (pending  * 100 / bufferLength)} %
+          .col.s1
+            a(href=rootPath + "purge?type=pending")
               i.material-icons delete
       li.list-group-item.text-center#set
         .row
-          .col-md-4
-            a.mdl-badge.btn.btn-success(href=rootPath + "set", data-badge=set, style="width:100%") succeed requests
-          .col-md-7
-            .progress(style="margin-top: 5px")
-              .progress-bar.progress-bar-success(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + set * 100 / bufferLength + "%;")
-                span #{set * 100 / bufferLength} %
-          .col-md-1
-            a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "purge?type=done")
+          .col.s3
+            a.btn(href=rootPath + "set", style="width:100%") succeed requests
+          .col.s1.text-center
+            .chip= set
+          .col.s7
+            .progress.green.lighten-5(style="margin-top: 16px")
+              .determinate(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + set * 100 / bufferLength + "%;")
+              span #{set * 100 / bufferLength} %
+          .col.s1
+            a(href=rootPath + "purge?type=done")
               i.material-icons delete
       li.list-group-item.text-center#failed
         .row
-          .col-md-4
-            a.mdl-badge.btn.btn-danger(href=rootPath + "failed", data-badge=failed, style="width:100%") failed requests
-          .col-md-7
-            .progress(style="margin-top: 5px")
-              .progress-bar.progress-bar-danger(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + failed * 100 / bufferLength + "%;")
-                span #{failed * 100 / bufferLength} %
-          .col-md-1
-            a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "purge?type=failed")
+          .col.s3
+            a.btn.red(href=rootPath + "failed", style="width:100%") failed requests
+          .col.s1.text-center
+            .chip= failed
+          .col.s7
+            .progress.red.lighten-5(style="margin-top: 16px")
+              .determinate.red(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + failed * 100 / bufferLength + "%;")
+              span #{failed * 100 / bufferLength} %
+          .col.s1
+            a(href=rootPath + "purge?type=failed")
               i.material-icons delete
+    if pending != 0
+      .row#pending-message
+        .col.s4.text-center.offset-s4
+          h4 Some requests are running
+          .preloader-wrapper.big.active
+            .spinner-layer.spinner-blue
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-red
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-yellow
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
+            .spinner-layer.spinner-green
+              .circle-clipper.left
+                .circle
+              .gap-patch
+                .circle
+              .circle-clipper.right
+                .circle
   script.
     var refresh_time = #{refresh_time}
   script
     :coffee-script
       rootPath = $("#root-collect-online").attr("href")
       decode = (response) -> 
-        $("#buffer .mdl-badge").attr({'data-badge': response.bufferLength})
-        $("#pending .mdl-badge").attr({'data-badge': response.pending})
-        $("#set .mdl-badge").attr({'data-badge': response.set})
-        $("#failed .mdl-badge").attr({'data-badge': response.failed})
+        $("#buffer .chip").text(response.bufferLength)
+        $("#pending .chip").text(response.pending)
+        $("#set .chip").text(response.set)
+        $("#failed .chip").text(response.failed)
         
-        $("#pending .progress-bar span").text(100 - (response.pending * 100 / response.bufferLength) + " %")
-        $("#set .progress-bar span").text(response.set * 100 / response.bufferLength + " %")
-        $("#failed .progress-bar span").text(response.failed * 100 / response.bufferLength + " %")
+        if (response.pending > 0)
+          $("#pending .progress span").text(100 - (response.pending * 100 / response.bufferLength) + " %")
+          $("#pending .determinate").css
+            width: 100 - (response.pending * 100 / response.bufferLength) + "%"
+        else
+          $("#pending .progress span").text("")
+          $("#pending .determinate").css
+            width: "0px"
+
+        if (response.set > 0)
+          $("#set .progress span").text(response.set * 100 / response.bufferLength + " %")
+          $("#set .determinate").css 
+            width: response.set * 100 / response.bufferLength + "%"
+        else
+          $("#set .progress span").text("")
+          $("#set .determinate").css
+            width: "0px"
+
+        if (response.failed > 0)
+          $("#failed .progress span").text(response.failed * 100 / response.bufferLength + " %")
+          $("#failed .determinate").css
+            width: response.failed * 100 / response.bufferLength + "%"
+        else
+          $("#failed .progress span").text("")
+          $("#failed .determinate").css
+            width: "0px"
         
-        $("#pending .progress-bar").css
-          width: 100 - (response.pending * 100 / response.bufferLength) + "%"
-        $("#set .progress-bar").css 
-          width: response.set * 100 / response.bufferLength + "%"
-        $("#failed .progress-bar").css
-          width: response.failed * 100 / response.bufferLength + "%"
-        
-        $("#pending .progress").toggle(response.pending != 0)
-        $("#set .progress").toggle(response.set != 0)
-        $("#failed .progress").toggle(response.failed != 0)
+        $("#pending #pending-message").toggle(response.pending != 0)
+
       $ ->
         auto_refresh = $("#auto-refresh").hasClass("active")
         $('#auto-refresh').click ->

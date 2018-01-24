@@ -1,5 +1,5 @@
 {
-  "name": "collectonline",
+  "name": "straw",
   "version": "1.0.1",
   "description": "scraping API",
   "main": "index.js",
@@ -11,16 +11,10 @@
   },
   "contributors": [
     {
-      "name": "CHELBI Ahmed"
-    },
-    {
-      "name": "FAUCHART gautier"
-    },
-    {
       "name": "VANDECAPPELLE Steeve"
     }
   ],
-  "license": "Optimix-copyright",
+  "license": "MIT",
   "dependencies": {
     "argv": "0.0.2",
     "async": "^2.4.1",
@@ -58,6 +52,8 @@
     "pug": "^2.0.0-rc.1",
     "q": "1.0.1",
     "qmaker": "0.0.1-dev",
+    "queryselector": "^0.1.0",
+    "queryselectorall": "^0.1.0",
     "readline-sync": "^1.4.5",
     "request": ">=2.33.0",
     "request-persistent": "^1.0.1",

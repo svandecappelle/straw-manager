@@ -1,34 +1,22 @@
 extends ../template
 
 block body
-  style.
-    body {
-      background: url('/public/background.jpg')
-    }
-    .demo-card-wide.mdl-card {
-      background-color: rgba(255, 255, 255, 1);
-      width: 512px;
-      margin: auto;
-      border-radius: 5px;
-    }
-    .demo-card-wide > .mdl-card__title {
-      height: 176px;
-      background: url('welcome_card.jpg') center / cover;
-    }
-    .demo-card-wide > .mdl-card__menu {
-      color: #fff;
-    }
-
-  .centered(style='margin: auto; width: 50%; margin-top: 6%;')
-    .demo-card-wide.mdl-card.mdl-shadow--2dp
-      i.material-icons(style='text-align: center;font-size:5em;margin-top:0.25em;margin-bottom:0.25em;') account_circle
-      .mdl-card__actions.mdl-card--border
-        form(method='post', action='/login?redirect=' + urlfrom, style='text-align: center;')
-          .mdl-textfield.mdl-js-textfield
-            input.mdl-textfield__input(type="text", id="username", name="username", placeholder="username")
-            label.mdl-textfield__label(for='username') Username
-          .mdl-textfield.mdl-js-textfield
-            input.mdl-textfield__input(type="password", id="password", name="password", placeholder="password")
-            label.mdl-textfield__label(for='password') Password
-          .mdl-grid
-            button.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect(style='margin: auto;') login
+  .row
+    form.col.s12.m6.offset-s3.offset-m3(method='post', action='/login?redirect=' + urlfrom)
+      .card
+        .card-content
+          .card-title
+            i.material-icons account_circle
+            span Login
+          .row
+            form.col.s12(method='post', style='text-align: center;')
+              .grid
+                .input-field.col.s8
+                  input(type="text", id="username", name="username")
+                  label(for='username') Username
+              .grid
+                .input-field.col.s8
+                  input(type="password", id="password", name="password")
+                  label(for="password") Password
+        .card-action
+          button.btn(href="#") Login

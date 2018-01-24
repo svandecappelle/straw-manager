@@ -1,98 +1,133 @@
 extends template
 
-block body
+block append body
+  style.
+    #list-requests_filter {
+      display: none;
+    }
   if !request
     .page-header
       h1 Request is invalid
   else
-    .page-header.request-view(id="request-" + request.requestID, data-id=request.requestID)
-      h1(style='font-family: inherit; font-weight: 500; font-size: 36px; margin: 0px;') Request: #{request.requestID}
-        if request.status === 'failed'
-          span.mdl-chip.mdl-color--red(style='vertical-align: middle; margin-left: 10px;')
-        else if request.status === 'pending'
-          span.mdl-chip.mdl-color--amber-800(style='vertical-align: middle; margin-left: 10px;')
-        else if request.status === 'set'
-          span.mdl-chip.mdl-color--green-A400(style='vertical-align: middle; margin-left: 10px;')          
-
-            span.mdl-chip__text #{request.status}
-
-        if request.status !== "pending" && request.status !== "partial_pending" 
-          a.mdl-button.mdl-js-button.mdl-js-ripple-effect.mdl-button--icon(href=rootPath + "drop/" + request.requestID)
-            i.material-icons delete
     if request.data.libelles
-      .col-xs-12.col-md-12.request
-        a(href=request.url)= request.data.libelles.join("\t")
-    ul.list-group(style="top:0px;position:sticky;z-index:1")
-      li.list-group-item.row.active.mdl-color--blue-grey-400
-        .col-xs-12.col-md-12.request
-          a(href=request.url)= request.url
+      .col.s12.request
+        a.green.lighten-1(href=request.url)= request.data.libelles.join("\t")
+    
+    ul.collapsible.green.lighten-2.grey.lighten-5(style="top:0px;position:sticky;z-index:1;", data-collapsible="expandable")
+      li
+        .collapsible-header.active Request #{request.requestID}
+          if request.status === 'failed'
+            span.badge.red.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+          else if request.status === 'pending'
+            span.badge.amber.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+          else if request.status === 'set'
+            span.badge.green.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+        .collapsible-body.col.s12.request
+          a.blue-text(href=request.url)= request.url
           .row
-            .col-xs-6.col-md-4 Magasins aspirés
+            .col-s6.m4 Page gardées
             if request.pages && request.aspired_pages
-              .col-xs-6.col-md-4
-                span= JSON.stringify(request.aspired_pages) + '/' + JSON.stringify(request.pages.length)
+              .col-s6.m4
+                span= JSON.stringify(request.aspired_pages) + ' pages / ' + JSON.stringify(request.pages.length) + ' sources'
                 if request.not_found_in_pages
                   span= '(Not in: ' + JSON.stringify(request.not_found_in_pages.length) + ')'
             else
-              .col-xs-6.col-md-4 all
-          
-        li.list-group-item.row.active.mdl-color--blue-grey-400
-          .col-xs-6.col-md-4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
-          .col-xs-6.col-md-4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
-          .col-xs-6.col-md-4.time-elapsed= "Temps passé: "
-    .col-xs-12.col-md-12.request
-      if request.error
-        .row
-          .col-xs-12.col-md-12
-            .alert.alert-danger Error caught
-              pre.well
-                if request.error.req
-                  =request.error.req.pages = 'hidden'
-                  =request.error.req.aspired_pages = 'hidden'
-                  =request.error.req.data = 'hidden'
-                p= JSON.stringify(request.error, null, 4)
+              .col-s6.m4 all
+      li
+        .collapsible-header Details
+        .collapsible-body
+          .col-s6.m4= "Lancement le: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-s6.m4= "Aspiré le: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
+          .col-s6.m4.time-elapsed= "Temps passé: "
+    .col.s12
+      .row
+        .col.s12
+          ul.request-errors.collapsible.red.lighten-2.grey-text.text-lighten-5(data-collapsible="accordion")
+            if request.error
+              li.error
+                div.collapsible-header.red Error caught
+                div.collapsible-body
+                  pre
+                    p= JSON.stringify(JSON.parse(request.error), null, 4).replace(new RegExp(/\\n/, 'g'), "\n")
       .row
         ul.list-group#datas
           each val, index in request.data
             li.list-group-item.row
-              .col-xs-6.col-md-4= index
-              .col-xs-6.col-md-4= val
-      if request.pages_detail
-        .row
-          ul.list-group
-            li.list-group-item.row
-              .col-xs-6.col-md-4 Aspired pages:
-              .col-xs-6.col-md-4= JSON.stringify(Object.keys(request.pages_detail).length)
-        ul.list-group#pages-datas
-          li.list-group-item.row.active(style='position: sticky; top: 110px;z-index: 1;')
-            - rows = request.pages_detail
-            - columns = []
-            each row in rows
-              each values, keys in row
-                .col-xs-6.col-md-4.text-center= keys
-                - columns = keys
-              - break
-          if request.pages_detail
-            each store_detail, storeid in request.pages_detail
-              if store_detail
-                li.list-group-item.row
-                  each values, keys in store_detail
-                    .col-xs-6.col-md-4
-                      if keys == "magasin"
-                        a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
-                      else if keys == "title"
-                        a(href=store_detail.id)= store_detail.title
-                      else
-                        span= values
-              else
-                .message= store_detail
-            else
-              .message no detail mag
+              .col-s6.m4= index
+              .col-s6.m4= val
+        table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
+          thead.sticky
+            tr
+              - rows = request.pages_detail
+              - columns = []
+              if rows
+                each row in rows
+                  th(width="20px") Request
+                  each value, key in row
+                    if key != "id"
+                      th.mdl-data-table__cell--non-numeric(style="width:200px;word-wrap:break-word;")= key
+                  - break
+          tfoot
+            tr
+              if rows
+                each row in rows
+                  each value, key in row
+                    th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
+                      input.column-filter(type="text", placeholder=key)
+                  - break
+          tbody
+            if request.pages_detail
+              - var i = 0;
+              each store_detail, storeid in request.pages_detail
+                - i += 1;
+                if store_detail
+                  tr
+                    td(style="max-width:200px")
+                      span= i
+                    each value, key in store_detail
+                      if key == "status"
+                        td
+                          - color = "mdl-color--indigo-200"
+                          if value == "200"
+                            - color = "mdl-color--light-green-A100"
+                          else if value == "404"
+                            - color = 'mdl-color--red-500'
+                          div(class=color, style="text-align: center")= value
+                      else if key != "id"
+                        td.mdl-data-table__cell--non-numeric(style="max-width:800px; text-overflow: ellipsis;overflow: hidden;")
+                          if key == "magasin"
+                            a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
+                          else if key == "title"
+                            a(href=store_detail.id)= store_detail.title
+                          else if key == "id"
+                            a(href=store_detail.id)= store_detail.title
+                          else if key == "from"
+                            a(href=store_detail.from)= store_detail.from
+                          else
+                            span= value
     script#request-var(type='application/json')= JSON.stringify(request)
     script.
       var refresh_time = #{refresh_time}
+      var columns = !{JSON.stringify(columns)}
     script
       :coffee-script
+        table = $('#list-requests').DataTable({
+          paging: true,
+          "lengthMenu": [[100, -1], [100, "All"]]
+          searching: true,
+          scrollY: '440px',
+          scrollCollapse: false,
+          fixedHeader: {
+            header: true
+          }
+        })
+        table.columns().every( () ->
+          that = this
+          $( 'input.column-filter', this.footer()).on( 'keyup change', () ->
+            if ( this.value != that.search() )
+              that.search( this.value ).draw()
+          )
+        )
         rootPath = $("#root-collect-online").attr("href")
         request = JSON.parse(document.getElementById('request-var').innerHTML
           .replace(/&quot;/g, '"')
@@ -109,16 +144,22 @@ block body
           $('.time-elapsed').text(moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));
           $("#request-" + request.requestID + " span.badge").text(request.status)
           $("#datas").empty()
-          if request.error
-            if ($(".alert.alert-danger").length == 0)
-              $('.request').append($('<div>', {
-                "class": "col-xs-12 col-md-12"
-              }).append($("<div>", {
-                "class": "alert alert-danger"
-              }).text("Error caught").append($("<pre>", {
-                "class": "well"
-              }))))
-            $(".request .alert.alert-danger .well").text(JSON.stringify request.error, null, 4)
+          if request.error && $(".error").length == 0
+            errorElement= $("<li>", {
+              class: "error"
+            })
+            $('.request-errors').append(errorElement);
+            errorHeader = $("<div>", {
+              "class": "collapsible-header"
+            });
+            errorElement.append(errorHeader);
+            errorHeader.text("Error caught");
+            errorBody = $("<div>", {
+              "class": "collapsible-body"
+            });
+
+            errorElement.append(errorBody).append($("<pre>").text(JSON.stringify JSON.parse(request.error), null, 4));
+
           for data, value of request.data
             obj = $("<li>", {
               class: "list-group-item row" 

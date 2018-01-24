@@ -4,6 +4,7 @@ var _ = require('underscore'),
   async = require('async'),
   nconf = require('nconf'),
   path = require('path');
+const { URL } = require('url');
 
 engine = require("./engine/engine");
 
@@ -17,10 +18,18 @@ class Engine {
     try {
       console.log(nconf.get("aspiration:timeout"));
       var timeout_aspiration = nconf.get("aspiration:timeout") * 60 * 1000;
+      if (!opts.Enseigne) {
+        opts.Enseigne = 'Generic';
+        let startPage = new URL(opts.url);
+        opts.Enseigne = startPage.hostname;
+        var Initialiser = require("./sites/generic");
 
-      var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
+      } else {
+        var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
+      }
 
-      var enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1);
+
+      var enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1, opts.Enseigne);
 
       enseigne_lancher.on('done', function(data){
         eventEmitter.emit('done', data);

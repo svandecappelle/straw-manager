@@ -1,17 +1,16 @@
 extends template
-
 block body
   a#api-link(href= rootPath + "api/" + view)
-  table#buffer.mdl-data-table.mdl-js-data-table.mdl-shadow--2dp(style='width: 100%;', cellspacing="0")
+  table#buffer.mdl-data-table.bordered.striped(style='width: 100%;', cellspacing="0")
     thead
-      tr
+      tr.centered
         each column in schema
-          th.mdl-data-table__cell--non-numeric(style='text-align:center;')= column.data
+          th(style='text-align:center;')= column.data
     tbody
     tfoot
       tr
         each column in schema
-          th.mdl-data-table__cell--non-numeric(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
+          th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
             input.column-filter(type="text", style='width: 33%;')
   script.
     var refresh_time = #{refresh_time}
@@ -33,9 +32,9 @@ block body
         #$('#buffer').height(calcDataTableHeight() + 'px');
         table = $('#buffer').DataTable({
           paging: true,
-          "lengthMenu": [[50, 100, -1], [50, 100, "All"]]
+          "lengthMenu": [[100, -1], [100, "All"]]
           retrieve: true,
-          searching: true,
+          searching: false,
           fixedHeader: {
             header: true
           },
@@ -49,14 +48,7 @@ block body
           "columnDefs": [
             {
               "render": (data, type, row ) ->
-                if (data && data.length)
-                  return data.length
-                return 0;
-              ,
-              "targets": [8, 11]
-            },
-            {
-              "render": (data, type, row ) ->
+                # req date + resp date
                 if (!data)
                   return "-";
                 return moment(data).format('Do MMMM YYYY HH:mm:ss');
@@ -65,14 +57,7 @@ block body
             },
             {
               "render": (data, type, row ) ->
-                if (data)
-                  return data;
-                return "-";
-              ,
-              "targets": [5]
-            }
-            {
-              "render": (data, type, row ) ->
+                # duration request
                 responseDate = row.responseDate;
                 if (!row.responseDate)
                   responseDate = moment();
@@ -85,12 +70,35 @@ block body
               ,
               "targets": [3]
             },
-            {"visible": false,  "targets": [ 2, 7 ]}, 
             {
               "render": (data, type, row) ->
-                return '<a href="' + row.url + '" onClick="event.stopPropagation(); Window.open(\'' + row.url + '\');">' + row.data.libelles + '</a>'
+                # url source
+                return '<a href="' + row.url + '" onClick="event.stopPropagation(); Window.open(\'' + row.url + '\');">' + row.url + '</a>'
+              ,
+              "targets": [5]
+            },
+            {
+              "render": (data, type, row ) ->
+                # status
+                if (data == "set")
+                  color = "green";
+                else if (data == "pending")
+                  color = "amber";
+                  data += '<div class="preloader-wrapper active" style="margin-left: 3px; vertical-align: middle; height: 16px; width: 16px"><div class="spinner-layer spinner-orange-only"><div class="circle-clipper left"><div class="circle"></div></div><div class="gap-patch"><div class="circle"></div></div><div class="circle-clipper right"><div class="circle"></div></div></div></div>'
+                else if (data == "failed")
+                  color = "red";
+                return '<span class="chip ' + color + ' lighten-2">' + data + '</span>';
               ,
               "targets": [6]
+            },
+            {
+              "render": (data, type, row ) ->
+                # not aspired pages
+                if (data && data.length)
+                  return data.length
+                return 0;
+              ,
+              "targets": [8]
             }
           ]
         });
@@ -98,7 +106,6 @@ block body
         table.columns().every( () ->
           that = this
           $( 'input.column-filter', this.footer()).on( 'keyup change', () ->
-            console.log(that.search(), this.value);
             if ( this.value != that.search() )
               that.search( this.value ).draw()
           )

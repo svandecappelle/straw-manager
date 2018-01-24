@@ -90,13 +90,13 @@ Exporter.prototype.open = function (data) {
       flags: 'a'
     });
   writableStream.on("close", function(){
-    logger.info('closed output file'.green);
+    logger.debug('closed output file'.green);
     that.data[data.enseigne] = _.where(that.data[data.enseigne], {isExported: false});
 
     that.file_descriptors[data.enseigne].isOpen = false;
   });
   writableStream.on("finish", function(){
-    logger.info("DONE!".green);
+    logger.debug("DONE!".green);
   });
   csvStream.pipe(writableStream);
 
@@ -105,7 +105,7 @@ Exporter.prototype.open = function (data) {
     isOpen: true,
     enseigne: data.enseigne,
     close: function(){
-      logger.info("Closing export file");
+      logger.info("Flush export");
       csvStream.end();
       writableStream.close();
       fs.appendFileSync(file, '\r\n');

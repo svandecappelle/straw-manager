@@ -7,6 +7,7 @@ var express = require('express'),
   proxyUpdater = require('../../proxy-update'),
   nconf = require('nconf'),
   ora = require('ora'),
+  _ = require('underscore'),
   logger = require("log4js").getLogger('app/routes/api');
 
 var GREEN = chalk.bold.green;
@@ -103,6 +104,16 @@ router.get('/request/:id', function (req, res) {
 
     if (elem) {
       logger.debug(`${req.params.id.red} sended`);
+     
+      if (elem.pages_detail){
+        /*var sortedArray = _.chain(elem.pages_detail).sortBy((value) => {
+          return - value.status;
+        }).sortBy((value) => {
+          return value.id;
+        }).value();
+        elem.pages_detail_sorted = sortedArray;*/
+      }
+
       res.status(200).send(elem);
     } else {
       logger.warn(`${req.params.id.red} not found`);

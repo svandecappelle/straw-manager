@@ -23,10 +23,7 @@ function getBufferTableSchema() {
     'responseDate',
     'time',
     'Enseigne',
-    'idProduit',
-    'libelles',
     'url',
-    'pages',
     'status',
     'aspired_pages',
     'not_found_in_pages'
@@ -233,6 +230,14 @@ router.get('/request/:id', function (req, res) {
   var elem = buffer.getElementByRequestID({
     "requestID": req.params.id
   });
+  if (elem && elem.pages_detail){
+    /*var sortedArray = _.chain(elem.pages_detail).sortBy((value) => {
+      return - value.status;
+    }).sortBy((value) => {
+      return value.id;
+    }).value();
+    elem.pages_detail_sorted = sortedArray;*/
+  }
 
   middleware.render(req, res, 'request.pug', {
     request: elem,

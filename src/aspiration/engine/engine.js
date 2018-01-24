@@ -52,7 +52,7 @@ class Engine extends events.EventEmitter{
 
   export (output) {
     this.aspiredDatas += 1;
-    if (this.pages){
+    if (this.pages && this.config.autoFinish){
       this.logger.debug(this.pages.length, " / ", this.aspiredDatas);
       if (this.pages.length <= this.aspiredDatas){
         this.logger.info(`Done all datas aspiration ${output.requestID}`.green);
@@ -71,6 +71,9 @@ class Engine extends events.EventEmitter{
       viewtype = undefined;
     }
     try {
+
+      var redirect;
+
       var that = this;
       // console.log(that);
       this.logger.debug("Using proxy check: ", req.url, this.use_proxy);
@@ -106,13 +109,13 @@ class Engine extends events.EventEmitter{
         if (that.config.wait){
           that.logger.debug(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
           setTimeout(function(){
-            that.onResult(error, response, body, viewtype, req);
+            that.onResult(error, response, body, viewtype, req, redirect);
             if (callback){
               callback();
             }
           }, that.config.wait);
         } else {
-          that.onResult(error, response, body, viewtype, req);
+          that.onResult(error, response, body, viewtype, req, redirect);
           if (callback){
             callback();
           }
@@ -131,7 +134,6 @@ class Engine extends events.EventEmitter{
       } else {
         call = needle_call(req.url, options, http_response_cb);
       }
-
       call.on('error', function(err){
         that.logger.error("Error on calling request engine", err);
         if (req.current_try >= that.config.maxtry){
@@ -147,7 +149,8 @@ class Engine extends events.EventEmitter{
           }
         }
       }).on('redirect', function(url) {
-        that.logger.debug(`redirect url: ${url.red}`);
+        redirect = url;
+        that.logger.debug(`redirect url: ${url}`);
       });
 
       this.logger.trace("needle_called: ", needle_call);
@@ -165,7 +168,7 @@ class Engine extends events.EventEmitter{
     }
   };
 
-  onResult (error, response, body, viewtype, req) {
+  onResult (error, response, body, viewtype, req, redirect) {
     if (error){
       if ( !req.current_try ){
         req.current_try = 1;
@@ -188,7 +191,7 @@ class Engine extends events.EventEmitter{
           this.logger.info(`Maximum number of tries [${req.current_try}]. Request marked as failed`, _.omit(req, ["pages", "aspired_pages"]));
           this.emit("fatal_error", {message: `maximum number of connection try: ${this.config.maxtry}`, origin_error: error}, req);
         } else {
-          this.logger.info(`Connection to proxy ${this.proxy} timed out trying another one.`);
+          this.logger.error(`Error on request ${req.url}: `, error);
           this.proxy = undefined;
           this.request(req, viewtype);
         }
@@ -202,13 +205,13 @@ class Engine extends events.EventEmitter{
       // console.log(req);
       if ( !viewtype ){
         try {
-          this.decode(body, req, response);
+          this.decode(body, req, response, redirect);
         } catch(error){
           this.emit("fatal_error", {error: error, requestID: req.requestID}, req)
         }
 
       } else {
-          this.emit(viewtype, body, req, response);
+          this.emit(viewtype, body, req, response, redirect);
       }
     }
   };

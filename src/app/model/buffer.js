@@ -27,6 +27,22 @@ var _ = require('underscore'),
 }
 **/
 
+if (!('toJSON' in Error.prototype)){
+  Object.defineProperty(Error.prototype, 'toJSON', {
+      value: function () {
+          var alt = {};
+
+          Object.getOwnPropertyNames(this).forEach(function (key) {
+              alt[key] = this[key];
+          }, this);
+
+          return alt;
+      },
+      configurable: true,
+      writable: true
+  });
+}
+
 
 (function (Buffer) {
   "use strict";
@@ -79,7 +95,7 @@ var _ = require('underscore'),
     if (req.origin){
       req = req.origin;
     }
-    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
+    logger.error("Timeout on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
     Buffer.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
@@ -96,11 +112,11 @@ var _ = require('underscore'),
       req = req.origin;
     }
     logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
-    Buffer.update(req);
+    Buffer.update(req, error);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
     if (index > -1){
-      requestBuffer[index].error = error;
+      // requestBuffer[index].error = error;
       requestBuffer[index].status = "failed";
       if (requestBuffer[index].callback){
         requestBuffer[index].callback(requestBuffer[index]);
@@ -153,24 +169,21 @@ var _ = require('underscore'),
 
   Buffer.add = function add(request, callback){
     auto_increment++;
-
+    logger.info(request);
+    
+    let newRq;
     if (request) {
-      var newRq = {
+      newRq = _.extend({
         requestID     : auto_increment,
         requestDate   : Date.now(),
         responseDate  : null,
-        Enseigne      : request.Enseigne,
-        MagasinId     : request.MagasinId,
-        idProduit     : request.idProduit,
         url           : request.url,
         pages        : request.pages ? request.pages : null,
         status        : 'pending',
-        idLogique     : request.idLogique,
         aspired_pages: 0,
-        data          : {
-        },
+        data          : {},
         callback      : callback
-      };
+      }, request);
 
       requestBuffer.push(newRq);
 
@@ -179,7 +192,7 @@ var _ = require('underscore'),
     return newRq;
   };
 
-  Buffer.update = function update(object){
+  Buffer.update = function update(object, error){
     // update data, set status and responseDate
     //
 
@@ -211,9 +224,9 @@ var _ = require('underscore'),
         }
 
         requestBuffer[index].pages_detail[object.data.page.id] = object.data.page;
-        _.sortBy(requestBuffer[index].pages_detail, function(value){
+        /*_.sortBy(requestBuffer[index].pages_detail, function(value){
           return value.id;
-        });
+        });*/
       } else {
         requestBuffer[index].data = object.data;
       }
@@ -227,9 +240,17 @@ var _ = require('underscore'),
       requestBuffer[index].not_found_in_pages.push(object.req.magasin);
     } else if (index > -1){
       requestBuffer[index].status = 'failed';
-      requestBuffer[index].error = object.error;
+      if (!requestBuffer[index].error && error) {
+        requestBuffer[index].error = JSON.stringify(error);
+      } else if (requestBuffer[index].error && error) {
+        if (!Array.isArray(requestBuffer[index])) {
+          requestBuffer[index].error = [requestBuffer[index].error]
+        }
+        requestBuffer[index].error.push(error);
+      }
+      
       requestBuffer[index].responseDate = Date.now();
-      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, _.omit(requestBuffer[index], ['pages_detail', 'pages', 'aspired_pages']));
+      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, requestBuffer[index].error);
     }
   };
 
@@ -244,7 +265,7 @@ var _ = require('underscore'),
   };
 
   Buffer.validQuery = function validQuery(query) {
-    if (query && query.Enseigne && query.url) {
+    if (query && query.url) {
       return true
     } else {
       return false
