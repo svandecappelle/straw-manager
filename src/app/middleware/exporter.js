@@ -8,6 +8,7 @@ var fs = require('fs'),
   camelize = require("underscore.string/camelize"),
   moment = require('moment');
 
+const ignoreFields = ['page'];
 const TIME_TO_CLOSE_FILE = 3000;
 
 function Exporter() {
@@ -70,21 +71,6 @@ Exporter.prototype.open = function (data) {
   var csvStream = fastcsv.format({
       headers: false,
       delimiter: ';'
-    })
-    .transform(function(data){
-      var output = {};
-      _.each(_.keys(data), function(key){
-        if (data[camelize(key)]){
-          output[key] = data[camelize(key)];
-        }
-      });
-      if (data.magasin) {
-        output.magasin = data.magasin.id;
-      }
-      if (output.timestamp){
-        output.timestamp = output.timestamp.getTime();
-      }
-      return output;
     }),
     writableStream = fs.createWriteStream(file, {
       flags: 'a'
@@ -127,7 +113,7 @@ Exporter.prototype.export = function (data) {
       this.data[data.enseigne] = [];
     }
     data.isExported = false;
-    this.data[data.enseigne].push(data);
+    this.data[data.enseigne].push(_.omit(data, ignoreFields));
   } else {
     logger.warn("WARN: an export request is about undefined Enseigne type".yellow.bold, data);
   }

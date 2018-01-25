@@ -15,9 +15,11 @@ class Generic extends Engine {
     this.on("home", this.home);
   }
 
-  call(request) {
+  call (request) {
     try {
-      this.params = request.parameters;
+      this.configure(request.parameters);
+      request.parameters = this.config;
+      this.params = this.config;
       this.params.url = request.url;
 
       if (request.parameters.pages) {
@@ -30,7 +32,7 @@ class Generic extends Engine {
         this.from = {};
       }
 
-      this.logger.info("Parameters call engine", request);
+      this.logger.debug("Parameters call engine", request);
       if (this.params["change-wait"] === "on" && this.params.wait && this.params.wait > -1) {
         this.config.wait = this.params.wait;
       }
@@ -39,7 +41,7 @@ class Generic extends Engine {
         url: request.url,
         origin: request
       }, 'home');
-    } catch (error){
+    } catch (error) {
       return this.emit("fatal_error", error, request);
     }
   };
@@ -87,6 +89,9 @@ class Generic extends Engine {
         this.logger.info(`Done all datas aspiration ${req.requestID}`.green);
         if (!req.parameters) {
           req.parameters = this.params;
+        }
+        if (this.done) {
+          req.total_crawl = this.done.length;
         }
         this.emit('done', req);
       }
@@ -212,26 +217,31 @@ class Generic extends Engine {
 
     let startPage = new URL(this.params.url);
 
+    let exportFields = ["title", "name", "from"];
+    let pageData = {
+      id: req.url,
+      title: page_title ? page_title : req.url,
+      name: req.data.name,
+      line: req.data.line,
+      status: response.statusCode,
+      from: this.from[req.url]
+    };
+    let requestDatas = {
+      enseigne: startPage.hostname,
+      url: req.url,
+      page: pageData,
+      status: response.statusCode,
+      timestamp: new Date()
+    };
+
+    requestDatas = _.extend(requestDatas, _.pick(pageData, exportFields));
+
     var output = {
       requestID: req.requestID,
       pages: this.pages,
       parameters: this.params,
-      data: {
-        enseigne: startPage.hostname,
-        url: req.url,
-        config: this.config,
-        page: {
-          id: req.url,
-          title: page_title ? page_title : req.url,
-          name: req.data.name,
-          line: req.data.line,
-          status: response.statusCode,
-          from: this.from[req.url]
-        },
-        libelles: title,
-        status: response.statusCode,
-        timestamp: new Date()
-      }
+      total_crawl: this.done ? this.done.length : 0,
+      data: requestDatas
     };
 
     if (this.params['keep-errors-only'] === "on") {

@@ -79,7 +79,7 @@ if (!('toJSON' in Error.prototype)){
   eventEmitter.on('product', function(results){
     logger.debug("Aspiration of one product".cyan.bold, results.requestID);
     
-    if (nconf.get("aspiration:export")){
+    if (results.parameters.export === true || results.parameters.export === "on") {
       exporter.export(results.data);
     }
     Buffer.update(results, false);
@@ -87,7 +87,9 @@ if (!('toJSON' in Error.prototype)){
 
   eventEmitter.on('not_found', function(results){
     logger.info("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
-
+    if (results.parameters.export === true || results.parameters.export === "on") {
+      exporter.export(results.data);
+    }
     Buffer.update(results, false);
   });
 

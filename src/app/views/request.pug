@@ -84,7 +84,7 @@ block append body
                     if request.parameters['change-wait'] && request.parameters['change-wait'] !== "on"
                     else if request.parameters['change-wait'] && value
                       a.chip(style="margin-right: 3px;")= param + '=' + value
-                  else if value
+                  else if value != undefined
                     a.chip(style="margin-right: 3px;")= param + '=' + value
           .row
             .col.s1 Kept pages:

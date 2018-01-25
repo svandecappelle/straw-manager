@@ -14,38 +14,47 @@ block body
             span Aspire a site
           .row
             form.col.s12(method='post', style='text-align: center;')
-              .grid
+              .row
                 .input-field.col.s12
                   input(type="text", id="url", name="url")
                   label(for='url') URL
-              .grid
-                .col.s12
+              .row
+                .col.s4
                   input(type="checkbox", id="only-children", name="only-children", checked="checked")
-                  label(for="only-children") only children
-              .grid
-                .col.s12
+                  label(for="only-children") Only children
+                .col.s4
                   input(type="checkbox", id="only-one-page", name="only-one-page", checked="checked")
-                  label(for="only-one-page") only one page
-              .grid
-                .col.s12
+                  label(for="only-one-page") Only one page
+                .col.s4
                   input(type="checkbox", id="keep-errors-only", name="keep-errors-only", checked="checked")
-                  label(for="keep-errors-only") Check errors only
-              .grid
+                  label(for="keep-errors-only") Keep errors only
+              .row
                 .input-field.col.s12
                   input(type="text", id="regxp-validation", name="regxp-validation")
                   label(for="regxp-validation") Regxp Validation
-              .grid
+              .row
                 .col.s4(style="margin-top: 25px;")
                   input(type="checkbox", id="change-wait", name="change-wait")
-                  label(for="change-wait") Change default value
+                  label(for="change-wait") Change default value (#{config.wait})
                 .col.s8
                   .input-field
                     input(type="number", id="wait", name="wait", value="500")
                     label(for="wait") Wait between requests (milliseconds)
-              .grid
+              .row
                 .col.s4(style="margin-top: 25px;")
                   input(type="checkbox", id="countlines", name="countlines")
-                  label(for="countlines") Count lines
+                  label(for="countlines") Count lines (may be slow)
+                .col.s8
+                  .input-field
+                    input(type="number", id="parallel", name="parallel", value=config.parallel)
+                    label(for="parallel") Parallels requests
+              .row
+                .col.s4(style="margin-top: 25px;")
+                  input(type="checkbox", id="export", name="export" config.export ? checked="true")
+                  label(for="export") Export CSV
+                .col.s4(style="margin-top: 25px;")
+                  input(type="checkbox", id="use_proxy", name="use_proxy")
+                  label(for="use_proxy") Try to use proxy
         .card-action
           button.btn(href="#") Launch
 

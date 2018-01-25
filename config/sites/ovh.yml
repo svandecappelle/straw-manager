@@ -1,3 +1,0 @@
-default:
-  recursive: true
-  autoFinish: false

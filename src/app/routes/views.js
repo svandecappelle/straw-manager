@@ -1,13 +1,15 @@
-var express = require('express'),
-  router = express.Router(),
-  buffer = require('./../model/buffer'),
-  bodyParser = require('body-parser'),
-  moment = require('moment'),
-  _ = require("underscore"),
-  nconf = require('nconf'),
-  logger = require("log4js").getLogger('app/routes/views'),
-  ora = require('ora'),
-  middleware = require("../middleware");
+const express = require('express');
+const router = express.Router();
+const buffer = require('./../model/buffer');
+const bodyParser = require('body-parser');
+const path = require('path');
+const moment = require('moment');
+const _ = require("underscore");
+const nconf = require('nconf');
+const logger = require("log4js").getLogger('app/routes/views');
+const ora = require('ora');
+const middleware = require("../middleware");
+const yaml_config = require('node-yaml-config');
 
 const LOG_ALL_VIEWS_ACCESS = false;
 router.use(bodyParser.urlencoded({
@@ -36,6 +38,10 @@ function getBufferTableSchema() {
 }
 
 var rootPath = nconf.get('aspiration:rootPath');
+
+function config_name(name){
+  return path.resolve(__dirname, "./../../../config/".concat(name.toLowerCase()).concat(".").concat("yml"));
+}
 
 // middleware that is specific to this router
 if (LOG_ALL_VIEWS_ACCESS) {
@@ -169,7 +175,8 @@ router.get('/view/:view', function (req, res) {
   }
 
   middleware.render(req, res, req.params.view + '.pug', {
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+    config: yaml_config.load(config_name("sites/global"))
   });
 });
 

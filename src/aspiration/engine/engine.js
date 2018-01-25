@@ -18,7 +18,6 @@ class Engine extends events.EventEmitter{
     super();
     this.name = name;
 
-    // events.EventEmitter.call(this);
     this.config = yaml_config.load(config_name("sites/global"));
 
     this.cookies = {};
@@ -48,7 +47,11 @@ class Engine extends events.EventEmitter{
     this.on('not_found', this.export);
   }
 
-
+  configure (parameters) {
+    if (parameters){
+      this.config = _.extend(this.config, parameters);      
+    }
+  }
 
   export (output) {
     this.aspiredDatas += 1;
@@ -138,7 +141,7 @@ class Engine extends events.EventEmitter{
         that.logger.error("Error on calling request engine", err);
         if (req.current_try >= that.config.maxtry){
           if (callback){
-            if (that.config.wait || that.params.wait){
+            if (that.config.wait){
               that.logger.info(`Waiting before parsing querie (see configurations): ${that.config.wait}`);
               that.emit("fatal_error", { message: 'connecting maxtry', origin: err}, req);
               setTimeout(callback, that.config.wait);
