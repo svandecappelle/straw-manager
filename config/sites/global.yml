@@ -3,6 +3,6 @@ default:
   maxtry: 2
   # wait: 0
   use_proxy: false
-  parallel: 2
+  parallel: 25
   keep_errors_only: true
   recursive: true

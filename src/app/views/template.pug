@@ -148,27 +148,14 @@ html(lang="en")
                 else
                   li
                     a(href="/login", style='width: 100%;display: block;') Login
-      if request
-        .nav-content.white.grey-text.text-darken-1.request-view(id="request-" + request.requestID, data-id=request.requestID)
-          h1(style="display: inline-block;margin-right: 20px;") Request: #{request.requestID}
-          span Status:
-          if request.status === 'failed'
-            span.chip.red.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
-          else if request.status === 'pending'
-            span.chip.amber.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
-          else if request.status === 'set'
-            span.chip.green.lighten-1(style='vertical-align: middle; margin-left: 10px;') #{request.status}
-          if request.status !== "pending" && request.status !== "partial_pending" 
-            a.red-text.text-darken-1(href=rootPath + "drop/" + request.requestID, style="display: inline-block;")
-              i.material-icons delete
-      else
+      if !request
         .nav-content.white
-            form
-              .col.s12(style="padding-left: 10px; padding-right: 10px;")
-                i.material-icons(style='color: black; position: absolute;') search
-                .input-field
-                  input#search(type="search", required)
-                  i.material-icons close
+          form
+            .col.s12(style="padding-left: 10px; padding-right: 10px;")
+              i.material-icons(style='color: black; position: absolute;') search
+              .input-field
+                input#search(type="search", required)
+                i.material-icons close
     if session
       ul#slide-out.side-nav
         li

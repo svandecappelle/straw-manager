@@ -26,10 +26,7 @@ if (process.argv.length > 2){
     var obj = require(path.resolve(__dirname,"./src/sites/" + enseigne));
 
     var param = {}
-    param.idProduit =''
-    param.Enseigne =''
     param.url =''
-    param.MagasinId =''
     param.requestID = null
 
     try {

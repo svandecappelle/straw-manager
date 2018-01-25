@@ -197,7 +197,9 @@ if (!('toJSON' in Error.prototype)){
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)});
     if (index > -1 && object.data && !_.isEmpty(object.data)) {
-
+      if (object.parameters) {
+        requestBuffer[index].parameters = object.parameters;
+      }
       requestBuffer[index].aspired_pages += 1;
 
       if (object.pages && requestBuffer[index].pages === null){

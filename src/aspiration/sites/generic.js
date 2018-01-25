@@ -3,7 +3,7 @@ const async = require('async');
 const path = require('path');
 const htmlToText = require('html-to-text');
 const log4js = require("log4js");
-const _ = require('underscore');
+const _ = require('lodash');
 const { URL } = require('url');
 
 class Generic extends Engine {
@@ -15,27 +15,33 @@ class Generic extends Engine {
     this.on("home", this.home);
   }
 
-  call(params) {
-    this.params = params;
-    if (params.pages) {
-      this.pages = params.pages;
-    } else {
-      this.pages = [];
-      this.done = [];
-      this.other_loop = [];
-      this.loopCounter = 0;
-      this.from = {};
-    }
+  call(request) {
+    try {
+      this.params = request.parameters;
+      this.params.url = request.url;
 
-    this.logger.info("Parameters call engine", params);
-    if (this.params["change-wait"] === "on" && this.params.wait && this.params.wait > -1) {
-      this.config.wait = this.params.wait;
-    }
+      if (request.parameters.pages) {
+        this.pages = request.parameters.pages;
+      } else {
+        this.pages = [];
+        this.done = [];
+        this.other_loop = [];
+        this.loopCounter = 0;
+        this.from = {};
+      }
 
-    this.request({
-      url: params.url,
-      origin: params
-    }, 'home');
+      this.logger.info("Parameters call engine", request);
+      if (this.params["change-wait"] === "on" && this.params.wait && this.params.wait > -1) {
+        this.config.wait = this.params.wait;
+      }
+
+      this.request({
+        url: request.url,
+        origin: request
+      }, 'home');
+    } catch (error){
+      return this.emit("fatal_error", error, request);
+    }
   };
 
   home(html, req, response) {
@@ -55,28 +61,33 @@ class Generic extends Engine {
 
   loop (req) {
     this.loopCounter += 1;
-    let current_loop = _.difference(this.pages, this.done);
+    let current_loop = _.differenceBy(this.pages, this.done, 'href');
     this.logger.info(`${this.loopCounter} - Fetching ${current_loop.length} pages`);
 
     async.eachLimit(current_loop, this.config.parallel, (page, next) => {
+      // this.logger.info(page);
+
       this.request({
-        url: page,
+        url: page.href,
+        data: page,
         origin: req,
         from: this.from[req.url],
         requestID: req.requestID
       }, next);
 
     }, () => {
-      this.done = this.pages;
       // all pages in page retrieved
       if ( !_.isEmpty(this.other_loop) ){
-        this.logger.info(`${this.loopCounter} - Add ${_.unique(_.difference(this.other_loop, this.done)).length} requests found`);
+        this.logger.info(`${this.loopCounter} - Add ${_.uniqBy(_.differenceBy(this.other_loop, this.done, 'href'), 'href').length} requests found`);
 
-        this.pages = _.union(this.pages, this.other_loop);
+        this.pages = _.unionBy(this.pages, this.other_loop, 'href');
         this.other_loop = [];
         this.loop(req);
       } else {
         this.logger.info(`Done all datas aspiration ${req.requestID}`.green);
+        if (!req.parameters) {
+          req.parameters = this.params;
+        }
         this.emit('done', req);
       }
     });
@@ -84,16 +95,41 @@ class Generic extends Engine {
 
   fetchPages(html, req) {
     let all_pages = [];
-    let re = /<a[^>]+href=["|']([^"']+)/g;
+    let re = /<a[^>]+href=['"]([^'"]+)['"][^>]*>([^<]+)/g;
+
     let group;
     do {
       group = re.exec(html);
       if (group) {
-        all_pages.push(group[1]);
+        
+        let linesFound = [];
+
+        if (this.params.countlines === "on") {
+          let lines = html.replace(/(\r\n|\n\r|\n|\r)/g, "\n").split("\n");
+          let lineCounter = 0;
+          let line;
+
+          for (lineCounter = 0; lineCounter < lines.length ; lineCounter += 1) {
+            line = lines[lineCounter];
+            if (line.indexOf("=\"" + group[1] + "\"") !== -1) {
+              linesFound.push(lineCounter + 1);
+            }
+          }
+        } else {
+          linesFound.push("Not activated");
+        }
+
+        let url = {
+          href: group[1], // group[2] ? group[2] : group[1]
+          name: group[2] ? group[2] : group[1],
+          line: linesFound.join(", ")
+        }
+        all_pages.push(url);
       }
     } while (group)
     
-    all_pages = _.filter(all_pages, (href) => {
+    all_pages = _.filter(all_pages, (page) => {
+      let href = page.href;
       let valid;
       let startPage = new URL(this.params.url)
 
@@ -119,16 +155,17 @@ class Generic extends Engine {
       return valid;
     });
 
-    _.each(all_pages, (href) => {
-      if (href.charAt(0) === '/') {
+    _.each(all_pages, (page) => {
+      if (page.href.charAt(0) === '/') {
         let startPage = new URL(this.params.url)
-        href = startPage.origin.concat(href);
+        page.href = startPage.origin.concat(page.href);
       }
-
-      if (this.valid(href)) {
-        if (!_.contains(this.pages, href)) {
-          this.other_loop.push(href);
-          this.from[href] = req.url;
+      
+      if (this.valid(page.href)) {
+        
+        if (_.findIndex(this.pages, { href: page.href }) == -1 ) {
+          this.other_loop.push(page);
+          this.from[page.href] = req.url;
         }
       }
     });
@@ -143,7 +180,7 @@ class Generic extends Engine {
       ".gif",
       ".cgi"
     ];
-    let valid = !_.contains(ignore, path.extname(href));
+    let valid = _.findIndex(ignore, path.extname(href)) == -1;
 
     if (this.params['regxp-validation']) {
       valid = valid && href.match(this.params['regxp-validation']) != null;
@@ -156,7 +193,7 @@ class Generic extends Engine {
   decode(html, req, response, redirect) {
     if (redirect) {
       if (redirect.indexOf(this.params.url) !== -1 ) {
-        this.logger.debug(`Ignore ${req.url} redirected on: ${redirect}`);  
+        this.logger.debug(`Ignore ${req.url} redirected on: ${redirect}`);
         // keep on hostname site
         this.fetchPages(html, req);  
       }
@@ -178,6 +215,7 @@ class Generic extends Engine {
     var output = {
       requestID: req.requestID,
       pages: this.pages,
+      parameters: this.params,
       data: {
         enseigne: startPage.hostname,
         url: req.url,
@@ -185,6 +223,8 @@ class Generic extends Engine {
         page: {
           id: req.url,
           title: page_title ? page_title : req.url,
+          name: req.data.name,
+          line: req.data.line,
           status: response.statusCode,
           from: this.from[req.url]
         },
@@ -196,7 +236,7 @@ class Generic extends Engine {
 
     if (this.params['keep-errors-only'] === "on") {
       if (response.statusCode >= 400 || response.statusCode === 310){
-        this.emit('product', output, req); 
+        this.emit('not_found', output, req);
       }
       return;
     }

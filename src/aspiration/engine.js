@@ -47,17 +47,16 @@ class Engine {
         eventEmitter.emit('error', error, req);
       });
 
-      var params = _.extend({
-        idProduit : '',
-        Enseigne : '',
+      var request = _.extend({
+        site : '',
         url : '',
-        MagasinId : '',
         requestID : null
-      }, opts);
+      }, _.pick(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]));
+      request.parameters = _.omit(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]);
 
       // todo
       var call_process = async.timeout(function aspiration(callback) {
-        enseigne_lancher.call(params);
+        enseigne_lancher.call(request);
 
         enseigne_lancher.on('done', function(data){
           callback();

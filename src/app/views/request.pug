@@ -52,26 +52,54 @@ block append body
       .col.s12.request
         a.green.lighten-1(href=request.url)= request.data.libelles.join("\t")
     
-    ul.collapsible.green.lighten-2.grey.lighten-5(style="top:0px;position:sticky;z-index:1;", data-collapsible="expandable")
+    ul.collapsible.grey.lighten-4(style="top:0px;position:sticky;z-index:1;", data-collapsible="expandable")
       li
-        .collapsible-header.active Request #{request.requestID}
-          if request.status === 'failed'
-            span.badge.red.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
-          else if request.status === 'pending'
-            span.badge.amber.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
-          else if request.status === 'set'
-            span.badge.green.lighten-1.grey-text.text-lighten-5(style='vertical-align: middle; margin-left: 10px;') #{request.status}
+        .collapsible-header.active General informations
         .collapsible-body.col.s12.request
-          a.blue-text(href=request.url)= request.url
           .row
-            .col-s6.m4 Kept pages
-            if request.pages && request.aspired_pages
-              .col-s6.m4
+            .col.s1 ID:
+            .col.s11.request-view(data-id=request.requestID)= request.requestID
+          .row
+            .col.s1 Status:
+              if request.status === 'failed'
+                - classes_status = "red lighten-1 grey-text text-lighten-5"
+              else if request.status === 'pending' || request.status === 'partial_pending'
+                - classes_status = "orange lighten-1 grey-text text-lighten-5"
+              else if request.status === 'set'
+                - classes_status = "green lighten-1 grey-text text-lighten-5"
+              else
+                - classes_status = "grey darken-1 grey-text text-lighten-5"
+            .col.s3
+              span(style="padding:3px;", class=classes_status) #{request.status}
+          .row
+            .col.s1 Url:
+            .col.s11
+              a.blue-text(href=request.url)= request.url
+          if request.parameters
+            .row
+              .col.s1 Params:
+              .col.s11
+                each value, param in request.parameters
+                  if param == "wait"
+                    if request.parameters['change-wait'] && request.parameters['change-wait'] !== "on"
+                    else if request.parameters['change-wait'] && value
+                      a.chip(style="margin-right: 3px;")= param + '=' + value
+                  else if value
+                    a.chip(style="margin-right: 3px;")= param + '=' + value
+          .row
+            .col.s1 Kept pages:
+            .col.s11
+              if request.pages && request.aspired_pages
                 span= JSON.stringify(request.aspired_pages) + ' pages / ' + JSON.stringify(request.pages.length + 1) + ' sources'
                 if request.not_found_in_pages
                   span= '(Not in: ' + JSON.stringify(request.not_found_in_pages.length) + ')'
-            else
-              .col-s6.m4 all
+              else
+                span all
+          if request.status !== "pending" && request.status !== "partial_pending" 
+            .row
+              .col.s1 Actions:
+              .col.s11
+                a.btn.red(href=rootPath + "drop/" + request.requestID, style="display: inline-block;") Delete
       li
         .collapsible-header Details
         .collapsible-body
@@ -79,71 +107,79 @@ block append body
           .col-s6.m4= "Done at: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-s6.m4.time-elapsed= "Elapsed time: "
     .col.s12
-      .row
-        .col.s12
-          ul.request-errors.collapsible.red.lighten-2.grey-text.text-lighten-5(data-collapsible="accordion")
-            if request.error
-              li.error
-                div.collapsible-header.red Error caught
-                div.collapsible-body
-                  pre
-                    p= request.error.toString().replace(new RegExp(/\\n/, 'g'), "\n")
-      .row
+      ul.request-errors.collapsible.red.lighten-2.grey-text.text-lighten-4(data-collapsible="accordion")
+        if request.error
+          li.error
+            div.collapsible-header.red Error caught
+            div.collapsible-body
+              pre
+                if request.error.toString() !== '[object Object]'
+                  p= request.error.toString().replace(new RegExp(/\\n/, 'g'), "\n")
+                else
+                  p= JSON.stringify(request.error, "", 4)
+      .row(style='overflow: hidden;')
         ul.list-group#datas
           each val, index in request.data
             li.list-group-item.row
               .col-s6.m4= index
               .col-s6.m4= val
-        table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
-          thead.sticky
-            tr
-              - rows = request.pages_detail
-              - columns = []
-              if rows
-                each row in rows
-                  th(width="20px") Request
-                  each value, key in row
-                    if key != "id"
-                      th.mdl-data-table__cell--non-numeric(style="width:200px;word-wrap:break-word;")= key
-                  - break
-          tfoot
-            tr
-              if rows
-                each row in rows
-                  each value, key in row
-                    th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
-                      input.column-filter(type="text", placeholder=key)
-                  - break
-          tbody
-            if request.pages_detail
-              - var i = 0;
-              each store_detail, storeid in request.pages_detail
-                - i += 1;
-                if store_detail
-                  tr
-                    td(style="max-width:200px")
-                      span= i
-                    each value, key in store_detail
-                      if key == "status"
-                        td
-                          - color = "mdl-color--indigo-200"
-                          if value == "200"
-                            - color = "mdl-color--light-green-A100"
-                          else if value == "404"
-                            - color = 'mdl-color--red-500'
-                          div(class=color, style="text-align: center")= value
-                      else if key != "id"
-                        td.mdl-data-table__cell--non-numeric(style="max-width:800px; text-overflow: ellipsis;overflow: hidden;")
-                          if key == "magasin"
-                            a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
-                          else if key == "title"
-                            a(href=store_detail.id)= store_detail.title
-                          else if key == "id"
-                            a(href=store_detail.id)= store_detail.title
-                          else if key == "from"
-                            a(href=store_detail.from)= store_detail.from
-                          else
-                            span= value
+        .col.s12(style="margin:3px;")
+          table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
+            thead.sticky
+              tr
+                - rows = request.pages_detail
+                - columns = []
+                if rows
+                  each row in rows
+                    th(width="20px") Request
+                    each value, key in row
+                      if key != "id"
+                        th.mdl-data-table__cell--non-numeric(style="width:200px;word-wrap:break-word;")= key
+                    - break
+            tfoot
+              //tr
+                if rows
+                  each row in rows
+                    each value, key in row
+                      th(style='padding: 0; margin: 0;') Search
+                    - break
+              tr
+                if rows
+                  each row in rows
+                    each value, key in row
+                      th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
+                        input.column-filter(type="text", placeholder='<' + key + '>')
+                    - break
+            tbody
+              if request.pages_detail
+                - var i = 0;
+                each store_detail, storeid in request.pages_detail
+                  - i += 1;
+                  if store_detail
+                    tr
+                      td(style="max-width:200px")
+                        span= i
+                      each value, key in store_detail
+                        if key == "status"
+                          td
+                            - color = "indigo lighten-3 grey-text text-lighten-5"
+                            if value == "200"
+                              - color = "green lighten-3 grey-text text-lighten-5"
+                            else if value == "404"
+                              - color = "red lighten-3 grey-text text-lighten-5"
+                            div(class=color, style="text-align: center")= value
+                        else if key != "id"
+                          td(style="max-width:200px; text-overflow: ellipsis;overflow: hidden;", title=value)
+                            if key == "magasin"
+                              a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
+                            else if key == "title"
+                              a(href=store_detail.id)= store_detail.title
+                            else if key == "id"
+                              a(href=store_detail.id)= store_detail.title
+                            else if key == "from"
+                              a(href=store_detail.from)= store_detail.from
+                            else
+                              span= value
     script#request-var(type='application/json')= JSON.stringify(request)
     script.
       var refresh_time = #{refresh_time}
