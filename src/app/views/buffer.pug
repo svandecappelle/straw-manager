@@ -75,7 +75,7 @@ block body
                 # url source
                 return '<a href="' + row.url + '" onClick="event.stopPropagation(); Window.open(\'' + row.url + '\');">' + row.url + '</a>'
               ,
-              "targets": [5]
+              "targets": [4]
             },
             {
               "render": (data, type, row ) ->
@@ -89,16 +89,7 @@ block body
                   color = "red";
                 return '<span class="chip ' + color + ' lighten-2">' + data + '</span>';
               ,
-              "targets": [6]
-            },
-            {
-              "render": (data, type, row ) ->
-                # not aspired pages
-                if (data && data.length)
-                  return data.length
-                return 0;
-              ,
-              "targets": [8]
+              "targets": [5]
             }
           ]
         });

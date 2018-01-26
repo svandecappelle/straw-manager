@@ -12,7 +12,7 @@ function config_name(name){
   return path.resolve(__dirname, "./../../../config/".concat(name.toLowerCase()).concat(".").concat("yml"));
 }
 
-class Engine extends events.EventEmitter{
+class Engine extends events.EventEmitter {
 
   constructor(name){
     super();

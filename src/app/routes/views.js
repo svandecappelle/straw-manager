@@ -24,11 +24,9 @@ function getBufferTableSchema() {
     'requestDate',
     'responseDate',
     'time',
-    'Enseigne',
     'url',
     'status',
-    'aspired_pages',
-    'not_found_in_pages'
+    'aspired_pages'
   ];
   var schema = [];
   for (column of columns) {
@@ -65,12 +63,23 @@ router.use(function timeLog(req, res, next) {
 
 // define the home page route
 router.get('/', function (req, res) {
-  middleware.render(req, res, 'index.pug', {
-    bufferLength: buffer.getBuffer().length,
-    pending: buffer.pending().length,
-    set: buffer.aspired().length,
-    failed: buffer.failed().length,
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+  buffer.getBuffer().then( (bufferList) => {
+    middleware.render(req, res, 'index.pug', {
+      bufferLength: bufferList.length,
+      pending: buffer.pending().length,
+      set: buffer.aspired().length,
+      failed: buffer.failed().length,
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+    });
+  })
+  .catch( () => {
+    middleware.render(req, res, 'index.pug', {
+      bufferLength: 0,
+      pending: 0,
+      set: 0,
+      failed: 0,
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+    });
   });
 });
 
@@ -112,14 +121,22 @@ router.get('/about', function (req, res) {
 
 router.get('/buffer', function (req, res) {
   logger.debug('buffer requested !'.red);
-  var bufferValues = buffer.getBuffer();
 
-  middleware.render(req, res, 'buffer.pug', {
-    buffer: bufferValues,
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    view: 'buffer'
-  });
+  buffer.getBuffer().then( (bufferList) => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: bufferList,
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: 'buffer'
+    });
+  }).catch(() => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: [],
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: 'buffer'
+    });
+  });  
 });
 
 router.get('/pending', function (req, res) {
@@ -198,7 +215,7 @@ router.post('/view/:view', function (req, res) {
   logger.info('server received :'.red, tempo);
   if (buffer.validQuery(tempo)) {
     logger.info("querying aspiration...");
-    spinner.start();
+    //spinner.start();
     spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
 
     if (nconf.get("aspiration:interactive")) {
@@ -234,22 +251,21 @@ router.post('/view/:view', function (req, res) {
 });
 
 router.get('/request/:id', function (req, res) {
-  var elem = buffer.getElementByRequestID({
+  buffer.getElementByRequestID({
     "requestID": req.params.id
-  });
-  if (elem && elem.pages_detail){
-    /*var sortedArray = _.chain(elem.pages_detail).sortBy((value) => {
-      return - value.status;
-    }).sortBy((value) => {
-      return value.id;
-    }).value();
-    elem.pages_detail_sorted = sortedArray;*/
-  }
-
-  middleware.render(req, res, 'request.pug', {
-    request: elem,
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+  }).then( (result) => {
+    middleware.render(req, res, 'request.pug', {
+      request: result,
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+    });
+  }).catch( (error) => {
+    logger.error(error);
+    middleware.render(req, res, 'request.pug', {
+      request: undefined,
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
+    });
   });
 });
 

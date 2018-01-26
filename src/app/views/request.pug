@@ -106,6 +106,15 @@ block append body
           .col-s6.m4= "Run at: " + new Date(request.requestDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-s6.m4= "Done at: " + new Date(request.responseDate).toISOString().slice(0, 19).replace('T', ' ')
           .col-s6.m4.time-elapsed= "Elapsed time: "
+          .row
+            .col-s12
+              ul.collection.with-header#datas
+                li.collection-header
+                  h4 Datas
+                each val, index in request.data
+                  li.collection-item
+                    .col-s6.m4= index
+                    .col-s6.m4= val
     .col.s12
       ul.request-errors.collapsible.red.lighten-2.grey-text.text-lighten-4(data-collapsible="accordion")
         if request.error
@@ -118,11 +127,6 @@ block append body
                 else
                   p= JSON.stringify(request.error, "", 4)
       .row(style='overflow: hidden;')
-        ul.list-group#datas
-          each val, index in request.data
-            li.list-group-item.row
-              .col-s6.m4= index
-              .col-s6.m4= val
         .col.s12(style="margin:3px;")
           table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
             thead.sticky
@@ -153,13 +157,13 @@ block append body
             tbody
               if request.pages_detail
                 - var i = 0;
-                each store_detail, storeid in request.pages_detail
+                each page_detail, pageid in request.pages_detail
                   - i += 1;
-                  if store_detail
+                  if page_detail
                     tr
                       td(style="max-width:200px")
                         span= i
-                      each value, key in store_detail
+                      each value, key in page_detail
                         if key == "status"
                           td
                             - color = "indigo lighten-3 grey-text text-lighten-5"
@@ -171,13 +175,13 @@ block append body
                         else if key != "id"
                           td(style="max-width:200px; text-overflow: ellipsis;overflow: hidden;", title=value)
                             if key == "magasin"
-                              a(href=store_detail.url)= store_detail.magasin.id + ' -> ' + store_detail.magasin.name 
+                              a(href=page_detail.url)= page_detail.magasin.id + ' -> ' + page_detail.magasin.name 
                             else if key == "title"
-                              a(href=store_detail.id)= store_detail.title
-                            else if key == "id"
-                              a(href=store_detail.id)= store_detail.title
+                              a(href=page_detail.url)= page_detail.title
+                            else if key == "url"
+                              a(href=page_detail.url)= page_detail.title
                             else if key == "from"
-                              a(href=store_detail.from)= store_detail.from
+                              a(href=page_detail.from)= page_detail.from
                             else
                               span= value
     script#request-var(type='application/json')= JSON.stringify(request)
@@ -190,7 +194,7 @@ block append body
           paging: true,
           "lengthMenu": [[100, -1], [100, "All"]]
           searching: true,
-          scrollY: '440px',
+          scrollY: '200px',
           scrollCollapse: false,
           fixedHeader: {
             header: true
@@ -235,15 +239,22 @@ block append body
 
             errorElement.append(errorBody).append($("<pre>").text(JSON.stringify JSON.parse(request.error), null, 4));
 
+          dataHeader = $("<li>", {
+            class: "collection-header"
+          });
+          dataHeader.append($("<h4>", {
+            text: "Datas"
+          }))
+          $("#datas").append(dataHeader);
           for data, value of request.data
             obj = $("<li>", {
-              class: "list-group-item row" 
+              class: "collection-item row" 
             })
             obj.append($("<div>", {
-              class: "col-xs-6 col-md-4"
+              class: "col s6 m2 grey-text"
             }).text(data))
             obj.append($("<div>", {
-              class: "col-xs-6 col-md-4"
+              class: "col s6 m4"
             }).text(value))
             $("#datas").append(obj)
             

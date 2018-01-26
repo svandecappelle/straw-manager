@@ -159,7 +159,7 @@ class Generic extends Engine {
 
       return valid;
     });
-
+    var counter = 0;
     _.each(all_pages, (page) => {
       if (page.href.charAt(0) === '/') {
         let startPage = new URL(this.params.url)
@@ -169,8 +169,10 @@ class Generic extends Engine {
       if (this.valid(page.href)) {
         
         if (_.findIndex(this.pages, { href: page.href }) == -1 ) {
+          page.id = this.pages.length + counter;
           this.other_loop.push(page);
           this.from[page.href] = req.url;
+          counter += 1;
         }
       }
     });
@@ -217,14 +219,23 @@ class Generic extends Engine {
 
     let startPage = new URL(this.params.url);
 
+    if (!req.data) {
+      req.data = {
+        id: 0,
+        name: '',
+        line: undefined
+      }
+    }
+
     let exportFields = ["title", "name", "from"];
     let pageData = {
-      id: req.url,
+      id: req.data.id ? req.data.id : 0,
+      url: req.url,
       title: page_title ? page_title : req.url,
-      name: req.data.name,
-      line: req.data.line,
+      name: req.data.name ? req.data.name : "",
+      line: req.data.line ? req.data.line : "",
       status: response.statusCode,
-      from: this.from[req.url]
+      from: this.from[req.url] ? this.from[req.url] : ""
     };
     let requestDatas = {
       enseigne: startPage.hostname,
@@ -236,13 +247,11 @@ class Generic extends Engine {
 
     requestDatas = _.extend(requestDatas, _.pick(pageData, exportFields));
 
-    var output = {
-      requestID: req.requestID,
-      pages: this.pages,
+    var output = _.extend(_.omit(req, ['origin']), {
       parameters: this.params,
       total_crawl: this.done ? this.done.length : 0,
       data: requestDatas
-    };
+    });
 
     if (this.params['keep-errors-only'] === "on") {
       if (response.statusCode >= 400 || response.statusCode === 310){

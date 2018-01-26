@@ -49,8 +49,7 @@ class Engine {
 
       var request = _.extend({
         site : '',
-        url : '',
-        requestID : null
+        url : ''
       }, _.pick(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]));
       request.parameters = _.omit(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]);
 

@@ -72,7 +72,13 @@ router.get('/about', function (req, res) {
 
 router.get('/buffer', function (req, res) {
   logger.debug('buffer requested !'.red);
-  res.status(200).send(buffer.getBuffer())
+  buffer.getBuffer().then( (bufferValues) => {
+    res.status(200).send(bufferValues);
+  })
+  .catch( (error) => {
+    logger.error(error);
+    res.status(500).send(error);
+  });
 });
 
 
@@ -98,27 +104,17 @@ router.get('/search', function (req, res) {
 
 router.get('/request/:id', function (req, res) {
 
-    var elem = buffer.getElementByRequestID({
+    buffer.getElementByRequestID({
       "requestID":req.params.id
-    });
-
-    if (elem) {
+    }).then( (result) => {
       logger.debug(`${req.params.id.red} sended`);
-     
-      if (elem.pages_detail){
-        /*var sortedArray = _.chain(elem.pages_detail).sortBy((value) => {
-          return - value.status;
-        }).sortBy((value) => {
-          return value.id;
-        }).value();
-        elem.pages_detail_sorted = sortedArray;*/
-      }
-
-      res.status(200).send(elem);
-    } else {
+      res.status(200).send(result);
+    }).catch( (error) => {
       logger.warn(`${req.params.id.red} not found`);
       res.status(404).send({"Error":"the requested ID, doesn't exists"});
-    }
+    });
+
+    
 
 });
 // delete element

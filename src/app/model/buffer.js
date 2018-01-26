@@ -1,31 +1,13 @@
-var _ = require('underscore'),
-  nconf = require('nconf'),
-  events = require('events'),
-  logger = require('log4js').getLogger('Buffer'),
-  aspiration = require('./../../aspiration/interface'),
-  Exporter = new require('./../middleware/exporter');
+const _ = require('underscore');
+const nconf = require('nconf');
+const events = require('events');
+const async = require('async');
+const logger = require('log4js').getLogger('Buffer');
+const aspiration = require('./../../aspiration/interface');
+const Exporter = new require('./../middleware/exporter');
+const datastore = require("../middleware/datastore");
 
-/**************************************************************************
-*                     SINGLETON CLASS DEFINITION                          *
-***************************************************************************/
-
-/*** element structure
-
-{ requestID : auto_increment
-  requestDate :
-  responseDate :
-
-  enseigne :
-  MagasinId :
-  idProduit :
-  url :
-  status :
-
-  data : {
-    ...
-  }
-}
-**/
+const aspired_pages = [];
 
 if (!('toJSON' in Error.prototype)){
   Object.defineProperty(Error.prototype, 'toJSON', {
@@ -43,98 +25,126 @@ if (!('toJSON' in Error.prototype)){
   });
 }
 
+const SHOPS_PROPERTIES = ['magasin', 'prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'url'];
 
-(function (Buffer) {
-  "use strict";
-  const SHOPS_PROPERTIES = ['magasin', 'prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'url'];
-  var requestBuffer = [];
-  var auto_increment = -1;
-  var eventEmitter = new events.EventEmitter();
-  var exporter = new Exporter();
+var requestBuffer = [];
+var auto_increment = -1;
+var exporter = new Exporter();
 
-  eventEmitter.on('done', function(results){
-    logger.info("Aspiration done".cyan.bold, results.requestID);
-    var mem = process.memoryUsage();
-    logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
-    if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000){
-      // 1Go clear memory
-      logger.warn('flush memory to prevent memory leaks');
-      Buffer.flush();
-    }
-    //Buffer.update(results, true);
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(results.requestID)})
-    if (requestBuffer[index].callback){
+class Buffer extends events.EventEmitter {
 
-      if (requestBuffer[index].status !== 'timeout' && requestBuffer[index].status !== 'error' && requestBuffer[index].status !== 'partial_pending') {
-        requestBuffer[index].status = 'set';
-      } else if (requestBuffer[index].status !== 'timeout' && requestBuffer[index].status !== 'error'){
-        requestBuffer[index].status = 'partial_done';
+  constructor () {
+    super();
+    datastore.get("requests")
+    .catch(() => {
+      datastore.store("requests", "[]");
+    });
+
+    this.on('done', (results) => {
+      logger.info("Aspiration done".cyan.bold, results.requestID);
+      var mem = process.memoryUsage();
+      logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
+      if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000){
+        // 1Go clear memory
+        logger.warn('flush memory to prevent memory leaks');
+        this.flush();
       }
-      if (requestBuffer[index].callback) {
-        requestBuffer[index].callback(results);        
-      }
-    }
-  });
 
-  eventEmitter.on('product', function(results){
-    logger.debug("Aspiration of one product".cyan.bold, results.requestID);
-    
-    if (results.parameters.export === true || results.parameters.export === "on") {
-      exporter.export(results.data);
-    }
-    Buffer.update(results, false);
-  });
+      var reqId = results.requestID;
 
-  eventEmitter.on('not_found', function(results){
-    logger.info("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
-    if (results.parameters.export === true || results.parameters.export === "on") {
-      exporter.export(results.data);
-    }
-    Buffer.update(results, false);
-  });
+      datastore.get(`request:${reqId}`)
+      .then( (request) => {
+        request = JSON.parse(request);
 
-  eventEmitter.on('timeout', function(error, req){
-    if (req.origin){
+        if (request.status !== 'timeout' && request.status !== 'error' && request.status !== 'partial_pending') {
+          request.status = 'set';
+        } else if (request.status !== 'timeout' && request.status !== 'error'){
+          request.status = 'partial_done';
+        }
+
+        datastore.store(`request:${reqId}`, JSON.stringify(request))
+      });
+    });
+  
+    this.on('product', (results) => {
+      logger.debug("Aspiration of one product".cyan.bold, results.requestID);
+      this.export(results);
+    });
+  
+    this.on('not_found', (results) => {
+      logger.info("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
+      this.export(results);
+    });
+  
+    this.on('timeout', (error, req) => {
+      this.error(req, 'timeout');
+    });
+    this.on('error', (error, req) => {
+      this.error(req, 'failed');
+    });
+  }
+
+  error (req, status) {
+    if (req.origin) {
       req = req.origin;
     }
-    logger.error("Timeout on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
-    Buffer.update(req);
+    logger.error(`${status} on aspiration`.red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
+    this.update(req);
 
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
-    if (index > -1){
+    if (index > -1) {
       requestBuffer[index].error = error;
-      requestBuffer[index].status = 'timeout';
+      requestBuffer[index].status = status;
       if (requestBuffer[index].callback){
         requestBuffer[index].callback(requestBuffer[index]);
       }
     }
-  });
-  eventEmitter.on('error', function(error, req){
-    if (req.origin){
-      req = req.origin;
+  }
+  
+  export (results) {
+    if (results.parameters.export === true || results.parameters.export === "on") {
+      exporter.export(results.data);
     }
-    logger.error("Errors on aspiration".red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
-    Buffer.update(req, error);
+    results = this.update(results, false);
+    
+    let dataColumns = ["status"];
+    if (results.data.page) {
+      dataColumns = _.keys(results.data.page);
+    }
 
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
-    if (index > -1){
-      // requestBuffer[index].error = error;
-      requestBuffer[index].status = "failed";
-      if (requestBuffer[index].callback){
-        requestBuffer[index].callback(requestBuffer[index]);
+    aspired_pages[results.requestID] += 1;
+    var nbaspired_pages = aspired_pages[results.requestID];
+    if (results.data.page) {
+      results.data.page.id = nbaspired_pages;
+    }
+
+    datastore.batch()
+    .put("last-request", results.requestID)
+    .put(`request:${results.requestID}:nbaspired`, "" + nbaspired_pages)
+    .put(`request:${results.requestID}:datas`, JSON.stringify(_.omit(results.data, ['page'])))
+    .put(`request:${results.requestID}:columns`, dataColumns)
+    .write( () => {
+      if (results.data.page) {
+        datastore.store(`request:${results.requestID}:page:${results.data.page.id}`, JSON.stringify(results.data.page))
+        .then( () => {
+        }).catch( (err) => {
+          logger.error(err);
+        });
+      } else {
+        logger.warn("no page data page", results.data);
       }
-    }
-  });
+    });
+  }
 
-  Buffer.flush = function(type){
+  flush (type) {
     if (!type){
-      requestBuffer = _.filter(requestBuffer, function(elem){
+      requestBuffer = _.filter(requestBuffer, (elem) => {
           return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
       });
 
     } else if (type !== 'all'){
       logger.info(`flush memory on '${type}'`);
-      requestBuffer = _.filter(requestBuffer, function(elem){
+      requestBuffer = _.filter(requestBuffer, (elem) => {
         return elem.status !== 'partial_'.concat(type) && elem.status !== type;
       });
 
@@ -147,127 +157,192 @@ if (!('toJSON' in Error.prototype)){
     logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
   };
 
-  Buffer.pending_length = function(){
-    return Buffer.pending().length;
+  pending_length () {
+    return this.pending().length;
   };
 
-  Buffer.pending = function(){
+  pending (){
     return _.union(_.where(requestBuffer, {status: 'pending'}), _.where(requestBuffer, {status: 'partial_pending'}));
   };
 
-  Buffer.failed = function(){
+  failed () {
     return _.union(_.where(requestBuffer, {status: 'failed'}), _.where(requestBuffer, {status: 'timeout'}));
   };
 
-  Buffer.aspired = function(){
+  aspired () {
     return _.union(_.where(requestBuffer, {status: 'set'}), _.where(requestBuffer, {status: 'partial_done'}));
   };
 
-  Buffer.search = function(query){
-    return _.filter(requestBuffer, function(elem){
+  search (query) {
+    return _.filter(requestBuffer, (elem) => {
       return JSON.stringify(elem).indexOf(query) !== -1;
     });
   }
 
-  Buffer.add = function add(request, callback){
+  add (request, callback) {
     auto_increment++;
     
-    let newRq;
-    if (request) {
-      newRq = _.extend({
-        requestID     : auto_increment,
-        requestDate   : Date.now(),
-        responseDate  : null,
-        url           : request.url,
-        pages        : request.pages ? request.pages : null,
-        status        : 'pending',
-        aspired_pages: 0,
-        data          : {},
-        callback      : callback
-      }, request);
+    return new Promise((resolve, reject) => {
+      if (request) {
+        datastore.get("requests")
+        .then( (requests) => {
+          requests = JSON.parse(requests);
 
-      requestBuffer.push(newRq);
+          request = _.extend({
+            requestID     : requests.length,
+            enseigne      : null,
+            requestDate   : Date.now(),
+            responseDate  : null,
+            url           : request.url,
+            status        : 'pending',
+            data          : {}
+          }, _.omit(request, ["requestID"]));
+          aspired_pages[request.requestID] = 0;
 
-      aspiration.launch(newRq, eventEmitter);
-    }
-    return newRq;
+          requests.push(request.requestID);
+          datastore.batch()
+          .put("requests", JSON.stringify(requests))
+          .put(`request:${request.requestID}:nbaspired`, "0")
+          .put(`request:${request.requestID}`, JSON.stringify(request))
+          .write( () => {
+            resolve(request);
+            aspiration.launch(request, this);
+          });
+
+        }).catch( () => {
+          // not any requests
+          aspired_pages[request.requestID] = 0;
+          
+          request = _.extend({
+            requestID     : 0,
+            enseigne      : null,
+            requestDate   : Date.now(),
+            responseDate  : null,
+            url           : request.url,
+            status        : 'pending',
+            data          : {}
+          }, _.omit(request, ["requestID"]));
+          datastore.batch()
+          .put("requests", JSON.stringify([0]))
+          .put(`request:${request.requestID}:nbaspired`, "0")
+          .put(`request:${request.requestID}`, JSON.stringify(request))
+          .write( () => {
+            resolve(request);
+            aspiration.launch(request, this);
+          });
+        });
+        
+      }
+    });
   };
 
-  Buffer.update = function update(object, error){
+  update (request, error) {
     // update data, set status and responseDate
-    //
+    
+    if (request.origin) {
+      request = req.origin;
+    }
 
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)});
-    if (index > -1 && object.data && !_.isEmpty(object.data)) {
-      if (object.parameters) {
-        requestBuffer[index].parameters = object.parameters;
-      }
-      requestBuffer[index].aspired_pages += 1;
-
-      if (object.pages && requestBuffer[index].pages === null){
-        requestBuffer[index].pages = object.pages;
-      }
-
-      requestBuffer[index].responseDate = Date.now();
-
-      if (object.data.magasin){
-        requestBuffer[index].data = _.extend(requestBuffer[index].data, _.omit(object.data, SHOPS_PROPERTIES));
-
-        if (!requestBuffer[index].pages_detail){
-          requestBuffer[index].pages_detail = {};
+    if (request.data && !_.isEmpty(request.data)) {
+      request.responseDate = Date.now();
+    } else if (error) {
+      request.status = 'failed';
+      if (!request.error && error) {
+        request.error = JSON.stringify(error);
+      } else if (request.error && error) {
+        if (!Array.isArray(request.error)) {
+          request.error = [request.error]
         }
-
-        requestBuffer[index].pages_detail[object.data.magasin.id] = _.pick(object.data, SHOPS_PROPERTIES);
-        _.sortBy(requestBuffer[index].pages_detail, function(value){
-          return value.magasin.id;
-        });
-      } else if (object.data.page){
-        if (!requestBuffer[index].pages_detail){
-          requestBuffer[index].pages_detail = {};
-        }
-
-        requestBuffer[index].pages_detail[object.data.page.id] = object.data.page;
-        /*_.sortBy(requestBuffer[index].pages_detail, function(value){
-          return value.id;
-        });*/
-      } else {
-        requestBuffer[index].data = object.data;
-      }
-    } else if (index > -1 && _.isEmpty(object.data) && object.req && object.req.magasin.id){
-      if (requestBuffer[index].status === 'pending'){
-        requestBuffer[index].status = 'partial_pending';
-      }
-      if (!requestBuffer[index].not_found_in_pages){
-        requestBuffer[index].not_found_in_pages = [];
-      }
-      requestBuffer[index].not_found_in_pages.push(object.req.magasin);
-    } else if (index > -1){
-      requestBuffer[index].status = 'failed';
-      if (!requestBuffer[index].error && error) {
-        requestBuffer[index].error = JSON.stringify(error);
-      } else if (requestBuffer[index].error && error) {
-        if (!Array.isArray(requestBuffer[index])) {
-          requestBuffer[index].error = [requestBuffer[index].error]
-        }
-        requestBuffer[index].error.push(error);
+        request.error.push(error);
       }
       
-      requestBuffer[index].responseDate = Date.now();
-      logger.error(`Request: ${object.requestID} failed: `.red.bold.underline, requestBuffer[index].error);
+      request.responseDate = Date.now();
+      logger.error(`Request: ${request.requestID} failed: `.red.bold.underline, request.error);
     }
+
+    return request;
   };
 
+  getElementByRequestID (object) {
+    var promise = new Promise((resolve, reject) => {
+      var request;
+      datastore.get(`request:${Number.parseInt(object.requestID)}`)
+      .then( (properties) => {
+        // Request properties
+        request = JSON.parse(properties);
+        datastore.get(`request:${Number.parseInt(object.requestID)}:nbaspired`)
+        .then( (nbaspired) => {
+          nbaspired = JSON.parse(nbaspired);
+          request.aspired_pages = nbaspired;
 
-  Buffer.getElementByRequestID = function getElementByRequestID(object) {
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(object.requestID)})
-    return  index > -1 ? requestBuffer[index]: undefined;
+          datastore.get(`request:${Number.parseInt(object.requestID)}:datas`)
+          .then( (requestStored) => {
+            // Request general info strawn
+
+            request.data = JSON.parse(requestStored);
+            request.pages_detail = [];
+            if (nbaspired > 0) {
+              async.timesLimit(nbaspired, 10, (n, next) => {
+                datastore.get(`request:${request.requestID}:page:${n + 1}`)
+                .then( (page) => {
+                  request.pages_detail.push(JSON.parse(page));
+                  next();
+                });
+              }, () => {
+                resolve(request);
+              });
+            } else {
+              resolve(request);
+            }
+          })
+          .catch((err) => {
+            logger.error(err);
+            reject("Not found id on datas");
+          });
+        });
+      });
+    });
+
+    return promise;
   };
 
-  Buffer.getBuffer = function getBuffer() {
-    return requestBuffer;
-  };
+  getBuffer () {
+    return new Promise( (resolve, reject) => {
+      datastore.get("requests")
+      .then( (requests) => {
+        requests = JSON.parse(requests);
+        async.mapLimit(requests, 10, (request, next) => {
+          datastore.get(`request:${request}`)
+          .then( (value) => {
+            value = JSON.parse(value)
+            datastore.get(`request:${request}:nbaspired`)
+            .then( (nbaspired) => {
+              value.aspired_pages = JSON.parse(nbaspired);
+              next(null, value);
+            }).catch( (error) => {
+              next(error);
+            });
+          })
+          .catch( (error) => {
+            logger.error(error);
+            next(error);
+          });
+        }, (error, buffer) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(buffer);
+          }
+        });
+      })
+      .catch( (error) => {
+        logger.error(error);
+        reject(error);
+      });
+    });
+  }
 
-  Buffer.validQuery = function validQuery(query) {
+  validQuery (query) {
     if (query && query.url) {
       return true
     } else {
@@ -275,14 +350,16 @@ if (!('toJSON' in Error.prototype)){
     }
   };
 
-  Buffer.drop = function drop(id) {
+  drop (id) {
     var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(id)})
     if (  index > -1 ) {
       requestBuffer.splice(index, 1)
       return true
-    }else {
+    } else {
       return false
     }
   };
 
-}(exports));
+}
+
+module.exports = new Buffer();
