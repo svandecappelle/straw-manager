@@ -137,7 +137,7 @@ block append body
                   each row in rows
                     th(width="20px") Request
                     each value, key in row
-                      if key != "id"
+                      if key != "id" && key != "title"
                         th.mdl-data-table__cell--non-numeric(style="width:200px;word-wrap:break-word;")= key
                     - break
             tfoot
@@ -151,6 +151,8 @@ block append body
                 if rows
                   each row in rows
                     each value, key in row
+                      if key == "title"
+                        - continue
                       th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
                         input.column-filter(type="text", placeholder='<' + key + '>')
                     - break
@@ -172,12 +174,10 @@ block append body
                             else if value == "404"
                               - color = "red lighten-3 grey-text text-lighten-5"
                             div(class=color, style="text-align: center")= value
-                        else if key != "id"
+                        else if key != "id" && key != "title"
                           td(style="max-width:200px; text-overflow: ellipsis;overflow: hidden;", title=value)
                             if key == "magasin"
                               a(href=page_detail.url)= page_detail.magasin.id + ' -> ' + page_detail.magasin.name 
-                            else if key == "title"
-                              a(href=page_detail.url)= page_detail.title
                             else if key == "url"
                               a(href=page_detail.url)= page_detail.title
                             else if key == "from"
