@@ -13,8 +13,8 @@ const path = require('path'),
   "use strict";
 
   Interface.launch = function (input, eventEmitter) {
-      logger.debug('launch aspiration update');
-      engine.start(input, eventEmitter);
+    logger.debug('launch aspiration update');
+    return engine.start(input, eventEmitter);
   };
 
 }(exports));

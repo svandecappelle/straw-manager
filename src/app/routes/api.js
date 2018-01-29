@@ -1,14 +1,16 @@
-var express = require('express'),
-  router = express.Router(),
-  buffer = require('./../model/buffer'),
-  bodyParser = require('body-parser'),
-  chalk = require('chalk'),
-  moment = require('moment'),
-  proxyUpdater = require('../../proxy-update'),
-  nconf = require('nconf'),
-  ora = require('ora'),
-  _ = require('underscore'),
-  logger = require("log4js").getLogger('app/routes/api');
+const express = require('express');
+const router = express.Router();
+const buffer = require('./../model/buffer');
+const bodyParser = require('body-parser');
+const chalk = require('chalk');
+const moment = require('moment');
+const proxyUpdater = require('../../proxy-update');
+const nconf = require('nconf');
+const ora = require('ora');
+const _ = require('lodash');
+const fs = require('fs');
+const logger = require("log4js").getLogger('app/routes/api');
+const tmp = require('tmp');
 
 var GREEN = chalk.bold.green;
 var RED = chalk.bold.red;
@@ -103,20 +105,130 @@ router.get('/search', function (req, res) {
 });
 
 router.get('/request/:id', function (req, res) {
+  buffer.getElementByRequestID({
+    "requestID":req.params.id,
+    start: 0
+  }).then( (result) => {
+    logger.debug(`${req.params.id.red} sended`);
+    res.status(200).send(result);
+  }).catch( (error) => {
+    logger.warn(`${req.params.id.red} not found`);
+    res.status(404).send({"Error":"the requested ID, doesn't exists"});
+  });
+});
 
-    buffer.getElementByRequestID({
-      "requestID":req.params.id
-    }).then( (result) => {
-      logger.debug(`${req.params.id.red} sended`);
-      res.status(200).send(result);
-    }).catch( (error) => {
-      logger.warn(`${req.params.id.red} not found`);
-      res.status(404).send({"Error":"the requested ID, doesn't exists"});
+router.get('/request/:id/details/:start', function (req, res) {
+  buffer.getElementByRequestID({
+    "requestID":req.params.id,
+    start: parseInt(req.params.start)
+  }).then( (result) => {
+    logger.debug(`${req.params.id.red} sended`);
+    res.status(200).send(result);
+  }).catch( (error) => {
+    logger.warn(`${req.params.id.red} not found`);
+    res.status(404).send({"Error":"the requested ID, doesn't exists"});
+  });
+});
+
+router.get('/request/:id/details/:start/:filter', function (req, res) {
+  buffer.getElementByRequestID({
+    "requestID":req.params.id,
+  }).then( (result) => {
+
+    let filteredPages = _.filter(result.pages_detail, (element) => {
+      return JSON.stringify(element).toLowerCase().indexOf(req.params.filter.toLowerCase()) !== -1;
     });
 
+    result.filtered_pages = filteredPages.length;
+    filteredPages = _.drop(filteredPages, parseInt(req.params.start))
+    result.pages_detail = _.take(filteredPages, 50);
     
+    logger.debug(`${req.params.id.red} sended`);
+    res.status(200).send(result);
 
+  }).catch( (error) => {
+    logger.warn(`${req.params.id.red} not found`, error);
+    res.status(404).send({"Error":"the requested ID, doesn't exists"});
+  });
 });
+
+router.get('/request/export/:id', function (req, res) {
+  buffer.getElementByRequestID({
+    "requestID":req.params.id,
+  }).then( (result) => {
+    logger.debug(`${req.params.id.red} sended`);
+    res.attachment('export.csv');
+    
+    tmp.file({postfix: '.csv'}, function (err, path, fd, cleanupCallback) {
+      if (err) throw err;
+  
+      console.log("File: ", path);
+      console.log("Filedescriptor: ", fd);
+      if (result.pages_detail.length > 0) {
+        fs.writeSync(fd, _.keys(result.pages_detail[0]).join(';')+"\n"); 
+        _.each(result.pages_detail, (element) => {
+
+          var lineValues = _.values(element);
+          lineValues = _.map(lineValues, (element) => {
+            return JSON.stringify(element.toString().replace(/\"/g, "'"));
+          });
+
+          fs.writeSync(fd, lineValues.join(';').concat("\n"));
+        });
+      }
+      const src = fs.createReadStream(path);
+      src.pipe(res);
+    });
+
+  }).catch( (error) => {
+    logger.warn(`${req.params.id.red} not found`, error);
+    res.status(404).send({"Error":"the requested ID, doesn't exists"});
+  });
+});
+
+
+router.get('/request/export/:id/details/:filter', function (req, res) {
+  buffer.getElementByRequestID({
+    "requestID":req.params.id,
+  }).then( (result) => {
+
+    let filteredPages = _.filter(result.pages_detail, (element) => {
+      return JSON.stringify(element).toLowerCase().indexOf(req.params.filter.toLowerCase()) !== -1;
+    });
+
+    result.pages_detail = filteredPages;
+    result.filtered_pages = filteredPages.length;
+
+    logger.debug(`${req.params.id.red} sended`);
+    
+    res.attachment('export.csv');
+    tmp.file({postfix: '.csv'}, function (err, path, fd, cleanupCallback) {
+      if (err) throw err;
+  
+      console.log("File: ", path);
+      console.log("Filedescriptor: ", fd);
+      if (result.pages_detail.length > 0) {
+        fs.writeSync(fd, _.keys(result.pages_detail[0]).join(';')+"\n"); 
+        _.each(result.pages_detail, (element) => {
+          
+          var lineValues = _.values(element);
+          lineValues = _.map(lineValues, (element) => {
+            return JSON.stringify(element.toString().replace(/\"/g, "'"));
+          });
+
+          fs.writeSync(fd, lineValues.join(';').concat("\n"));
+        });
+      }
+      const src = fs.createReadStream(path);
+      src.pipe(res);
+    });
+
+  }).catch( (error) => {
+    logger.warn(`${req.params.id.red} not found`, error);
+    res.status(404).send({"Error":"the requested ID, doesn't exists"});
+  });
+});
+
 // delete element
 router.delete('/drop/:id', function (req, res) {
  logger.info("".concat(req.params.id).red + " to delete !");
@@ -180,5 +292,10 @@ router.post('/update', function (req, res) {
     }
 });
 
+router.get('/cancel/:id', function (req, res) {
+  logger.info("".concat(req.params.id).red + " to stop !");
+  buffer.stop(parseInt(req.params.id));
+  res.redirect(`/request/${req.params.id}`);
+});
 
 module.exports = router

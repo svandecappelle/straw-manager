@@ -1,6 +1,6 @@
 const levelup = require('levelup')
 const leveldown = require('leveldown')
-const db = levelup(leveldown('./mydb'));
+const db = levelup(leveldown('./database'));
 
 // 1) Create our store
 class Database {

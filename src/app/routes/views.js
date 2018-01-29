@@ -252,7 +252,8 @@ router.post('/view/:view', function (req, res) {
 
 router.get('/request/:id', function (req, res) {
   buffer.getElementByRequestID({
-    "requestID": req.params.id
+    "requestID": req.params.id,
+    start: 0
   }).then( (result) => {
     middleware.render(req, res, 'request.pug', {
       request: result,

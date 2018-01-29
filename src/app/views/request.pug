@@ -2,7 +2,21 @@ extends template
 
 block append body
   style.
+    #list-requests tr td {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     #list-requests_filter {
+      width: 50%;
+      text-align: left;
+    }
+    #list-requests_filter input {
+      width: 50%;
+      margin-bottom: 0px;
+      height: 2rem;
+    }
+    #list-requests_length {
       display: none;
     }
   if !request
@@ -95,11 +109,17 @@ block append body
                   span= '(Not in: ' + JSON.stringify(request.not_found_in_pages.length) + ')'
               else
                 span all
-          if request.status !== "pending" && request.status !== "partial_pending" 
-            .row
-              .col.s1 Actions:
-              .col.s11
-                a.btn.red(href=rootPath + "drop/" + request.requestID, style="display: inline-block;") Delete
+          .row(style="margin-bottom: 0px;")
+            .col.s1 Actions:
+            .col.s11
+              a.btn-floating.orange(href=rootPath + "api/request/export/" + request.requestID, style="display: inline-block;", title="Export")
+                i.material-icons file_download
+              if request.status !== "pending" && request.status !== "partial_pending" 
+                a.btn-floating.red(href=rootPath + "drop/" + request.requestID, style="display: inline-block;", title="Delete")
+                  i.material-icons delete
+              else
+                a.btn-floating.orange(href=rootPath + "api/cancel/" + request.requestID, style="display: inline-block;", title="Stop")
+                  i.material-icons stop
       li
         .collapsible-header Details
         .collapsible-body
@@ -126,6 +146,15 @@ block append body
                   p= request.error.toString().replace(new RegExp(/\\n/, 'g'), "\n")
                 else
                   p= JSON.stringify(request.error, "", 4)
+      .row(style="position:relative")
+        .col.s12(style="position: absolute; right: 0px; width:200px; top: -10px; height: 70px;")
+          .fixed-action-btn.horizontal(style="position: absolute; top: 0; right: 24px;")
+            .btn-floating.btn-large.red
+              i.large.material-icons menu
+            ul
+              li
+                a#export_with_filter.btn-floating.small.orange(href=rootPath + "api/request/export/" + request.requestID, style="display: inline-block;")
+                  i.material-icons file_download
       .row(style='overflow: hidden;')
         .col.s12(style="margin:3px;")
           table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
@@ -135,85 +164,81 @@ block append body
                 - columns = []
                 if rows
                   each row in rows
-                    th(width="20px") Request
                     each value, key in row
-                      if key != "id" && key != "title"
-                        th.mdl-data-table__cell--non-numeric(style="width:200px;word-wrap:break-word;")= key
+                      if key === "id" || key === "status"
+                        th.mdl-data-table__cell--non-numeric(style="max-width:50px;word-wrap:break-word;")= key
+                        - columns.push({data: key})
+                      else if key != "title"
+                        th.mdl-data-table__cell--non-numeric(style="max-width:200px;word-wrap:break-word;")= key
+                        - columns.push({data: key})
                     - break
-            tfoot
-              //tr
-                if rows
-                  each row in rows
-                    each value, key in row
-                      th(style='padding: 0; margin: 0;') Search
-                    - break
-              tr
-                if rows
-                  each row in rows
-                    each value, key in row
-                      if key == "title"
-                        - continue
-                      th(style='padding: 0; margin: 0; vertical-align: middle; text-align:center;')
-                        input.column-filter(type="text", placeholder='<' + key + '>')
-                    - break
-            tbody
-              if request.pages_detail
-                - var i = 0;
-                each page_detail, pageid in request.pages_detail
-                  - i += 1;
-                  if page_detail
-                    tr
-                      td(style="max-width:200px")
-                        span= i
-                      each value, key in page_detail
-                        if key == "status"
-                          td
-                            - color = "indigo lighten-3 grey-text text-lighten-5"
-                            if value == "200"
-                              - color = "green lighten-3 grey-text text-lighten-5"
-                            else if value == "404"
-                              - color = "red lighten-3 grey-text text-lighten-5"
-                            div(class=color, style="text-align: center")= value
-                        else if key != "id" && key != "title"
-                          td(style="max-width:200px; text-overflow: ellipsis;overflow: hidden;", title=value)
-                            if key == "magasin"
-                              a(href=page_detail.url)= page_detail.magasin.id + ' -> ' + page_detail.magasin.name 
-                            else if key == "url"
-                              a(href=page_detail.url)= page_detail.title
-                            else if key == "from"
-                              a(href=page_detail.from)= page_detail.from
-                            else
-                              span= value
     script#request-var(type='application/json')= JSON.stringify(request)
     script.
       var refresh_time = #{refresh_time}
       var columns = !{JSON.stringify(columns)}
     script
       :coffee-script
-        table = $('#list-requests').DataTable({
-          paging: true,
-          "lengthMenu": [[100, -1], [100, "All"]]
-          searching: true,
-          scrollY: '200px',
-          scrollCollapse: false,
-          fixedHeader: {
-            header: true
-          }
-        })
-        table.columns().every( () ->
-          that = this
-          $( 'input.column-filter', this.footer()).on( 'keyup change', () ->
-            if ( this.value != that.search() )
-              that.search( this.value ).draw()
-          )
-        )
         rootPath = $("#root-straw-manager").attr("href")
         request = JSON.parse(document.getElementById('request-var').innerHTML
           .replace(/&quot;/g, '"')
           .replace(/&gt;/g, '>')
           .replace(/&lt;/g, '<')
           .replace(/&amp;/g, '&'));
-
+        table = $('#list-requests').DataTable({
+          pageLength: 50,
+          searching: true,
+          scrollY: '265px',
+          scrollCollapse: false,
+          processing: true,
+          sort: false,
+          serverSide: true,
+          ajax: (data, callback, settings) ->
+            apiurl = "/api/request/" + request.requestID + "/details/" + (data.start)
+            if data.search.value
+              apiurl += "/" + data.search.value
+            $.get(apiurl)
+              .done((response) ->
+                callback({
+                  draw: response.draw,
+                  data: response.pages_detail,
+                  recordsTotal: response.aspired_pages,
+                  recordsFiltered: if response.filtered_pages then response.filtered_pages else response.aspired_pages
+                });
+              )
+          ,
+          fixedHeader: {
+            header: true
+          },
+          columns: columns,
+          columnDefs: [
+            {
+              targets: [5],
+              render: (data) ->
+                return "<a href='" + data + "'>" + data + "</a>";
+            },
+            {
+              targets: [1],
+              render: (data, type, row) ->
+                return "<a href='" + data + "'>" + row['title'] + "</a>";
+            },
+            {
+              targets: [4],
+              render: (data, type, row) ->
+                if data >= 500
+                  classes_status = "red lighten-1 grey-text text-lighten-5"
+                else if data >= 400
+                  classes_status = "orange lighten-1 grey-text text-lighten-5"
+                else if data < 400
+                  classes_status = "green lighten-1 grey-text text-lighten-5"
+                else
+                  classes_status = "grey darken-1 grey-text text-lighten-5"
+                return "<div class='center-align " + classes_status +  "'>" + data + "</div>"
+            }
+          ]
+        })
+        $("#list-requests_filter input").on("change", ->
+          $("#export_with_filter").attr("href", "/api/request/export/" + request.requestID + "/details/" + $(this).val())
+        )
         if (!request.responseDate)
           request.responseDate = moment();
         $('.time-elapsed').text("Elapsed time: " + moment.duration(moment(request.requestDate).diff(moment(request.responseDate))).format("h [h] mm [min] ss [secs]"));

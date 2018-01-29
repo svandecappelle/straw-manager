@@ -4,3 +4,5 @@ public/assets
 build/
 export/
 dist/
+requests/*.req
+database/

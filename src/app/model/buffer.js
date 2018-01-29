@@ -7,7 +7,7 @@ const aspiration = require('./../../aspiration/interface');
 const Exporter = new require('./../middleware/exporter');
 const datastore = require("../middleware/datastore");
 
-const aspired_pages = [];
+const aspired_pages = {};
 
 if (!('toJSON' in Error.prototype)){
   Object.defineProperty(Error.prototype, 'toJSON', {
@@ -28,6 +28,7 @@ if (!('toJSON' in Error.prototype)){
 const SHOPS_PROPERTIES = ['magasin', 'prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'url'];
 
 var requestBuffer = [];
+var aspirations = {};
 var auto_increment = -1;
 var exporter = new Exporter();
 
@@ -55,6 +56,7 @@ class Buffer extends events.EventEmitter {
       datastore.get(`request:${reqId}`)
       .then( (request) => {
         request = JSON.parse(request);
+        request.responseDate = Date.now();
 
         if (request.status !== 'timeout' && request.status !== 'error' && request.status !== 'partial_pending') {
           request.status = 'set';
@@ -77,14 +79,14 @@ class Buffer extends events.EventEmitter {
     });
   
     this.on('timeout', (error, req) => {
-      this.error(req, 'timeout');
+      this.error(req, 'timeout', error);
     });
     this.on('error', (error, req) => {
-      this.error(req, 'failed');
+      this.error(req, 'failed', error);
     });
   }
 
-  error (req, status) {
+  error (req, status, error) {
     if (req.origin) {
       req = req.origin;
     }
@@ -179,6 +181,19 @@ class Buffer extends events.EventEmitter {
     });
   }
 
+  stop (id) {
+    if (aspirations[id]){
+      aspirations[id].stop();
+    }
+    datastore.get(`request:${id}`)
+    .then( (request) => {
+      request = JSON.parse(request);
+      request.responseDate = Date.now();
+      request.status = 'cancelled';
+      datastore.store(`request:${id}`, JSON.stringify(request))
+    });
+  }
+
   add (request, callback) {
     auto_increment++;
     
@@ -206,7 +221,7 @@ class Buffer extends events.EventEmitter {
           .put(`request:${request.requestID}`, JSON.stringify(request))
           .write( () => {
             resolve(request);
-            aspiration.launch(request, this);
+            aspirations[request.requestID] = aspiration.launch(request, this);
           });
 
         }).catch( () => {
@@ -228,7 +243,7 @@ class Buffer extends events.EventEmitter {
           .put(`request:${request.requestID}`, JSON.stringify(request))
           .write( () => {
             resolve(request);
-            aspiration.launch(request, this);
+            aspirations[request.requestID] = aspiration.launch(request, this);
           });
         });
         
@@ -243,9 +258,9 @@ class Buffer extends events.EventEmitter {
       request = req.origin;
     }
 
-    if (request.data && !_.isEmpty(request.data)) {
-      request.responseDate = Date.now();
-    } else if (error) {
+    request.responseDate = Date.now();
+    
+    if (error) {
       request.status = 'failed';
       if (!request.error && error) {
         request.error = JSON.stringify(error);
@@ -256,7 +271,6 @@ class Buffer extends events.EventEmitter {
         request.error.push(error);
       }
       
-      request.responseDate = Date.now();
       logger.error(`Request: ${request.requestID} failed: `.red.bold.underline, request.error);
     }
 
@@ -264,6 +278,10 @@ class Buffer extends events.EventEmitter {
   };
 
   getElementByRequestID (object) {
+    var nbRecordsByPage = 50;
+    var pageNumberFilter = object.start ? object.start : 0;
+    var activatePaging = object.start !== undefined;
+
     var promise = new Promise((resolve, reject) => {
       var request;
       datastore.get(`request:${Number.parseInt(object.requestID)}`)
@@ -277,13 +295,20 @@ class Buffer extends events.EventEmitter {
 
           datastore.get(`request:${Number.parseInt(object.requestID)}:datas`)
           .then( (requestStored) => {
-            // Request general info strawn
-
             request.data = JSON.parse(requestStored);
             request.pages_detail = [];
             if (nbaspired > 0) {
-              async.timesLimit(nbaspired, 10, (n, next) => {
-                datastore.get(`request:${request.requestID}:page:${n + 1}`)
+              let nbRecordsToFetch = nbRecordsByPage;
+              if (activatePaging) {
+                if (pageNumberFilter + nbRecordsToFetch > nbaspired){
+                  nbRecordsToFetch = nbaspired % nbRecordsToFetch
+                }
+              } else {
+                nbRecordsToFetch = nbaspired;
+              }
+              async.timesLimit(nbRecordsToFetch, 10, (n, next) => {
+                let start = (pageNumberFilter) + (n + 1);
+                datastore.get(`request:${request.requestID}:page:${start}`)
                 .then( (page) => {
                   request.pages_detail.push(JSON.parse(page));
                   next();
@@ -291,6 +316,7 @@ class Buffer extends events.EventEmitter {
               }, () => {
                 resolve(request);
               });
+              
             } else {
               resolve(request);
             }

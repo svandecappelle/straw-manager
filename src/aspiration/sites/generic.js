@@ -3,16 +3,27 @@ const async = require('async');
 const path = require('path');
 const htmlToText = require('html-to-text');
 const log4js = require("log4js");
+const fs = require('fs');
 const _ = require('lodash');
+const qfgets = require('qfgets');
+
 const { URL } = require('url');
 
 class Generic extends Engine {
 
   constructor(use_proxy, name) {
     super(name);
+    this.cancelled = false;
     this.use_proxy = use_proxy;
     this.on("page", this.decode);
     this.on("home", this.home);
+    this.on("stop", this.stop);
+  }
+
+  stop(){
+    this.cancelled = true;
+    this.other_loop = [];
+    this.pages = [];
   }
 
   call (request) {
@@ -26,7 +37,6 @@ class Generic extends Engine {
         this.pages = request.parameters.pages;
       } else {
         this.pages = [];
-        this.done = [];
         this.other_loop = [];
         this.loopCounter = 0;
         this.from = {};
@@ -61,37 +71,77 @@ class Generic extends Engine {
     }
   };
 
+  isAlreadyDone ( filename, checking, done ) {
+    if (!fs.existsSync(filename)){
+      return done(false);
+    }
+    var that = this;
+    let fp = new qfgets(filename, "r");
+    function loop() {
+      for (let i=0; i<40; i++) {
+        let line = fp.fgets();
+        if (line){
+          line = line.trim();
+          if (line === checking) return done(true);
+        }
+      }
+      if (!fp.feof()) setImmediate(loop);
+      else return done(false);
+    }
+    loop();
+  }
+
   loop (req) {
+    if (this.cancelled) {
+      this.logger.info(`Cancelled all datas aspiration ${req.requestID}`.orange);
+      if (!req.parameters) {
+        req.parameters = this.params;
+      }
+      
+      return this.emit('done', req);
+    }
     this.loopCounter += 1;
-    let current_loop = _.differenceBy(this.pages, this.done, 'href');
+    let current_loop = this.pages;
     this.logger.info(`${this.loopCounter} - Fetching ${current_loop.length} pages`);
 
     async.eachLimit(current_loop, this.config.parallel, (page, next) => {
-      // this.logger.info(page);
-
-      this.request({
-        url: page.href,
-        data: page,
-        origin: req,
-        from: this.from[req.url],
-        requestID: req.requestID
-      }, next);
-
+      if (!this.cancelled) {
+        this.request({
+          url: page.href,
+          data: page,
+          origin: req,
+          from: this.from[req.url],
+          requestID: req.requestID
+        }, next);
+      } else {
+        current_loop = [];
+      }
     }, () => {
       // all pages in page retrieved
-      if ( !_.isEmpty(this.other_loop) ){
-        this.logger.info(`${this.loopCounter} - Add ${_.uniqBy(_.differenceBy(this.other_loop, this.done, 'href'), 'href').length} requests found`);
+      if ( !_.isEmpty(this.other_loop)) {
+        var file = path.resolve(__dirname, `../../../requests/req-${req.requestID}.req`);
+        let notAlreadyCrawl = [];
 
-        this.pages = _.unionBy(this.pages, this.other_loop, 'href');
-        this.other_loop = [];
-        this.loop(req);
+        async.filterLimit(this.other_loop, 10, (page, next) => {
+          this.isAlreadyDone(file, page.href, (isDone) => {
+            if (!isDone) {
+              fs.appendFileSync(file, page.href.concat("\n"));
+              // this.logger.info("Not crawled: " + page.href);      
+            }
+            next(null, !isDone);
+          });
+        }, (err, results) => {
+          // console.log(results);
+          this.logger.info(`${this.loopCounter} - Add ${results.length} requests found and not already crawled`);
+          this.pages = results;
+          this.other_loop = [];
+          this.loop(req);  
+        });
+        
       } else {
         this.logger.info(`Done all datas aspiration ${req.requestID}`.green);
         if (!req.parameters) {
           req.parameters = this.params;
-        }
-        if (this.done) {
-          req.total_crawl = this.done.length;
         }
         this.emit('done', req);
       }
@@ -231,8 +281,8 @@ class Generic extends Engine {
     let pageData = {
       id: req.data.id ? req.data.id : 0,
       url: req.url,
-      title: page_title ? page_title : req.url,
-      name: req.data.name ? req.data.name : "",
+      title: page_title ? page_title.trim() : req.url,
+      name: req.data.name ? req.data.name.trim() : "",
       line: req.data.line ? req.data.line : "",
       status: response.statusCode,
       from: this.from[req.url] ? this.from[req.url] : ""
@@ -249,7 +299,6 @@ class Generic extends Engine {
 
     var output = _.extend(_.omit(req, ['origin']), {
       parameters: this.params,
-      total_crawl: this.done ? this.done.length : 0,
       data: requestDatas
     });
 

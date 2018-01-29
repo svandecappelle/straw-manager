@@ -29,21 +29,21 @@ class Engine {
       }
 
 
-      var enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1, opts.Enseigne);
+      this.enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1, opts.Enseigne);
 
-      enseigne_lancher.on('done', function(data){
+      this.enseigne_lancher.on('done', (data) => {
         eventEmitter.emit('done', data);
       });
 
-      enseigne_lancher.on('product', function(data){
+      this.enseigne_lancher.on('product', (data) => {
         eventEmitter.emit('product', data);
       });
 
-      enseigne_lancher.on('not_found', function(data){
+      this.enseigne_lancher.on('not_found', (data) => {
         eventEmitter.emit('not_found', data);
       });
 
-      enseigne_lancher.on('fatal_error', function(error, req){
+      this.enseigne_lancher.on('fatal_error', (error, req) => {
         eventEmitter.emit('error', error, req);
       });
 
@@ -54,14 +54,14 @@ class Engine {
       request.parameters = _.omit(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]);
 
       // todo
-      var call_process = async.timeout(function aspiration(callback) {
-        enseigne_lancher.call(request);
+      var call_process = async.timeout( (callback) => {
+        this.enseigne_lancher.call(request);
 
-        enseigne_lancher.on('done', function(data){
+        this.enseigne_lancher.on('done', (data) => {
           callback();
         });
 
-        enseigne_lancher.on('fatal_error', function(data){
+        this.enseigne_lancher.on('fatal_error', (data) => {
           callback();
         });
       }, timeout_aspiration);
@@ -77,7 +77,14 @@ class Engine {
     } catch(error) {
       eventEmitter.emit('error', {error: error}, opts);
     }
+    return this;
   };
+
+  stop () {
+    if (this.enseigne_lancher) {
+      this.enseigne_lancher.emit('stop');
+    }
+  }
 
 }
 
