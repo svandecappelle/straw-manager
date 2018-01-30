@@ -122,7 +122,7 @@ html(lang="en")
       script(src="/public/assets/moment-duration-format/lib/moment-duration-format.js")
 
   body
-    nav.nav-extended.grey.darken-3
+    nav.nav-extended.grey.darken-3.pushpin(style="z-index:99;")
       .nav-wrapper
         ul.left.hide-on-med-and-down
           li
@@ -176,7 +176,7 @@ html(lang="en")
           a#root-straw-manager(href=rootPath) Home
         li
           a#root-straw-manager(href=rootPath + "view/site") Hoover a site
-    main
+    main(style="margin-top: 60px; font-size: 8pt;")
       block body
 
     script

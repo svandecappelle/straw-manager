@@ -23,11 +23,13 @@ class Engine {
         let startPage = new URL(opts.url);
         opts.Enseigne = startPage.hostname;
         var Initialiser = require("./sites/generic");
-
       } else {
         var Initialiser = require("./sites/" + opts.Enseigne.toLowerCase());
       }
 
+      if (opts.timeout) {
+        timeout_aspiration = opts.timeout;
+      }
 
       this.enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1, opts.Enseigne);
 
@@ -54,25 +56,30 @@ class Engine {
       request.parameters = _.omit(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]);
 
       // todo
-      var call_process = async.timeout( (callback) => {
+      if (timeout_aspiration >= 1){
+        var call_process = async.timeout( (callback) => {
+          this.enseigne_lancher.call(request);
+  
+          this.enseigne_lancher.on('done', (data) => {
+            callback();
+          });
+  
+          this.enseigne_lancher.on('fatal_error', (data) => {
+            callback();
+          });
+        }, timeout_aspiration);
+
+        call_process(err => {
+          if (err && err.message === 'Callback function "aspiration" timed out.') {
+            eventEmitter.emit('timeout', {err: `Aspiration take to much time on one product > ${timeout_aspiration / 1000}sec: ${err.code}`}, params);
+          } else {
+            console.log(err);
+          }
+        });
+
+      } else {
         this.enseigne_lancher.call(request);
-
-        this.enseigne_lancher.on('done', (data) => {
-          callback();
-        });
-
-        this.enseigne_lancher.on('fatal_error', (data) => {
-          callback();
-        });
-      }, timeout_aspiration);
-
-      call_process(err => {
-        if (err && err.message === 'Callback function "aspiration" timed out.') {
-          eventEmitter.emit('timeout', {err: `Aspiration take to much time on one product > ${timeout_aspiration / 1000}sec: ${err.code}`}, params);
-        } else {
-          console.log(err);
-        }
-      });
+      }
 
     } catch(error) {
       eventEmitter.emit('error', {error: error}, opts);

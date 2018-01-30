@@ -5,7 +5,7 @@ block body
     body {
       background-color: #616161;
     }
-  .row(style='margin: auto; width: 80%; margin-top: 6%;')
+  .row(style='margin: auto; width: 80%;')
     form.col.s12.m6.offset-s3.offset-m3(method='post')
       .card
         .card-content
@@ -44,10 +44,14 @@ block body
                 .col.s4(style="margin-top: 25px;")
                   input(type="checkbox", id="countlines", name="countlines")
                   label(for="countlines") Count lines (may be slow)
-                .col.s8
+                .col.s4
                   .input-field
                     input(type="number", id="parallel", name="parallel", value=config.parallel)
                     label(for="parallel") Parallels requests
+                .col.s4
+                  .input-field
+                    input(type="number", id="timeout", name="timeout", value=config.timeout)
+                    label(for="timeout") Request timeout
               .row
                 .col.s4(style="margin-top: 25px;")
                   input(type="checkbox", id="export", name="export" config.export ? checked="true")

@@ -66,7 +66,7 @@ block append body
       .col.s12.request
         a.green.lighten-1(href=request.url)= request.data.libelles.join("\t")
     
-    ul.collapsible.grey.lighten-4(style="top:0px;position:sticky;z-index:1;", data-collapsible="expandable")
+    ul.collapsible.grey.lighten-4(data-collapsible="expandable", style="font-size: 8pt")
       li
         .collapsible-header.active General informations
         .collapsible-body.col.s12.request
@@ -98,7 +98,7 @@ block append body
                     if request.parameters['change-wait'] && request.parameters['change-wait'] !== "on"
                     else if request.parameters['change-wait'] && value
                       a.chip(style="margin-right: 3px;")= param + '=' + value
-                  else if value != undefined
+                  else if value != undefined  && value !== ""
                     a.chip(style="margin-right: 3px;")= param + '=' + value
           .row
             .col.s1 Kept pages:
@@ -215,6 +215,11 @@ block append body
               targets: [5],
               render: (data) ->
                 return "<a href='" + data + "'>" + data + "</a>";
+            },
+            {
+              targets: [2],
+              render: (data) ->
+                return "<code>" + data.replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
             },
             {
               targets: [1],

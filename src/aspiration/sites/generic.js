@@ -6,6 +6,8 @@ const log4js = require("log4js");
 const fs = require('fs');
 const _ = require('lodash');
 const qfgets = require('qfgets');
+const child_process = require('child_process');
+const tmp = require('tmp');
 
 const { URL } = require('url');
 
@@ -71,24 +73,33 @@ class Generic extends Engine {
     }
   };
 
-  isAlreadyDone ( filename, checking, done ) {
+  getNotAlreadyDone ( filename, currentLoopFile, done ) {
+    // Keep only left side no present in right side
     if (!fs.existsSync(filename)){
-      return done(false);
-    }
-    var that = this;
-    let fp = new qfgets(filename, "r");
-    function loop() {
-      for (let i=0; i<40; i++) {
-        let line = fp.fgets();
-        if (line){
-          line = line.trim();
-          if (line === checking) return done(true);
+      return done(this.other_loop);
+    } else { 
+      let cmd = `comm --nocheck-order -23 <(sort ${currentLoopFile}) <(sort ${filename})`;
+      this.logger.info(cmd);
+      let child = child_process.exec(cmd, {shell: "/bin/bash", maxBuffer: 1024 * 1024 * 5}, (error, stdout, stderr) => {
+        if (error) {
+          this.logger.error(error);
         }
-      }
-      if (!fp.feof()) setImmediate(loop);
-      else return done(false);
+        // console.log(`stdout: ${stdout}`);
+      });
+      let lines = "";
+      child.stdout.on("data", (data) => {
+        lines += data.toString();
+      });
+      child.on('close', (code) => {
+        lines = lines.split("\n");
+        lines = _.filter(lines, (line) => {
+          return line !== "";
+        })
+        lines = _.uniq(lines);
+        this.logger.info(`to request: ${lines.length}`);
+        done(lines);
+      });
     }
-    loop();
   }
 
   loop (req) {
@@ -120,22 +131,47 @@ class Generic extends Engine {
       // all pages in page retrieved
       if ( !_.isEmpty(this.other_loop)) {
         var file = path.resolve(__dirname, `../../../requests/req-${req.requestID}.req`);
-        let notAlreadyCrawl = [];
 
-        async.filterLimit(this.other_loop, 10, (page, next) => {
-          this.isAlreadyDone(file, page.href, (isDone) => {
-            if (!isDone) {
-              fs.appendFileSync(file, page.href.concat("\n"));
-              // this.logger.info("Not crawled: " + page.href);      
-            }
-            next(null, !isDone);
+        tmp.file({postfix: '.csv'}, (err, path, fd, cleanupCallback) => {
+          if (err) throw err;
+          
+          // Create temp file of current loop to diff between alreay done on request
+          console.log("File: ", path);
+          console.log("Filedescriptor: ", fd);
+          this.other_loop = _.uniqBy(this.other_loop, 'href');
+
+          _.each(this.other_loop, (element) => {
+            fs.writeSync(fd, element.href.concat("\n"));            
           });
-        }, (err, results) => {
-          // console.log(results);
-          this.logger.info(`${this.loopCounter} - Add ${results.length} requests found and not already crawled`);
-          this.pages = results;
-          this.other_loop = [];
-          this.loop(req);  
+          
+          this.getNotAlreadyDone(file, path, ( results ) => {
+            
+            // this.logger.warn(this.other_loop);
+            var loopUrls = _.map(results, (page) => {
+              // this.logger.info({'href': page});
+              let obj;
+              if (page.href) {
+                obj = _.find(this.other_loop, { 'href': page.href });
+              } else if (_.isString(page)) {
+                obj =  _.find(this.other_loop, {'href': page});
+              } else {
+                return undefined;
+              }
+              if (obj) {
+                fs.appendFileSync(file, obj.href.concat("\n"));  
+              }
+              return obj;
+            });
+
+            this.other_loop = _.filter(loopUrls, (page) => {
+              return page !== undefined;
+            });
+
+            this.logger.info(`${this.loopCounter} - Add ${results.length} requests found and not already crawled`);
+            this.pages = this.other_loop;
+            this.other_loop = [];
+            this.loop(req);  
+          });
         });
         
       } else {
@@ -150,10 +186,12 @@ class Generic extends Engine {
 
   fetchPages(html, req) {
     let all_pages = [];
-    let re = /<a[^>]+href=['"]([^'"]+)['"][^>]*>([^<]+)/g;
+    let re = /<a[^>]+href=['"]([^'"]+)['"][^>]*>(([^<]+)|.*?(?=(<\/a>)+))/g;
 
     let group;
+    // <a> balises
     do {
+      html = html.toString().replace(/(\r\n|\n\r|\n|\r)/g, "");
       group = re.exec(html);
       if (group) {
         
@@ -179,10 +217,11 @@ class Generic extends Engine {
           name: group[2] ? group[2] : group[1],
           line: linesFound.join(", ")
         }
+        // this.logger.info(url);
         all_pages.push(url);
       }
     } while (group)
-    
+
     all_pages = _.filter(all_pages, (page) => {
       let href = page.href;
       let valid;
@@ -289,6 +328,7 @@ class Generic extends Engine {
     };
     let requestDatas = {
       enseigne: startPage.hostname,
+      parameters: this.config,
       url: req.url,
       page: pageData,
       status: response.statusCode,

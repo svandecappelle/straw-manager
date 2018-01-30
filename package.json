@@ -66,11 +66,7 @@
     "stream-transform": "^0.1.2",
     "tmp": "0.0.33",
     "underscore": "^1.8.3",
-    "underscore.string": "^3.3.4",
-    "xlblogger": ">=1.0.1",
-    "xml2js": "0.4.4",
-    "xmlbuilder": "2.3.0",
-    "xmldoc": "0.1.2"
+    "underscore.string": "^3.3.4"
   },
   "optionalDependencies": {
     "oracledb": "~1.13.1"

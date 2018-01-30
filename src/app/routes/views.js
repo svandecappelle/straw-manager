@@ -193,7 +193,9 @@ router.get('/view/:view', function (req, res) {
 
   middleware.render(req, res, req.params.view + '.pug', {
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    config: yaml_config.load(config_name("sites/global"))
+    config: _.extend({
+      timeout: nconf.get("aspiration:timeout") * 60 * 1000
+    }, yaml_config.load(config_name("sites/global")))
   });
 });
 

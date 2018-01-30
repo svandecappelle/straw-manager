@@ -120,21 +120,28 @@ class Buffer extends events.EventEmitter {
       results.data.page.id = nbaspired_pages;
     }
 
-    datastore.batch()
-    .put("last-request", results.requestID)
-    .put(`request:${results.requestID}:nbaspired`, "" + nbaspired_pages)
-    .put(`request:${results.requestID}:datas`, JSON.stringify(_.omit(results.data, ['page'])))
-    .put(`request:${results.requestID}:columns`, dataColumns)
-    .write( () => {
-      if (results.data.page) {
-        datastore.store(`request:${results.requestID}:page:${results.data.page.id}`, JSON.stringify(results.data.page))
-        .then( () => {
-        }).catch( (err) => {
-          logger.error(err);
-        });
-      } else {
-        logger.warn("no page data page", results.data);
-      }
+    datastore.get(`request:${results.requestID}`)
+    .then( (request) => {
+      request = JSON.parse(request);
+      let req = _.extend(request, _.omit(results, ["aspired_pages", "pages", "pages_detail"]));
+      
+      datastore.batch()
+      .put("last-request", results.requestID)
+      .put(`request:${results.requestID}`, JSON.stringify(req))
+      .put(`request:${results.requestID}:nbaspired`, "" + nbaspired_pages)
+      .put(`request:${results.requestID}:datas`, JSON.stringify(_.omit(results.data, ['page'])))
+      .put(`request:${results.requestID}:columns`, dataColumns)
+      .write( () => {
+        if (results.data.page) {
+          datastore.store(`request:${results.requestID}:page:${results.data.page.id}`, JSON.stringify(results.data.page))
+          .then( () => {
+          }).catch( (err) => {
+            logger.error(err);
+          });
+        } else {
+          logger.warn("no page data page", results.data);
+        }
+      });
     });
   }
 

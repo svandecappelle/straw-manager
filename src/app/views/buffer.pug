@@ -59,7 +59,7 @@ block body
                 responseDate = row.responseDate;
                 if (!row.responseDate)
                   responseDate = moment();
-                return moment.duration(moment(row.requestDate).diff(moment(responseDate))).format("h [h] mm [min] ss [secs]");
+                return moment.duration(Math.abs(moment(row.requestDate).diff(moment(responseDate)))).format("h [h] mm [min] ss [secs]");
               ,
               "targets": [3]
             },
