@@ -155,9 +155,9 @@ block append body
               li
                 a#export_with_filter.btn-floating.small.orange(href=rootPath + "api/request/export/" + request.requestID, style="display: inline-block;")
                   i.material-icons file_download
-      .row(style='overflow: hidden;')
-        .col.s12(style="margin:3px;")
-          table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;")
+      .row
+        .col.s12
+          table#list-requests.mdl-data-table.bordered.striped.transparent(width="100%;table-layout:fixed;border")
             thead.sticky
               tr
                 - rows = request.pages_detail

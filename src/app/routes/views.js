@@ -49,7 +49,7 @@ if (LOG_ALL_VIEWS_ACCESS) {
   });
 }
 
-router.use(function timeLog(req, res, next) {
+router.use('/', function timeLog(req, res, next) {
   if (req.session && req.session.passport && req.session.passport.user) {
     next();
   } else if (req.url.indexOf("login") === -1) {

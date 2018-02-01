@@ -111,7 +111,7 @@ process.on('uncaughtException', function (err) {
         app.set('view engine', 'pug');
         app.use(bodyParser.json());
 
-        app.use('/public', express.static(path.join(__dirname + '/../public')));
+        app.use('/', express.static(path.join(__dirname + '/../public')));
         app.use('/', views);
 
         authentication.initialize(app);

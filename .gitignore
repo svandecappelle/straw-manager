@@ -1,8 +1,12 @@
 node_modules/
 logs/
-public/assets
+public/node_modules/*
 build/
 export/
 dist/
 requests/*.req
 database/
+public/*
+!public/js
+!public/css
+!public/img
