@@ -144,18 +144,22 @@ html(lang="en")
         li
           .user-view
             .background
-              img(src="/public/img/coke_straw-test.jpg", width="100%")
-            a.col.offset-s2(href="#!user", style="position: relative; left: 135px;")
-              img.circle(src="/public/img/account.jpg", width="100%")
-            a(href="#!name", style="position: relative; right: 0px;")
-              span.white-text.name= session.username
-            a(href="#!email", style="position: relative; right: 0px;")
-              span.white-text.email= session.useremail
+              img(src="/img/straw.jpg", width="100%")
+            .row
+              .col.s12.center-align
+                a.center-align(href="#!user", style="margin: auto;")
+                  img.circle.center-align(src="/img/account.jpg", width="100%", style="margin: auto;")
+              .col.s12
+                a.center-align(href="#!name")
+                  span.grey-text.name= session.username
+              .col.s12
+                a.center-align(href="#!email")
+                  span.grey-text.email= session.useremail
           </div>
         li
-          a#root-straw-manager(href=rootPath) Home
+          a#root-straw-manager(href="/") Home
         li
-          a#root-straw-manager(href=rootPath + "view/site") Hoover a site
+          a#root-straw-manager(href="/view/site") Hoover a site
     main(style="font-size: 8pt;")
       block body
 

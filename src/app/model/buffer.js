@@ -3,49 +3,47 @@ const nconf = require('nconf');
 const events = require('events');
 const async = require('async');
 const logger = require('log4js').getLogger('Buffer');
-const aspiration = require('./../../aspiration/interface');
-const Exporter = new require('./../middleware/exporter');
+const crawler = require('./../../crawler');
+const exporter = new require('./../middleware/exporter');
 const datastore = require("../middleware/datastore");
 
 const aspired_pages = {};
 
-if (!('toJSON' in Error.prototype)){
+if (!('toJSON' in Error.prototype)) {
   Object.defineProperty(Error.prototype, 'toJSON', {
-      value: function () {
-          var alt = {};
+    value: function () {
+      var alt = {};
 
-          Object.getOwnPropertyNames(this).forEach(function (key) {
-              alt[key] = this[key];
-          }, this);
+      Object.getOwnPropertyNames(this).forEach(function (key) {
+        alt[key] = this[key];
+      }, this);
 
-          return alt;
-      },
-      configurable: true,
-      writable: true
+      return alt;
+    },
+    configurable: true,
+    writable: true
   });
 }
 
 const SHOPS_PROPERTIES = ['magasin', 'prix', 'prixUnite', 'promo', 'promoDirecte', 'dispo', 'url'];
-
 var requestBuffer = [];
-var aspirations = {};
+var crawls = {};
 var auto_increment = -1;
-var exporter = new Exporter();
 
 class Buffer extends events.EventEmitter {
 
-  constructor () {
+  constructor() {
     super();
     datastore.get("requests")
-    .catch(() => {
-      datastore.store("requests", "[]");
-    });
+      .catch(() => {
+        datastore.store("requests", "[]");
+      });
 
     this.on('done', (results) => {
-      logger.info("Aspiration done".cyan.bold, results.requestID);
+      logger.info("Crawl done".cyan.bold, results.requestID);
       var mem = process.memoryUsage();
       logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
-      if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000){
+      if (mem.heapUsed > nconf.get("max-memory") * 1000 * 1000) {
         // 1Go clear memory
         logger.warn('flush memory to prevent memory leaks');
         this.flush();
@@ -54,30 +52,30 @@ class Buffer extends events.EventEmitter {
       var reqId = results.requestID;
 
       datastore.get(`request:${reqId}`)
-      .then( (request) => {
-        request = JSON.parse(request);
-        request.responseDate = Date.now();
+        .then((request) => {
+          request = JSON.parse(request);
+          request.responseDate = Date.now();
 
-        if (request.status !== 'timeout' && request.status !== 'error' && request.status !== 'partial_pending') {
-          request.status = 'set';
-        } else if (request.status !== 'timeout' && request.status !== 'error'){
-          request.status = 'partial_done';
-        }
+          if (request.status !== 'timeout' && request.status !== 'error' && request.status !== 'partial_pending') {
+            request.status = 'set';
+          } else if (request.status !== 'timeout' && request.status !== 'error') {
+            request.status = 'partial_done';
+          }
 
-        datastore.store(`request:${reqId}`, JSON.stringify(request))
-      });
+          datastore.store(`request:${reqId}`, JSON.stringify(request))
+        });
     });
-  
+
     this.on('product', (results) => {
-      logger.debug("Aspiration of one product".cyan.bold, results.requestID);
+      logger.debug("Crawl of one product".cyan.bold, results.requestID);
       this.export(results);
     });
-  
+
     this.on('not_found', (results) => {
-      logger.info("Aspiration of one product is partial because of not found on a store".cyan.bold, results.requestID);
+      logger.info("Crawl of one product is partial because of not found on a store".cyan.bold, results.requestID);
       this.export(results);
     });
-  
+
     this.on('timeout', (error, req) => {
       this.error(req, 'timeout', error);
     });
@@ -86,29 +84,29 @@ class Buffer extends events.EventEmitter {
     });
   }
 
-  error (req, status, error) {
+  error(req, status, error) {
     if (req.origin) {
       req = req.origin;
     }
-    logger.error(`${status} on aspiration`.red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
+    logger.error(`${status} on crawl`.red, error, _.omit(req, ["aspired_pages", "pages", "pages_detail"]));
     this.update(req);
 
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(req.requestID)})
+    var index = _.findIndex(requestBuffer, { requestID: Number.parseInt(req.requestID) })
     if (index > -1) {
       requestBuffer[index].error = error;
       requestBuffer[index].status = status;
-      if (requestBuffer[index].callback){
+      if (requestBuffer[index].callback) {
         requestBuffer[index].callback(requestBuffer[index]);
       }
     }
   }
-  
-  export (results) {
+
+  export(results) {
     if (results.parameters.export === true || results.parameters.export === "on") {
       exporter.export(results.data);
     }
     results = this.update(results, false);
-    
+
     let dataColumns = ["status"];
     if (results.data.page) {
       dataColumns = _.keys(results.data.page);
@@ -121,37 +119,37 @@ class Buffer extends events.EventEmitter {
     }
 
     datastore.get(`request:${results.requestID}`)
-    .then( (request) => {
-      request = JSON.parse(request);
-      let req = _.extend(request, _.omit(results, ["aspired_pages", "pages", "pages_detail"]));
-      
-      datastore.batch()
-      .put("last-request", results.requestID)
-      .put(`request:${results.requestID}`, JSON.stringify(req))
-      .put(`request:${results.requestID}:nbaspired`, "" + nbaspired_pages)
-      .put(`request:${results.requestID}:datas`, JSON.stringify(_.omit(results.data, ['page'])))
-      .put(`request:${results.requestID}:columns`, dataColumns)
-      .write( () => {
-        if (results.data.page) {
-          datastore.store(`request:${results.requestID}:page:${results.data.page.id}`, JSON.stringify(results.data.page))
-          .then( () => {
-          }).catch( (err) => {
-            logger.error(err);
+      .then((request) => {
+        request = JSON.parse(request);
+        let req = _.extend(request, _.omit(results, ["aspired_pages", "pages", "pages_detail"]));
+
+        datastore.batch()
+          .put("last-request", results.requestID)
+          .put(`request:${results.requestID}`, JSON.stringify(req))
+          .put(`request:${results.requestID}:nbaspired`, "" + nbaspired_pages)
+          .put(`request:${results.requestID}:datas`, JSON.stringify(_.omit(results.data, ['page'])))
+          .put(`request:${results.requestID}:columns`, dataColumns)
+          .write(() => {
+            if (results.data.page) {
+              datastore.store(`request:${results.requestID}:page:${results.data.page.id}`, JSON.stringify(results.data.page))
+                .then(() => {
+                }).catch((err) => {
+                  logger.error(err);
+                });
+            } else {
+              logger.warn("no page data page", results.data);
+            }
           });
-        } else {
-          logger.warn("no page data page", results.data);
-        }
       });
-    });
   }
 
-  flush (type) {
-    if (!type){
+  flush(type) {
+    if (!type) {
       requestBuffer = _.filter(requestBuffer, (elem) => {
-          return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
+        return elem.status === 'failed' || elem.status === 'pending' || elem.status === 'partial_pending';
       });
 
-    } else if (type !== 'all'){
+    } else if (type !== 'all') {
       logger.info(`flush memory on '${type}'`);
       requestBuffer = _.filter(requestBuffer, (elem) => {
         return elem.status !== 'partial_'.concat(type) && elem.status !== type;
@@ -166,107 +164,138 @@ class Buffer extends events.EventEmitter {
     logger.info("Memory used: ", mem.heapUsed.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "));
   };
 
-  pending_length () {
-    return this.pending().length;
+  pending_length() {
+    return new Promise( (resolve, reject) => {
+      this.pending().then((buffer) => {
+        resolve(buffer.length);
+      });
+    });
   };
 
-  pending (){
-    return _.union(_.where(requestBuffer, {status: 'pending'}), _.where(requestBuffer, {status: 'partial_pending'}));
+  pending() {
+    return new Promise( (resolve, reject) => {
+      this.getBuffer().then((buffer) => {
+        let bufferPending = _.where(buffer, { status: 'pending' });
+        let bufferPartialPending = _.where(buffer, { status: 'partial_pending' });
+        resolve(_.union(bufferPending, bufferPartialPending));
+      });
+    });
   };
 
-  failed () {
-    return _.union(_.where(requestBuffer, {status: 'failed'}), _.where(requestBuffer, {status: 'timeout'}));
+  failed() {
+    return new Promise( (resolve, reject) => {
+      this.getBuffer().then((buffer) => {
+        let bufferFailed = _.where(buffer, { status: 'failed' });
+        let bufferTimeout = _.where(buffer, { status: 'timeout' });
+        resolve(_.union(bufferFailed, bufferTimeout));
+      });
+    });
   };
 
-  aspired () {
-    return _.union(_.where(requestBuffer, {status: 'set'}), _.where(requestBuffer, {status: 'partial_done'}));
+  set () {
+    return this.aspired()
+  }
+
+  aspired() {
+    return new Promise( (resolve, reject) => {
+      this.getBuffer().then((buffer) => {
+        let bufferSet = _.where(buffer, { status: 'set' });
+        let bufferPartialDone = _.where(buffer, { status: 'partial_done' });
+        resolve(_.union(bufferSet, bufferPartialDone));
+      });
+    });
   };
 
   search (query) {
-    return _.filter(requestBuffer, (elem) => {
-      return JSON.stringify(elem).indexOf(query) !== -1;
+    return new Promise( (resolve, reject) => {
+      this.getBuffer().then((buffer) => {
+        buffer = _.filter(buffer, (elem) => {
+          return JSON.stringify(elem).indexOf(query) !== -1;
+        });
+        resolve(buffer);
+      });
     });
   }
 
-  stop (id) {
-    if (aspirations[id]){
-      aspirations[id].stop();
+  stop(id) {
+    if (crawls[id]) {
+      crawls[id].stop();
     }
     datastore.get(`request:${id}`)
-    .then( (request) => {
-      request = JSON.parse(request);
-      request.responseDate = Date.now();
-      request.status = 'cancelled';
-      datastore.store(`request:${id}`, JSON.stringify(request))
-    });
+      .then((request) => {
+        request = JSON.parse(request);
+        request.responseDate = Date.now();
+        request.status = 'cancelled';
+        datastore.store(`request:${id}`, JSON.stringify(request))
+      });
   }
 
-  add (request, callback) {
+  add(request, callback) {
     auto_increment++;
-    
+
     return new Promise((resolve, reject) => {
       if (request) {
         datastore.get("requests")
-        .then( (requests) => {
-          requests = JSON.parse(requests);
+          .then((requests) => {
+            requests = JSON.parse(requests);
 
-          request = _.extend({
-            requestID     : requests.length,
-            enseigne      : null,
-            requestDate   : Date.now(),
-            responseDate  : null,
-            url           : request.url,
-            status        : 'pending',
-            data          : {}
-          }, _.omit(request, ["requestID"]));
-          aspired_pages[request.requestID] = 0;
+            request = _.extend({
+              requestID: requests.length,
+              enseigne: null,
+              requestDate: Date.now(),
+              responseDate: null,
+              url: request.url,
+              status: 'pending',
+              data: {}
+            }, _.omit(request, ["requestID"]));
+            aspired_pages[request.requestID] = 0;
 
-          requests.push(request.requestID);
-          datastore.batch()
-          .put("requests", JSON.stringify(requests))
-          .put(`request:${request.requestID}:nbaspired`, "0")
-          .put(`request:${request.requestID}`, JSON.stringify(request))
-          .write( () => {
-            resolve(request);
-            aspirations[request.requestID] = aspiration.launch(request, this);
+            requests.push(request.requestID);
+            datastore.batch()
+              .put("requests", JSON.stringify(requests))
+              .put(`request:${request.requestID}:nbaspired`, "0")
+              .put(`request:${request.requestID}`, JSON.stringify(request))
+              .write(() => {
+                resolve(request);
+                crawls[request.requestID] = crawler.launch(request, this);
+              });
+
+          }).catch(() => {
+            // not any requests
+            aspired_pages[request.requestID] = 0;
+
+            request = _.extend({
+              requestID: 0,
+              enseigne: null,
+              requestDate: Date.now(),
+              responseDate: null,
+              url: request.url,
+              status: 'pending',
+              data: {}
+            }, _.omit(request, ["requestID"]));
+            datastore.batch()
+              .put("requests", JSON.stringify([0]))
+              .put(`request:${request.requestID}:nbaspired`, "0")
+              .put(`request:${request.requestID}`, JSON.stringify(request))
+              .write(() => {
+                resolve(request);
+                crawls[request.requestID] = crawler.launch(request, this);
+              });
           });
 
-        }).catch( () => {
-          // not any requests
-          aspired_pages[request.requestID] = 0;
-          
-          request = _.extend({
-            requestID     : 0,
-            enseigne      : null,
-            requestDate   : Date.now(),
-            responseDate  : null,
-            url           : request.url,
-            status        : 'pending',
-            data          : {}
-          }, _.omit(request, ["requestID"]));
-          datastore.batch()
-          .put("requests", JSON.stringify([0]))
-          .put(`request:${request.requestID}:nbaspired`, "0")
-          .put(`request:${request.requestID}`, JSON.stringify(request))
-          .write( () => {
-            resolve(request);
-            aspirations[request.requestID] = aspiration.launch(request, this);
-          });
-        });
-        
       }
     });
   };
 
-  update (request, error) {
+  update(request, error) {
     // update data, set status and responseDate
-    
+
     if (request.origin) {
       request = req.origin;
     }
 
     request.responseDate = Date.now();
-    
+
     if (error) {
       request.status = 'failed';
       if (!request.error && error) {
@@ -277,14 +306,14 @@ class Buffer extends events.EventEmitter {
         }
         request.error.push(error);
       }
-      
+
       logger.error(`Request: ${request.requestID} failed: `.red.bold.underline, request.error);
     }
 
     return request;
   };
 
-  getElementByRequestID (object) {
+  getElementByRequestID(object) {
     var nbRecordsByPage = 50;
     var pageNumberFilter = object.start ? object.start : 0;
     var activatePaging = object.start !== undefined;
@@ -292,90 +321,98 @@ class Buffer extends events.EventEmitter {
     var promise = new Promise((resolve, reject) => {
       var request;
       datastore.get(`request:${Number.parseInt(object.requestID)}`)
-      .then( (properties) => {
-        // Request properties
-        request = JSON.parse(properties);
-        datastore.get(`request:${Number.parseInt(object.requestID)}:nbaspired`)
-        .then( (nbaspired) => {
-          nbaspired = JSON.parse(nbaspired);
-          request.aspired_pages = nbaspired;
+        .then((properties) => {
+          // Request properties
+          request = JSON.parse(properties);
+          datastore.get(`request:${Number.parseInt(object.requestID)}:nbaspired`)
+            .then((nbaspired) => {
+              nbaspired = JSON.parse(nbaspired);
+              request.aspired_pages = nbaspired;
 
-          datastore.get(`request:${Number.parseInt(object.requestID)}:datas`)
-          .then( (requestStored) => {
-            request.data = JSON.parse(requestStored);
-            request.pages_detail = [];
-            if (nbaspired > 0) {
-              let nbRecordsToFetch = nbRecordsByPage;
-              if (activatePaging) {
-                if (pageNumberFilter + nbRecordsToFetch > nbaspired){
-                  nbRecordsToFetch = nbaspired % nbRecordsToFetch
-                }
-              } else {
-                nbRecordsToFetch = nbaspired;
-              }
-              async.timesLimit(nbRecordsToFetch, 10, (n, next) => {
-                let start = (pageNumberFilter) + (n + 1);
-                datastore.get(`request:${request.requestID}:page:${start}`)
-                .then( (page) => {
-                  request.pages_detail.push(JSON.parse(page));
-                  next();
+              datastore.get(`request:${Number.parseInt(object.requestID)}:datas`)
+                .then((requestStored) => {
+                  request.data = JSON.parse(requestStored);
+                  request.pages_detail = [];
+                  if (nbaspired > 0) {
+                    let nbRecordsToFetch = nbRecordsByPage;
+                    if (activatePaging) {
+                      if (pageNumberFilter + nbRecordsToFetch > nbaspired) {
+                        nbRecordsToFetch = nbaspired % nbRecordsToFetch
+                      }
+                    } else {
+                      nbRecordsToFetch = nbaspired;
+                    }
+                    async.timesLimit(nbRecordsToFetch, 10, (n, next) => {
+                      let start = (pageNumberFilter) + (n + 1);
+                      datastore.get(`request:${request.requestID}:page:${start}`)
+                        .then((page) => {
+                          request.pages_detail.push(JSON.parse(page));
+                          next();
+                        });
+                    }, () => {
+                      resolve(request);
+                    });
+
+                  } else {
+                    resolve(request);
+                  }
+                })
+                .catch((err) => {
+                  logger.error(err);
+                  reject("Not found id on datas");
                 });
-              }, () => {
-                resolve(request);
-              });
-              
-            } else {
-              resolve(request);
-            }
-          })
-          .catch((err) => {
-            logger.error(err);
-            reject("Not found id on datas");
-          });
+            });
         });
-      });
     });
 
     return promise;
   };
 
-  getBuffer () {
-    return new Promise( (resolve, reject) => {
+  getBuffer(){
+    return this.all();
+  }
+
+  buffer () {
+    return this.all();
+  }
+
+  all () {
+    return new Promise((resolve, reject) => {
       datastore.get("requests")
-      .then( (requests) => {
-        requests = JSON.parse(requests);
-        async.mapLimit(requests, 10, (request, next) => {
-          datastore.get(`request:${request}`)
-          .then( (value) => {
-            value = JSON.parse(value)
-            datastore.get(`request:${request}:nbaspired`)
-            .then( (nbaspired) => {
-              value.aspired_pages = JSON.parse(nbaspired);
-              next(null, value);
-            }).catch( (error) => {
-              next(error);
-            });
-          })
-          .catch( (error) => {
-            logger.error(error);
-            next(error);
+        .then((requests) => {
+          requests = JSON.parse(requests);
+          async.mapLimit(requests, 10, (request, next) => {
+            datastore.get(`request:${request}`)
+              .then((value) => {
+                value = JSON.parse(value)
+                datastore.get(`request:${request}:nbaspired`)
+                  .then((nbaspired) => {
+                    value.aspired_pages = JSON.parse(nbaspired);
+                    next(null, value);
+                  }).catch((error) => {
+                    next(error);
+                  });
+              })
+              .catch((error) => {
+                logger.error(error);
+                next(error);
+              });
+          }, (error, buffer) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(buffer);
+            }
           });
-        }, (error, buffer) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(buffer);
-          }
+        })
+        .catch((error) => {
+          logger.error(error);
+          reject(error);
         });
-      })
-      .catch( (error) => {
-        logger.error(error);
-        reject(error);
-      });
     });
   }
 
-  validQuery (query) {
+  validQuery(query) {
     if (query && query.url) {
       return true
     } else {
@@ -383,9 +420,9 @@ class Buffer extends events.EventEmitter {
     }
   };
 
-  drop (id) {
-    var index = _.findIndex(requestBuffer, {requestID : Number.parseInt(id)})
-    if (  index > -1 ) {
+  drop(id) {
+    var index = _.findIndex(requestBuffer, { requestID: Number.parseInt(id) })
+    if (index > -1) {
       requestBuffer.splice(index, 1)
       return true
     } else {

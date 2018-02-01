@@ -7,7 +7,7 @@ const moment = require('moment');
 const _ = require("underscore");
 const nconf = require('nconf');
 const logger = require("log4js").getLogger('app/routes/views');
-const ora = require('ora');
+
 const middleware = require("../middleware");
 const yaml_config = require('node-yaml-config');
 
@@ -35,7 +35,6 @@ function getBufferTableSchema() {
   return schema;
 }
 
-var rootPath = nconf.get('aspiration:rootPath');
 
 function config_name(name){
   return path.resolve(__dirname, "./../../../config/".concat(name.toLowerCase()).concat(".").concat("yml"));
@@ -63,12 +62,26 @@ router.use('/', function timeLog(req, res, next) {
 
 // define the home page route
 router.get('/', function (req, res) {
-  buffer.getBuffer().then( (bufferList) => {
+  buffer.getBuffer().then( (buffer) => {
+
+    let bufferPending = _.where(buffer, { status: 'pending' });
+    let bufferPartialPending = _.where(buffer, { status: 'partial_pending' });
+    let pending = _.union(bufferPending, bufferPartialPending);
+
+    let bufferFailed = _.where(buffer, { status: 'failed' });
+    let bufferTimeout = _.where(buffer, { status: 'timeout' });
+    let failed = _.union(bufferFailed, bufferTimeout);
+
+    let bufferSet = _.where(buffer, { status: 'set' });
+    let bufferPartialDone = _.where(buffer, { status: 'partial_done' });
+    let set = _.union(bufferSet, bufferPartialDone);
+
+
     middleware.render(req, res, 'index.pug', {
-      bufferLength: bufferList.length,
-      pending: buffer.pending().length,
-      set: buffer.aspired().length,
-      failed: buffer.failed().length,
+      bufferLength: buffer.length,
+      pending: pending.length,
+      set: set.length,
+      failed: failed.length,
       session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null
     });
   })
@@ -136,47 +149,61 @@ router.get('/buffer', function (req, res) {
       session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
       view: 'buffer'
     });
-  });  
-});
-
-router.get('/pending', function (req, res) {
-  logger.debug('pending buffer requested !'.red);
-  middleware.render(req, res, 'buffer.pug', {
-    buffer: buffer.pending(),
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    view: 'pending'
   });
 });
 
-router.get('/set', function (req, res) {
-  logger.debug('aspired buffer requested !'.red);
-  middleware.render(req, res, 'buffer.pug', {
-    buffer: buffer.aspired(),
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    view: 'set'
+router.get('/buffer/status/:status', function (req, res) {
+  let status = req.params.status;
+  var funcStatus;
+
+  switch (status) {
+    case "pending":
+    case "set":
+    case "failed":
+      funcStatus = status;
+      break;
+    default:
+      funcStatus = "buffer";
+      break;  
+  }
+
+  buffer[funcStatus]().then( (bufferList) => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: bufferList,
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: 'buffer/'.concat(funcStatus)
+    });
+  }).catch(() => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: [],
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: 'buffer/'.concat(funcStatus)
+    });
   });
 });
 
-router.get('/failed', function (req, res) {
-  logger.debug('failed buffer requested !'.red);
-  middleware.render(req, res, 'buffer.pug', {
-    buffer: buffer.failed(),
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    view: 'failed'
-  });
-});
 
 router.get('/search', function (req, res) {
-  logger.info('search into buffer requested !'.red);
-  middleware.render(req, res, 'buffer.pug', {
-    buffer: buffer.search(req.query["q"]),
-    schema: getBufferTableSchema(),
-    session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
-    view: `search?q=${req.query["q"]}`
+  logger.info(`search ${req.query["q"]} into buffer requested !`.red);
+
+  buffer.search(req.query["q"]).then( (bufferList) => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: bufferList,
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: `search?q=${req.query["q"]}`
+    });
+  }).catch(() => {
+    middleware.render(req, res, 'buffer.pug', {
+      buffer: [],
+      schema: getBufferTableSchema(),
+      session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
+      view: `search?q=${req.query["q"]}`
+    });
   });
+
 });
 
 router.get('/view/:view', function (req, res) {
@@ -194,12 +221,10 @@ router.get('/view/:view', function (req, res) {
   middleware.render(req, res, req.params.view + '.pug', {
     session: req.session && req.session.passport && req.session.passport.user ? req.session.passport.user : null,
     config: _.extend({
-      timeout: nconf.get("aspiration:timeout") * 60 * 1000
+      timeout: nconf.get("crawler:timeout") * 60 * 1000
     }, yaml_config.load(config_name("sites/global")))
   });
 });
-
-var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']\r')
 
 router.post('/view/:view', function (req, res) {
   logger.info(req.params.view + ' view requested !'.red);
@@ -216,34 +241,20 @@ router.post('/view/:view', function (req, res) {
   var tempo = req.body
   logger.info('server received :'.red, tempo);
   if (buffer.validQuery(tempo)) {
-    logger.info("querying aspiration...");
-    //spinner.start();
-    spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
+    logger.info("querying crawler...");
 
-    if (nconf.get("aspiration:interactive")) {
+    if (nconf.get("crawler:interactive")) {
       // Mode interactive activated: The result is returned into POST return call.
       var elem = buffer.add(req.body, function (results) {
         console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
-        if (buffer.pending_length() === 0) {
-          spinner.stop();
-        } else {
-          spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
-        }
         logger.info("results sent");
         res.status(200).send(results);
       });
     } else {
       // Mode interactive activated: The result is not returned into POST return call.
       // User need to call buffer to now the status.
-
       var elem = buffer.add(req.body, function (results) {
-
         console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
-        if (buffer.pending_length() === 0) {
-          spinner.stop();
-        } else {
-          spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
-        }
         logger.info("results are now accessibles");
       });
 

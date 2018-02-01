@@ -5,19 +5,19 @@ const db = levelup(leveldown('./database'));
 // 1) Create our store
 class Database {
 
-    constructor () {}
+  constructor() { }
 
-    get (key) {
-        return db.get(key);
-    }
+  get(key) {
+    return db.get(key);
+  }
 
-    store (key, value) {
-        return db.put(key, value);
-    }
+  store(key, value) {
+    return db.put(key, value);
+  }
 
-    batch () {
-        return db.batch();
-    }
+  batch() {
+    return db.batch();
+  }
 }
 
 module.exports = new Database();

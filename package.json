@@ -2,7 +2,7 @@
   "name": "straw",
   "version": "1.0.0",
   "description": "Crawling app",
-  "main": "index.js",
+  "main": "src/server.js",
   "private": true,
   "scripts": {
     "test": "mocha",

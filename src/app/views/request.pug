@@ -112,13 +112,13 @@ block append body
           .row(style="margin-bottom: 0px;")
             .col.s1 Actions:
             .col.s11
-              a.btn-floating.orange(href=rootPath + "api/request/export/" + request.requestID, style="display: inline-block;", title="Export")
+              a.btn-floating.orange(href="/api/request/export/" + request.requestID, style="display: inline-block;", title="Export")
                 i.material-icons file_download
               if request.status !== "pending" && request.status !== "partial_pending" 
-                a.btn-floating.red(href=rootPath + "drop/" + request.requestID, style="display: inline-block;", title="Delete")
+                a.btn-floating.red(href="/drop/" + request.requestID, style="display: inline-block;", title="Delete")
                   i.material-icons delete
               else
-                a.btn-floating.orange(href=rootPath + "api/cancel/" + request.requestID, style="display: inline-block;", title="Stop")
+                a.btn-floating.orange(href="/api/cancel/" + request.requestID, style="display: inline-block;", title="Stop")
                   i.material-icons stop
       li
         .collapsible-header Details
@@ -153,7 +153,7 @@ block append body
               i.large.material-icons menu
             ul
               li
-                a#export_with_filter.btn-floating.small.orange(href=rootPath + "api/request/export/" + request.requestID, style="display: inline-block;")
+                a#export_with_filter.btn-floating.small.orange(href="/api/request/export/" + request.requestID, style="display: inline-block;")
                   i.material-icons file_download
       .row
         .col.s12

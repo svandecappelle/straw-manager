@@ -1,6 +1,6 @@
 extends template
 block body
-  a#api-link(href= rootPath + "api/" + view)
+  a#api-link(href= "/api/" + view)
   table#buffer.mdl-data-table.bordered.highlight(style='width: 100%;', cellspacing="0")
     thead
       tr.centered
@@ -98,7 +98,7 @@ block body
         auto_refresh = $("#auto-refresh").is(':checked')
         $('#buffer tbody').on 'click', 'tr', ->
           data = table.row( this ).data()
-          window.open("request/" + data.requestID, "_self")
+          window.open("/request/" + data.requestID, "_self")
 
         $('#auto-refresh').change -> 
           auto_refresh = $("#auto-refresh").is(':checked')

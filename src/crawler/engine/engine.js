@@ -1,5 +1,4 @@
 var events = require('events'),
-  // request = require('request'),
   needle = require('needle'),
   _ = require('underscore'),
   path = require('path'),
@@ -58,7 +57,7 @@ class Engine extends events.EventEmitter {
     if (this.pages && this.config.autoFinish){
       this.logger.debug(this.pages.length, " / ", this.aspiredDatas);
       if (this.pages.length <= this.aspiredDatas){
-        this.logger.info(`Done all datas aspiration ${output.requestID}`.green);
+        this.logger.info(`Done all datas crawled ${output.requestID}`.green);
         this.emit('done', output);
       }
     }
@@ -234,13 +233,7 @@ class Engine extends events.EventEmitter {
     var lines = data.split('\n');
     var proxy = lines[Math.floor(Math.random() * lines.length)];
 
-    // TODO comment this
-    // Used for test timeout only
-    // proxy = '91.239.24.182:8085';
-    // ssl
-    // proxy = '5.135.195.166:3128'
     this.proxy = proxy.trim();
-    // this.proxy = 'http://91.242.217.148:8085'
     this.logger.info(`Using proxy `.cyan + proxy.yellow.bold);
     return {
       'proxy': `http://${this.proxy}`,
@@ -257,9 +250,5 @@ class Engine extends events.EventEmitter {
 
   };
 };
-
-// __proto__ = events.EventEmitter.prototype;
-
-
 
 module.exports = Engine;

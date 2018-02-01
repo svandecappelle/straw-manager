@@ -5,16 +5,16 @@ block body
       li.list-group-item.text-center#buffer
         .row
           .col.s3.text-center
-            a.btn.blue(href=rootPath + "buffer", style="width:100%") All requests
+            a.btn.blue(href="/buffer", style="width:100%") All requests
           .col.s1.text-center
             span.chip= bufferLength
           .col.s1.offset-s7.pull-right
-            a(href=rootPath + "purge?type=all")
+            a(href="/purge?type=all")
               i.material-icons delete
       li.list-group-item.text-center#pending
         .row
           .col.s3
-            a.btn.orange(href=rootPath + "pending", style="width:100%") pending requests
+            a.btn.orange(href="/buffer/status/pending", style="width:100%") pending requests
           .col.s1.text-center
             .chip= pending
           .col.s7
@@ -22,12 +22,12 @@ block body
               .determinate.orange(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + 100 - (pending * 100 / bufferLength) + "%;")
               span #{100 - (pending  * 100 / bufferLength)} %
           .col.s1
-            a(href=rootPath + "purge?type=pending")
+            a(href="/purge?type=pending")
               i.material-icons delete
       li.list-group-item.text-center#set
         .row
           .col.s3
-            a.btn(href=rootPath + "set", style="width:100%") succeed requests
+            a.btn(href="/buffer/status/set", style="width:100%") succeed requests
           .col.s1.text-center
             .chip= set
           .col.s7
@@ -35,12 +35,12 @@ block body
               .determinate(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + set * 100 / bufferLength + "%;")
               span #{set * 100 / bufferLength} %
           .col.s1
-            a(href=rootPath + "purge?type=done")
+            a(href="/purge?type=done")
               i.material-icons delete
       li.list-group-item.text-center#failed
         .row
           .col.s3
-            a.btn.red(href=rootPath + "failed", style="width:100%") failed requests
+            a.btn.red(href="/buffer/status/failed", style="width:100%") failed requests
           .col.s1.text-center
             .chip= failed
           .col.s7
@@ -48,7 +48,7 @@ block body
               .determinate.red(role="progressbar", aria-valuenow="60", aria-valuemin="0", aria-valuemax="100", style="width: " + failed * 100 / bufferLength + "%;")
               span #{failed * 100 / bufferLength} %
           .col.s1
-            a(href=rootPath + "purge?type=failed")
+            a(href="/purge?type=failed")
               i.material-icons delete
     if pending != 0
       .row#pending-message
@@ -98,10 +98,12 @@ block body
           $("#pending .progress span").text(100 - (response.pending * 100 / response.bufferLength) + " %")
           $("#pending .determinate").css
             width: 100 - (response.pending * 100 / response.bufferLength) + "%"
+          $("#pending-message").show()
         else
           $("#pending .progress span").text("")
           $("#pending .determinate").css
             width: "0px"
+          $("#pending-message").hide()
 
         if (response.set > 0)
           $("#set .progress span").text(response.set * 100 / response.bufferLength + " %")
@@ -135,6 +137,6 @@ block body
           if auto_refresh
             setTimeout(refresh, refresh_time)
         refresh = () -> 
-          $.get rootPath + "api/status", callback
+          $.get  "api/status", callback
         if auto_refresh
           refresh()

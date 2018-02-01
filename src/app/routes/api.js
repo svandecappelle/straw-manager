@@ -6,8 +6,8 @@ const chalk = require('chalk');
 const moment = require('moment');
 const proxyUpdater = require('../../proxy-update');
 const nconf = require('nconf');
-const ora = require('ora');
 const _ = require('lodash');
+const underscore = require('underscore');
 const fs = require('fs');
 const logger = require("log4js").getLogger('app/routes/api');
 const tmp = require('tmp');
@@ -59,11 +59,34 @@ router.get('/proxies-update', function (req, res) {
 });
 
 router.get('/status', function(req, res){
-  res.send({
-    bufferLength: buffer.getBuffer().length,
-    pending: buffer.pending().length,
-    set: buffer.aspired().length,
-    failed: buffer.failed().length
+  buffer.getBuffer().then( (buffer) => {
+    
+    let bufferPending = underscore.where(buffer, { status: 'pending' });
+    let bufferPartialPending = underscore.where(buffer, { status: 'partial_pending' });
+    let pending = underscore.union(bufferPending, bufferPartialPending);
+
+    let bufferFailed = underscore.where(buffer, { status: 'failed' });
+    let bufferTimeout = underscore.where(buffer, { status: 'timeout' });
+    let failed = underscore.union(bufferFailed, bufferTimeout);
+
+    let bufferSet = underscore.where(buffer, { status: 'set' });
+    let bufferPartialDone = underscore.where(buffer, { status: 'partial_done' });
+    let set = underscore.union(bufferSet, bufferPartialDone);
+
+    res.send({
+      bufferLength: buffer.length,
+      pending: pending.length,
+      set: set.length,
+      failed: failed.length
+    });
+  }).catch( (error) => {
+    logger.error(error);
+    res.send({
+      bufferLength: 0,
+      pending: 0,
+      set: 0,
+      failed: 0
+    });
   });
 });
 
@@ -84,24 +107,36 @@ router.get('/buffer', function (req, res) {
 });
 
 
-router.get('/pending', function (req, res) {
-  logger.debug('pending buffer requested !'.red);
-  res.send(buffer.pending());
-});
+router.get('/buffer/:status', function (req, res) {
+  let status = req.params.status;
 
-router.get('/set', function (req, res) {
-  logger.debug('aspired buffer requested !'.red);
-  res.send(buffer.aspired());
-});
-
-router.get('/failed', function (req, res) {
-  logger.debug('failed buffer requested !'.red);
-  res.send(buffer.failed());
+  logger.debug(`${status} buffer requested !`.red);
+  
+  switch (status) {
+    case "pending":
+    case "failed":
+    case "set":
+      buffer[status]().then( (buffer) => {
+        res.send(buffer);
+      });
+      break;
+    default:
+      buffer.aspired().then( (buffer) => {
+        res.send(buffer);
+      });
+      break;
+  }
 });
 
 router.get('/search', function (req, res) {
   logger.debug(`search into buffer requested ! ${req.query["q"]}`.red);
-  res.send(buffer.search(req.query["q"]));
+
+  buffer.search(req.query["q"]).then( (bufferList) => {
+    res.send(bufferList);
+  }).catch((error) => {
+    logger.error(error);
+    res.send({});
+  });
 });
 
 router.get('/request/:id', function (req, res) {
@@ -247,40 +282,24 @@ router.delete('/drop/:id', function (req, res) {
     res.status(404).send({"Error":"a valid ID must be choosen"})
   }
 });
-var spinner = ora('Aspire informations... [' + buffer.pending_length() + ']\r')
-
 router.post('/update', function (req, res) {
     var tempo = req.body
     logger.info('server received :'.red, tempo);
     if (buffer.validQuery(tempo)) {
-      logger.info("querying aspiration...");
-      spinner.start();
-      spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
+      logger.info("querying crawler...");
 
-      if (nconf.get("aspiration:interactive")) {
+      if (nconf.get("crawler:interactive")) {
         // Mode interactive activated: The result is returned into POST return call.
         var elem = buffer.add(req.body, function(results){
           console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
-          if (buffer.pending_length() === 0){
-            spinner.stop();
-          } else {
-            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
-          }
           logger.info("results sent");
           res.status(200).send(results);
         });
       } else {
         // Mode interactive activated: The result is not returned into POST return call.
         // User need to call buffer to now the status.
-
         var elem = buffer.add(req.body, function(results){
-
           console.log("pending buffer: ".concat(buffer.pending_length()).green.bold);
-          if (buffer.pending_length() === 0){
-            spinner.stop();
-          } else {
-            spinner.text = 'Aspire informations... [' + buffer.pending_length() + ']\r';
-          }
           logger.info("results are now accessibles");
         });
 

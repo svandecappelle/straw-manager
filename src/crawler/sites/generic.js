@@ -104,7 +104,7 @@ class Generic extends Engine {
 
   loop (req) {
     if (this.cancelled) {
-      this.logger.info(`Cancelled all datas aspiration ${req.requestID}`.orange);
+      this.logger.info(`Cancelled all datas crawl ${req.requestID}`.orange);
       if (!req.parameters) {
         req.parameters = this.params;
       }
@@ -175,7 +175,7 @@ class Generic extends Engine {
         });
         
       } else {
-        this.logger.info(`Done all datas aspiration ${req.requestID}`.green);
+        this.logger.info(`Done all datas crawl ${req.requestID}`.green);
         if (!req.parameters) {
           req.parameters = this.params;
         }

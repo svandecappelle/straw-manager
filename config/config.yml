@@ -4,9 +4,9 @@ logLevel: DEBUG
 scribe_logger:
   use: false
   version: 3
-proxies: ../proxyRU.txt
+proxies: ../proxies.txt
 max-memory: 2000
-aspiration:
+crawler:
   interactive: false
   export: true
   timeout: 10
@@ -21,7 +21,7 @@ tests:
       autorun_server: false
       timeout: 5000
       silent: true
-    ProductOnline:
+    production:
       port: 12000
       hostname: localhost
       use_auth: true

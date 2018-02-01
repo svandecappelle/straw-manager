@@ -1,18 +1,12 @@
 
-(function (Middleware) {
-    "use strict";
-    var merge = require('merge-object'),
-      nconf = require('nconf');
+const merge = require('merge-object');
 
-    Middleware.render = function (req, res, view, obj){
-      var rootPath = nconf.get("aspiration:rootPath");
-      if (rootPath === undefined){
-        rootPath = '';
-      }
-      res.render(view, merge(obj, {
-        rootPath: rootPath + '/',
-        refresh_time: 500
-      }));
-    };
+class Middleware {
+  render(req, res, view, obj) {
+    res.render(view, merge(obj, {
+      refresh_time: 500
+    }));
+  };
+}
 
-})(exports);
+module.exports = new Middleware();

@@ -1,9 +1,9 @@
 
 /*jslint node: true */
-var _ = require('underscore'),
-  async = require('async'),
-  nconf = require('nconf'),
-  path = require('path');
+const _ = require('underscore');
+const async = require('async');
+const nconf = require('nconf');
+const path = require('path');
 const { URL } = require('url');
 
 engine = require("./engine/engine");
@@ -11,13 +11,13 @@ engine = require("./engine/engine");
 var site_engines = {};
 
 class Engine {
-  constructor(){
 
-  }
+  constructor () {}
+
   start (opts, eventEmitter) {
     try {
-      console.log(nconf.get("aspiration:timeout"));
-      var timeout_aspiration = nconf.get("aspiration:timeout") * 60 * 1000;
+      console.log(nconf.get("crawler:timeout"));
+      var timeout_crawler = nconf.get("crawler:timeout") * 60 * 1000;
       if (!opts.Enseigne) {
         opts.Enseigne = 'Generic';
         let startPage = new URL(opts.url);
@@ -28,7 +28,7 @@ class Engine {
       }
 
       if (opts.timeout) {
-        timeout_aspiration = opts.timeout;
+        timeout_crawler = opts.timeout;
       }
 
       this.enseigne_lancher = new Initialiser(opts.url.indexOf("https://") === -1, opts.Enseigne);
@@ -56,7 +56,7 @@ class Engine {
       request.parameters = _.omit(opts, ['site', 'url', 'requestID', 'requestDate', 'responseDate', 'status', "callback", "data", "Enseigne", "aspired_pages"]);
 
       // todo
-      if (timeout_aspiration >= 1){
+      if (timeout_crawler >= 1){
         var call_process = async.timeout( (callback) => {
           this.enseigne_lancher.call(request);
   
@@ -67,11 +67,11 @@ class Engine {
           this.enseigne_lancher.on('fatal_error', (data) => {
             callback();
           });
-        }, timeout_aspiration);
+        }, timeout_crawler);
 
         call_process(err => {
-          if (err && err.message === 'Callback function "aspiration" timed out.') {
-            eventEmitter.emit('timeout', {err: `Aspiration take to much time on one product > ${timeout_aspiration / 1000}sec: ${err.code}`}, params);
+          if (err && err.message === 'Callback function "crawler" timed out.') {
+            eventEmitter.emit('timeout', {err: `Crawler take to much time on one site > ${timeout_crawler / 1000}sec: ${err.code}`}, params);
           } else {
             console.log(err);
           }
