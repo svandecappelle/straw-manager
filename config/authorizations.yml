@@ -1,6 +1,4 @@
 default:
   users:
-    - username: user1
-      password: pwd
-    - username: svandecappelle
-      password: toto
+    - username: admin
+      password: $2a$10$VCdHqrdK3Gj/05njmc2XDet3iA4qgDF3blNv6ToNSUtKJVPNa0Boy

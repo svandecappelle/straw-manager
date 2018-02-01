@@ -7,6 +7,8 @@
       logger = require('log4js').getLogger("authority"),
       yaml_config = require('node-yaml-config'),
       _ = require("underscore");
+    var bcrypt = require('bcrypt');
+    const saltRounds = 10;
 
     var LOGIN_DURATION = 60 * 24;
     var LONG_LOGIN_DURATION = LOGIN_DURATION * 14;
@@ -73,15 +75,17 @@
             return done(new Error('[[error:invalid-user-data]]'));
         }
         const autorizations = yaml_config.load(path.resolve(__dirname, "../../../config/authorizations.yml")).users;
-
-        var user = _.findWhere(autorizations, {'username': username, 'password': password});
-        
-        if (user){
-          return done(null, {
-              uid: username
-          }, '[[success:authentication-successful]]');
+        var user = _.findWhere(autorizations, {'username': username});
+        if ( !user ) {
+            return done(new Error('error:invalid-password'));
         }
-
-        return done(new Error('error:invalid-password'));
+        bcrypt.compare(password, user.password, function(err, valid) {
+            if (valid) {
+                return done(null, {
+                    uid: username
+                }, '[[success:authentication-successful]]');
+            }
+            return done(new Error('error:invalid-password'));
+        });
     };
 }(exports));
