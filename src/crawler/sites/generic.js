@@ -1,4 +1,6 @@
 const Engine = require('../engine/engine');
+const parser = require('../engine/parser');
+
 const async = require('async');
 const path = require('path');
 const htmlToText = require('html-to-text');
@@ -14,9 +16,8 @@ const { URL } = require('url');
 class Generic extends Engine {
 
   constructor(use_proxy, name) {
-    super(name);
+    super(use_proxy, name);
     this.cancelled = false;
-    this.use_proxy = use_proxy;
     this.on("page", this.decode);
     this.on("home", this.home);
     this.on("stop", this.stop);
@@ -29,6 +30,7 @@ class Generic extends Engine {
   }
 
   call (request) {
+    parser.configure(request);
     try {
       this.configure(request.parameters);
       request.parameters = this.config;
@@ -326,6 +328,7 @@ class Generic extends Engine {
       status: response.statusCode,
       from: this.from[req.url] ? this.from[req.url] : ""
     };
+
     let requestDatas = {
       enseigne: startPage.hostname,
       parameters: this.config,
@@ -336,11 +339,21 @@ class Generic extends Engine {
     };
 
     requestDatas = _.extend(requestDatas, _.pick(pageData, exportFields));
-
     var output = _.extend(_.omit(req, ['origin']), {
       parameters: this.params,
       data: requestDatas
     });
+
+    parser.parse(html).then((values) => {
+      output.data.values = values;
+      pageData.values = values;
+      this.emit('product', output, req);
+    }).catch((err) => {
+      this.logger.error(err);
+      this.emit('error', output, req );
+    });
+    
+    
 
     if (this.params['keep-errors-only'] === "on") {
       if (response.statusCode >= 400 || response.statusCode === 310){
@@ -348,7 +361,8 @@ class Generic extends Engine {
       }
       return;
     }
-    this.emit('product', output, req);
+
+    
   };
 
 };

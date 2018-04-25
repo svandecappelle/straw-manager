@@ -13,8 +13,9 @@ function config_name(name){
 
 class Engine extends events.EventEmitter {
 
-  constructor(name){
+  constructor(use_proxy, name){
     super();
+    this.use_proxy = use_proxy;
     this.name = name;
 
     this.config = yaml_config.load(config_name("sites/global"));
@@ -78,7 +79,7 @@ class Engine extends events.EventEmitter {
 
       var that = this;
       // console.log(that);
-      this.logger.debug("Using proxy check: ", req.url, this.use_proxy);
+      this.logger.info("Using proxy check: ", req.url, this.use_proxy);
       var options = {
         timeout: 50000,
         read_timeout: 60000,
@@ -229,12 +230,17 @@ class Engine extends events.EventEmitter {
         proxyFile = "../proxyRU.txt";
     }
     proxyFile = path.resolve(__dirname, "../../../config/" + proxyFile);
-    var data = fs.readFileSync(proxyFile, 'utf8');
-    var lines = data.split('\n');
-    var proxy = lines[Math.floor(Math.random() * lines.length)];
+    if (fs.existsSync(proxyFile)){ 
+      var data = fs.readFileSync(proxyFile, 'utf8');
+      var lines = data.split('\n');
+      var proxy = lines[Math.floor(Math.random() * lines.length)];
 
-    this.proxy = proxy.trim();
-    this.logger.info(`Using proxy `.cyan + proxy.yellow.bold);
+      this.proxy = proxy.trim();
+
+      this.logger.info(`Using proxy `.cyan + proxy.yellow.bold);
+    } else {
+      this.logger.warn("Proxy file not found");
+    }
     return {
       'proxy': `http://${this.proxy}`,
       'parse_cookies': true,

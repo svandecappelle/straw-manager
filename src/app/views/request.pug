@@ -19,6 +19,12 @@ block append body
     #list-requests_length {
       display: none;
     }
+    .detail-grid tbody{
+      max-height: 120px;
+      overflow: auto;
+      display: inline-grid;
+      width: 100%;
+    }
   if !request
     .page-header
       h1 Request is invalid
@@ -67,8 +73,8 @@ block append body
         a.green.lighten-1(href=request.url)= request.data.libelles.join("\t")
     
     ul.collapsible.grey.lighten-4(data-collapsible="expandable", style="font-size: 8pt")
-      li
-        .collapsible-header.active General informations
+      li.active
+        .collapsible-header General informations
         .collapsible-body.col.s12.request
           .row
             .col.s1 ID:
@@ -134,7 +140,8 @@ block append body
                 each val, index in request.data
                   li.collection-item
                     .col-s6.m4= index
-                    .col-s6.m4= val
+                    .col-s6.m8
+                      code= JSON.stringify(val, 2, "")
     .col.s12
       ul.request-errors.collapsible.red.lighten-2.grey-text.text-lighten-4(data-collapsible="accordion")
         if request.error
@@ -210,6 +217,10 @@ block append body
             header: true
           },
           columns: columns,
+          "drawCallback": ( row, data, index ) ->
+            # console.log("drawed")
+            $('.tabs').tabs();
+          ,
           columnDefs: [
             {
               targets: [5],
@@ -238,6 +249,39 @@ block append body
                 else
                   classes_status = "grey darken-1 grey-text text-lighten-5"
                 return "<div class='center-align " + classes_status +  "'>" + data + "</div>"
+            },
+            {
+              targets: [6],
+              render: (data, type, row) ->
+                
+                details = '<div class="row"> <ul class="tabs">'
+                maxHeight = '350px'
+                for matched in data
+                  for own key, value of matched 
+                    details += '<li class="tab col s3"><a href="#grabbed-'+key+'">' + key + '</a></li>'
+                
+                details += '</ul>'
+                for matched in data
+                  for own key, value of matched 
+                    details += '<div id="grabbed-'+key+'" class="col s12"><ul class="collapsible" style="overflow:auto;max-height:'+maxHeight+'">'
+                    for matching_entries in value
+                      details += '<li>'
+                      details += '<div class="collapsible-header"><code>'+matching_entries+'</code></div>'
+                      details += '<div class="collapsible-body"><pre style="overflow:auto;max-width:100%">'+matching_entries.replace(/</g, '&lt;').replace(/>/g,"&gt;")+'</pre></div>'
+                      details += '</li>'
+                    details += '</ul></div>'
+                
+                modal = '<div id="' + row.id + '" class="modal">
+                  <div class="modal-content">
+                    <h5>Req page ' + row.id + ' details</h5>
+                    '+details+'
+                  </div>
+                  <div class="modal-footer">
+                    <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+                  </div>
+                </div>'
+
+                return "<a class='waves-effect waves-light btn modal-trigger' href='#1'>See</a>" + modal;
             }
           ]
         })
@@ -283,9 +327,9 @@ block append body
             obj.append($("<div>", {
               class: "col s6 m2 grey-text"
             }).text(data))
-            obj.append($("<div>", {
-              class: "col s6 m4"
-            }).text(value))
+            obj.append($("<pre>", {
+              class: "col s6 m10"
+            }).text(JSON.stringify(value, null, 2)))
             $("#datas").append(obj)
             
           if (request.status != "pending")

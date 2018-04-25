@@ -106,7 +106,7 @@ html(lang="en")
       .nav-wrapper
         ul.left.hide-on-med-and-down
           li
-            a.button-nav.btn-medium(data-activates="slide-out", href="#")
+            a.button-nav.btn-medium(data-target="slide-out", href="#")
               i.material-icons menu
           li
             a.brand-logo(style='padding-left: 5px; padding-right: 5px;') straw-manager
@@ -120,7 +120,7 @@ html(lang="en")
                   span.lever
                   span On
             li
-              a.dropdown-button.btn-medium.waves-effect.waves-light(data-activates='opts-menu')
+              a.dropdown-button.dropdown-trigger.btn-medium.waves-effect.waves-light(data-target='opts-menu')
                 i.material-icons more_vert
               ul.dropdown-content#opts-menu
                 if session
@@ -140,7 +140,7 @@ html(lang="en")
                 input#search(type="search", required)
                 i.material-icons close
     if session
-      ul#slide-out.side-nav
+      ul#slide-out.sidenav
         li
           .user-view
             .background
@@ -166,9 +166,19 @@ html(lang="en")
     script
       :coffee-script
         $ ->
+          M.AutoInit();
+          $('.collapsible').collapsible();
+          elem = document.querySelector('.modal');
+          instance = M.Modal.init(elem, {
+            onOpenEnd: ->
+              $('.collapsible').collapsible();
+            });
+
           $('.pushpin').each ->
             $(this).pushpin()
-          $(".button-nav").sideNav();
+          $("#slide-out").sidenav();
+          $(".button-nav").click () ->
+            $("#slide-out").sidenav('open')
           moment.locale('fr'); 
           rootPath = $("#root-straw-manager").attr("href")
           $("#search").on 'change', ->
